@@ -432,35 +432,29 @@
     }
 
     async function saveDatabase() {
-      // 1. Instantly save to local cache
+      // 1. Instantly save to local cache so the UI updates and user can continue immediately
       localStorage.setItem('dpd_products', JSON.stringify(products));
       localStorage.setItem('dpd_history', JSON.stringify(history));
       localStorage.setItem('dpd_personnel', JSON.stringify(PERSONNEL));
 
-      // 2. POST updates to Google Sheets in the background with a screen lock overlay
-      showSyncLoading('กำลังบันทึกข้อมูลลง Google Sheets...');
-      try {
-        await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            products: products,
-            history: history,
-            personnel: PERSONNEL
-          })
-        });
-        
-        await new Promise(resolve => setTimeout(resolve, 800)); // Brief pause for UX feel
-        showToast('บันทึกข้อมูลลง Google Sheets สำเร็จ', 'success');
-      } catch (err) {
-        console.error('Failed to sync changes with cloud:', err);
-        showToast('บันทึกลงคลาวด์ไม่สำเร็จ (บันทึกลงเครื่องคอมพิวเตอร์แทนแล้ว)', 'danger');
-      } finally {
-        hideSyncLoading();
-      }
+      // 2. POST updates to Google Sheets in the background silently
+      // We perform this asynchronously in the background so it does not block the UI or hang
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          products: products,
+          history: history,
+          personnel: PERSONNEL
+        })
+      }).then(() => {
+        console.log('Background cloud database sync completed successfully.');
+      }).catch(err => {
+        console.error('Background cloud database sync failed:', err);
+      });
     }
 
     function getRankWeight(name) {
