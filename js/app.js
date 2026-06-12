@@ -289,15 +289,56 @@
           color: #f8fafc;
         `;
         loader.innerHTML = `
-          <div style="
-            border: 4px solid rgba(255,255,255,0.05);
-            border-top: 4px solid #6366f1;
-            border-radius: 50%;
-            width: 44px; height: 44px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-          "></div>
-          <p id="apiSyncLoaderText" style="font-weight: 500; font-size: 15px; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.5);"></p>
+          <!-- Custom CSS for Cyber Spinner Animation -->
+          <style>
+            @keyframes cyber-spin-clockwise {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+            @keyframes cyber-spin-counter {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(-360deg); }
+            }
+            @keyframes cyber-glow-pulse {
+              0%, 100% { filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.6)); }
+              50% { filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.9)) drop-shadow(0 0 25px rgba(6, 182, 212, 0.5)); }
+            }
+          </style>
+
+          <!-- Glowing Multi-Ring Cyber Loader -->
+          <div class="cyber-loader-container" style="position: relative; width: 80px; height: 80px; margin-bottom: 25px; animation: cyber-glow-pulse 2s infinite ease-in-out;">
+            <!-- Outer Ring (Indigo) -->
+            <div style="
+              position: absolute;
+              inset: 0;
+              border: 3px solid transparent;
+              border-top: 3px solid #6366f1;
+              border-bottom: 3px solid #6366f1;
+              border-radius: 50%;
+              animation: cyber-spin-clockwise 1.5s linear infinite;
+            "></div>
+            <!-- Middle Ring (Cyan) -->
+            <div style="
+              position: absolute;
+              inset: 8px;
+              border: 3px solid transparent;
+              border-left: 3px solid #06b6d4;
+              border-right: 3px solid #06b6d4;
+              border-radius: 50%;
+              opacity: 0.8;
+              animation: cyber-spin-counter 1.2s linear infinite;
+            "></div>
+            <!-- Inner Dot Core (Glowing White/Blue) -->
+            <div style="
+              position: absolute;
+              inset: 22px;
+              background: radial-gradient(circle, #ffffff 0%, #6366f1 70%);
+              border-radius: 50%;
+              box-shadow: 0 0 12px #6366f1;
+              opacity: 0.9;
+            "></div>
+          </div>
+          <p id="apiSyncLoaderText" style="font-weight: 500; font-size: 15px; margin: 0; text-shadow: 0 2px 8px rgba(0,0,0,0.8); letter-spacing: 0.5px; color: #e2e8f0;"></p>
         `;
         document.body.appendChild(loader);
       }
