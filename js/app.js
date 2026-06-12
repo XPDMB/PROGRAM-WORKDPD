@@ -1442,7 +1442,7 @@
 
       const reportData = products.map(p => {
         const recv = filteredHistory
-          .filter(h => h.code === p.code && h.type === 'รับ')
+          .filter(h => h.code === p.code && (h.type === 'รับ' || h.type === 'เพิ่ม'))
           .reduce((sum, h) => sum + h.qty, 0);
 
         const issue = filteredHistory
