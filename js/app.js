@@ -1947,6 +1947,14 @@
       if (hiddenInput) hiddenInput.value = code;
       const btn = document.getElementById('clearRecvItemBtn');
       if (btn) btn.style.display = 'block';
+
+      // Find selected product to get unit dynamically
+      const p = products.find(x => x.code === code);
+      const unitLabel = document.getElementById('recvUnitLabel');
+      if (unitLabel && p) {
+        unitLabel.textContent = `(หน่วย: ${t(p.unit)})`;
+      }
+
       hideRecvProductDropdown();
     }
 
@@ -1965,6 +1973,8 @@
         input.focus();
       }
       if (hiddenInput) hiddenInput.value = '';
+      const unitLabel = document.getElementById('recvUnitLabel');
+      if (unitLabel) unitLabel.textContent = '';
       const btn = document.getElementById('clearRecvItemBtn');
       if (btn) btn.style.display = 'none';
       filterRecvProductDropdown('');
@@ -2008,6 +2018,14 @@
       if (hiddenInput) hiddenInput.value = code;
       const btn = document.getElementById('clearIssueItemBtn');
       if (btn) btn.style.display = 'block';
+
+      // Find selected product to get unit dynamically
+      const p = products.find(x => x.code === code);
+      const unitLabel = document.getElementById('issueUnitLabel');
+      if (unitLabel && p) {
+        unitLabel.textContent = `(หน่วย: ${t(p.unit)})`;
+      }
+
       hideIssueProductDropdown();
     }
 
@@ -2026,6 +2044,8 @@
         input.focus();
       }
       if (hiddenInput) hiddenInput.value = '';
+      const unitLabel = document.getElementById('issueUnitLabel');
+      if (unitLabel) unitLabel.textContent = '';
       const btn = document.getElementById('clearIssueItemBtn');
       if (btn) btn.style.display = 'none';
       filterIssueProductDropdown('');
