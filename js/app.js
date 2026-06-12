@@ -622,7 +622,7 @@
     function renderStock() {
       const q = document.getElementById('searchInput').value.trim().toLowerCase();
       const list = products.filter(p => p.code.toLowerCase().includes(q) || p.name.toLowerCase().includes(q));
-      document.getElementById('stockTable').innerHTML = `<table><thead><tr><th>${t('รหัสสินค้า')}</th><th>${t('ชื่อ')}</th><th>${t('จำนวน')}</th><th>${t('หน่วย')}</th><th>${t('จัดการ')}</th></tr></thead><tbody>${list.map(p => `<tr><td>${p.code}</td><td>${p.name}</td><td>${p.qty}</td><td>${p.unit}</td><td><button class="btn-action btn-action-edit" onclick="openEditModal('${p.code}')"><i class="ti ti-edit"></i></button><button class="btn-action btn-action-delete" onclick="deleteProduct('${p.code}')"><i class="ti ti-trash"></i></button></td></tr>`).join('')}</tbody></table>`;
+      document.getElementById('stockTable').innerHTML = `<table><thead><tr><th>${t('รหัสสินค้า')}</th><th>${t('ชื่อ')}</th><th>${t('จำนวน')}</th><th>${t('หน่วย')}</th><th>${t('จัดการ')}</th></tr></thead><tbody>${list.map(p => `<tr><td>${p.code}</td><td style="user-select: none;">${p.name}</td><td>${p.qty}</td><td>${p.unit}</td><td><button class="btn-action btn-action-edit" onclick="openEditModal('${p.code}')"><i class="ti ti-edit"></i></button><button class="btn-action btn-action-delete" onclick="deleteProduct('${p.code}')"><i class="ti ti-trash"></i></button></td></tr>`).join('')}</tbody></table>`;
     }
 
     function populateSelects() {
