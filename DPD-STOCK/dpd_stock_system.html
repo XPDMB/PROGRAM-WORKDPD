@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DPD Stock System - ระบบจัดการคลังสินค้า</title>
+  
+  <!-- Import Premium Fonts (Inter & Sarabun) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Import Tabler Icons for modern vector icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+
+    <link rel="stylesheet" href="css/style.css">
+  <!-- Chart.js for interactive dashboard visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- Global High-Tech Cyber Security Video Background (Double Buffered for Seamless Loop) -->
+  <video autoplay muted playsinline id="appBgVideo1" class="app-bg-video active" preload="auto">
+    <source src="assets/Cyber_secrity.mp4" type="video/mp4">
+  </video>
+  <video muted playsinline id="appBgVideo2" class="app-bg-video" preload="auto">
+    <source src="assets/Cyber_secrity.mp4" type="video/mp4">
+  </video>
+  <div class="app-bg-overlay"></div>
+
+  <!-- TOAST CONTAINER FOR FLOATING ALERTS -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- ========================================== -->
+  <!-- 1. LOGIN SCREEN (Active by default) -->
+  <!-- ========================================== -->
+  <div id="loginScreen" class="screen active">
+    <!-- Animated Air Force & Cyber Security Sky Background -->
+    <div class="sky-background">
+      <div class="cyber-grid"></div>
+      <div class="jet jet-1"></div>
+      <div class="jet jet-2"></div>
+      <div class="jet jet-3"></div>
+      <div class="jet jet-4"></div>
+      <div class="cloud cloud-1"></div>
+      <div class="cloud cloud-2"></div>
+      
+      <!-- Subtle Floating Cyber Elements -->
+      <div class="cyber-code" style="top: 10%; left: 15%; animation-duration: 25s; font-size: 15px;">10100110</div>
+      <div class="cyber-code" style="top: 45%; left: 80%; animation-duration: 30s; font-size: 13px;">SECURE_SYS</div>
+      <div class="cyber-code" style="top: 75%; left: 10%; animation-duration: 22s; font-size: 14px;">01101100</div>
+      <div class="cyber-code" style="top: 30%; left: 85%; animation-duration: 28s; font-size: 12px;">[DPD]</div>
+      <div class="cyber-code" style="top: 85%; left: 68%; animation-duration: 35s; font-size: 15px;">11010101</div>
+    </div>
+
+    <div class="login-wrapper">
+      <div class="login-header">
+        <div class="logo-container">
+          <img src="assets/logo.png" class="logo-floating-img" alt="DPD Logo" />
+        </div>
+        <h1>DPD Stock System</h1>
+        <p>ระบบจัดการพัสดุของกองกรรมวิธีข้อมูล DPD</p>
+      </div>
+      
+      <div class="login-card">
+        <div class="form-group">
+          <label class="form-label" for="loginPass">รหัสเข้าใช้งานระบบ (Passcode)</label>
+          <div class="input-wrapper">
+            <i class="ti ti-lock" aria-hidden="true"></i>
+            <input type="password" id="loginPass" class="input-field" placeholder="กรอกรหัสเข้าใช้งาน (เช่น 36335)" autocomplete="current-password" />
+          </div>
+        </div>
+        
+        <button class="btn-submit" onclick="doLogin()">เข้าสู่ระบบ</button>
+        <div id="loginErr" class="login-error">รหัสเข้าใช้งานไม่ถูกต้อง</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 2. MAIN APPLICATION (Starts inactive, activated after login) -->
+  <!-- ========================================== -->
+  <div id="mainApp" class="screen">
+    
+    <!-- LEFT SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-brand">
+        <span class="sidebar-brand-text">DPD STOCK</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-link active" onclick="showTab('dashboard', this)" id="nav-dashboard">
+          📊 ภาพรวม
+        </div>
+        <div class="nav-link" onclick="showTab('stock', this)" id="nav-stock">
+          📦 สต็อกสินค้า
+        </div>
+        <div class="nav-link" onclick="showTab('history', this)" id="nav-history">
+          📜 ประวัติการเบิก-รับ
+        </div>
+        <div class="nav-link" onclick="showTab('personnel', this)" id="nav-personnel">
+          👥 รายชื่อข้าราชการ
+        </div>
+        <div class="nav-link" onclick="showTab('reports', this)" id="nav-reports">
+          📋 รายงานราชการ
+        </div>
+      </nav>
+      
+      <!-- Backup & Restore section in Sidebar -->
+      <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 16px; margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; padding: 0 12px; letter-spacing: 0.5px;">สำรองฐานข้อมูล</span>
+        <button class="btn-sidebar-tool" onclick="exportBackupData()" title="ดาวน์โหลดไฟล์สำรองข้อมูลพัสดุและบุคลากร">
+          📥 ส่งออกข้อมูลสำรอง
+        </button>
+        <button class="btn-sidebar-tool" onclick="triggerRestoreUpload()" title="กู้คืนฐานข้อมูลจากไฟล์สำรอง (.json)">
+          📤 นำเข้าข้อมูลสำรอง
+        </button>
+        <input type="file" id="restoreFileInput" accept=".json" onchange="importBackupData(event)" style="display: none;" />
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="user-avatar" id="userAvatar">A</div>
+          <div class="sidebar-user-details">
+            <span class="sidebar-user-name" id="userBadge">admin</span>
+            <span class="sidebar-user-role">ผู้ดูแลระบบ</span>
+          </div>
+        </div>
+        <button class="btn-logout" onclick="doLogout()">
+          <i class="ti ti-logout" aria-hidden="true"></i>ออกจากระบบ
+        </button>
+      </div>
+    </div>
+
+    <!-- RIGHT WORKSPACE -->
+    <div class="workspace">
+      
+      <!-- MAIN CONTENT PORTAL -->
+      <div class="content-area">
+        
+        <!-- APP HEADER (Clock & Lang) -->
+        <div class="app-header">
+          <div class="datetime-display" id="realtimeClock">
+            <i class="ti ti-clock"></i> <span></span>
+          </div>
+          <div class="lang-switch">
+            <button class="btn-lang active" onclick="setLang('th')">TH</button>
+            <button class="btn-lang" onclick="setLang('en')">EN</button>
+          </div>
+        </div>
+        <!-- DASHBOARD VIEW -->
+        <div id="tab-dashboard" class="view-container">
+          <div class="page-header">
+            <h2 class="page-title">ภาพรวมสต็อกวันนี้</h2>
+            <p class="page-subtitle">แสดงข้อมูลเชิงสรุปและการแจ้งเตือนของสินค้าคงเหลือในระบบ</p>
+          </div>
+          
+          <div class="dash-grid" id="dashCards">
+            <!-- Dynamic Cards Loaded here -->
+          </div>
+
+          <!-- Interactive Analytics Charts Row -->
+          <div class="charts-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+            <div class="panel" style="margin-bottom: 0;">
+              <div class="panel-header">
+                <span class="panel-title"><i class="ti ti-chart-line" aria-hidden="true"></i> แนวโน้มการเบิกจ่ายพัสดุรายเดือน (6 เดือนล่าสุด)</span>
+              </div>
+              <div class="panel-body" style="background: rgba(15, 23, 42, 0.25); border-radius: 8px; padding: 16px; min-height: 280px; position: relative;">
+                <canvas id="monthlyTrendChart"></canvas>
+              </div>
+            </div>
+            <div class="panel" style="margin-bottom: 0;">
+              <div class="panel-header">
+                <span class="panel-title"><i class="ti ti-chart-bar" aria-hidden="true"></i> สินค้าที่ถูกเบิกใช้ปริมาณสูงสุด (Top 5)</span>
+              </div>
+              <div class="panel-body" style="background: rgba(15, 23, 42, 0.25); border-radius: 8px; padding: 16px; min-height: 280px; position: relative;">
+                <canvas id="topProductsChart"></canvas>
+              </div>
+            </div>
+          </div>
+          
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title" style="color: var(--color-danger); display: flex; align-items: center; gap: 8px;">
+                <i class="ti ti-alert-triangle" aria-hidden="true"></i> สินค้าใกล้หมดสต็อก (ต่ำกว่าจุดสั่งซื้อขั้นต่ำ / Min Stock)
+              </span>
+            </div>
+            <div class="panel-body">
+              <div class="table-container" id="lowStockTable">
+                <!-- Dynamic low stock list loaded here -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STOCK VIEW -->
+        <div id="tab-stock" class="view-container" style="display:none">
+          <div class="page-header">
+            <h2 class="page-title">รายการสต็อกสินค้า</h2>
+            <p class="page-subtitle">ค้นหา จัดการ และลงทะเบียนพัสดุในคลังสินค้า</p>
+          </div>
+          
+          <div class="action-bar">
+            <div class="search-input-box">
+              <i class="ti ti-search" aria-hidden="true"></i>
+              <input type="text" id="searchInput" class="form-control" placeholder="ค้นหาด้วยรหัสสินค้า หรือ ชื่อสินค้า..." oninput="renderStock()" />
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-primary" onclick="openAddModal()">
+                <i class="ti ti-plus" aria-hidden="true"></i> เพิ่มสินค้าใหม่
+              </button>
+              <button class="btn btn-success" onclick="openRecvModal()">
+                <i class="ti ti-arrow-down-left" aria-hidden="true"></i> รับสินค้าเข้า
+              </button>
+              <button class="btn btn-danger" onclick="openIssueModal()">
+                <i class="ti ti-arrow-up-right" aria-hidden="true"></i> เบิกสินค้าออก
+              </button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="table-container" id="stockTable">
+              <!-- Dynamic products table loaded here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- HISTORY VIEW -->
+        <div id="tab-history" class="view-container" style="display:none">
+          <div class="page-header">
+            <h2 class="page-title">ประวัติการเคลื่อนไหวสต็อก</h2>
+            <p class="page-subtitle">แสดงรายการประวัติรับเข้า เบิกจ่าย และการลงทะเบียนสินค้าทั้งหมดในระบบ</p>
+          </div>
+          
+          <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+            <div style="display:flex; align-items:center; gap:16px; flex-wrap: wrap; flex-grow: 1;">
+              <div class="search-input-box" style="max-width: 320px;">
+                <i class="ti ti-search" aria-hidden="true"></i>
+                <input type="text" id="historySearchInput" class="form-control" placeholder="ค้นหาประวัติ (รหัส, ชื่อ, ผู้เบิก, ครุภัณฑ์...)" oninput="renderHistory()" />
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:14px; font-weight:500; color:var(--color-text-secondary);">ประเภทกิจกรรม:</span>
+                <select id="histFilter" class="form-control" onchange="renderHistory()" style="width:150px">
+                  <option value="">ทั้งหมด</option>
+                  <option value="รับ">รับสินค้าเข้า</option>
+                  <option value="เบิก">เบิกสินค้าออก</option>
+                  <option value="เพิ่ม">ลงทะเบียนใหม่</option>
+                  <option value="แก้ไข">แก้ไขรายละเอียด</option>
+                  <option value="ปรับปรุง">ปรับยอดโดยตรง</option>
+                  <option value="ลบ">ลบสินค้าออก</option>
+                </select>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:14px; font-weight:500; color:var(--color-text-secondary);">ปีงบประมาณ:</span>
+                <select id="histFiscalFilter" class="form-control" onchange="renderHistory()" style="width:130px">
+                  <option value="">ทั้งหมด</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <button class="btn btn-danger" onclick="clearHistory()" style="box-shadow: 0 4px 12px rgba(244, 63, 94, 0.15);">
+                <i class="ti ti-trash" aria-hidden="true"></i> ล้างประวัติทั้งหมด
+              </button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="table-container" id="historyTable">
+              <!-- Dynamic history list loaded here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- PERSONNEL VIEW -->
+        <div id="tab-personnel" class="view-container" style="display:none">
+          <div class="page-header">
+            <h2 class="page-title">รายชื่อบุคลากร (ผู้เบิกพัสดุ)</h2>
+            <p class="page-subtitle">รายชื่อข้าราชการและเจ้าหน้าที่ เรียงลำดับตามชั้นยศและตำแหน่งในการเบิกจ่ายพัสดุ</p>
+          </div>
+          
+          <div class="action-bar">
+            <div class="search-input-box">
+              <i class="ti ti-search" aria-hidden="true"></i>
+              <input type="text" id="searchPersonnelInput" class="form-control" placeholder="ค้นหาด้วยชื่อ หรือ ตำแหน่ง..." oninput="renderPersonnel()" />
+            </div>
+            <div>
+              <button class="btn btn-primary" onclick="openPersonnelModal()">
+                <i class="ti ti-plus" aria-hidden="true"></i> เพิ่มบุคลากรใหม่
+              </button>
+            </div>
+          </div>
+          
+          <div class="panel">
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ยศ-ชื่อ-สกุล</th>
+                    <th>ตำแหน่ง</th>
+                    <th>เบอร์ติดต่อ</th>
+                    <th style="text-align: center; width: 120px;">จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody id="personnelTableBody">
+                  <!-- Dynamic render from JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- REPORTS VIEW -->
+        <div id="tab-reports" class="view-container" style="display:none">
+          <div class="page-header">
+            <h2 class="page-title">รายงานสรุปพัสดุราชการ</h2>
+            <p class="page-subtitle">จัดทำรายงานความเคลื่อนไหวและพัสดุคงเหลือเพื่อเสนอผู้บังคับบัญชา</p>
+          </div>
+          
+          <div class="panel">
+            <div class="panel-body">
+              <div class="report-controls" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; margin-bottom: 24px; border-bottom: 1px solid var(--color-border); padding-bottom: 20px;">
+                <div style="display: flex; gap: 16px; flex-grow: 1; flex-wrap: wrap;">
+                  <div class="form-group" style="min-width: 200px; margin-bottom: 0;">
+                    <label class="form-label" for="reportType">ประเภทรายงาน</label>
+                    <select id="reportType" class="form-control" onchange="onReportFilterChange()">
+                      <option value="monthly">รายงานสรุปรายเดือน</option>
+                      <option value="fiscal">รายงานสรุปรายปีงบประมาณ</option>
+                    </select>
+                  </div>
+                  
+                  <div class="form-group" id="reportMonthGroup" style="min-width: 150px; margin-bottom: 0;">
+                    <label class="form-label" for="reportMonth">เลือกเดือน</label>
+                    <select id="reportMonth" class="form-control" onchange="renderReport()">
+                      <option value="1">มกราคม</option>
+                      <option value="2">กุมภาพันธ์</option>
+                      <option value="3">มีนาคม</option>
+                      <option value="4">เมษายน</option>
+                      <option value="5">พฤษภาคม</option>
+                      <option value="6">มิถุนายน</option>
+                      <option value="7">กรกฎาคม</option>
+                      <option value="8">สิงหาคม</option>
+                      <option value="9">กันยายน</option>
+                      <option value="10">ตุลาคม</option>
+                      <option value="11">พฤศจิกายน</option>
+                      <option value="12">ธันวาคม</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group" id="reportYearGroup" style="min-width: 180px; margin-bottom: 0;">
+                    <label class="form-label" for="reportYear">เลือกปี ค.ศ. (Calendar Year)</label>
+                    <select id="reportYear" class="form-control" onchange="renderReport()">
+                      <!-- Generated Dynamically -->
+                    </select>
+                  </div>
+
+                  <div class="form-group" id="reportFiscalGroup" style="display:none; min-width: 200px; margin-bottom: 0;">
+                    <label class="form-label" for="reportFiscalYear">เลือกปีงบประมาณ (Fiscal Year B.E.)</label>
+                    <select id="reportFiscalYear" class="form-control" onchange="renderReport()">
+                      <!-- Generated Dynamically -->
+                    </select>
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; align-items: center;">
+                  <button class="btn btn-primary" onclick="printReport()" style="box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15); height: 42px;">
+                    <i class="ti ti-printer" aria-hidden="true"></i> พิมพ์รายงาน (Print PDF)
+                  </button>
+                  <button class="btn btn-success" onclick="exportReportCSV()" style="box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15); height: 42px;">
+                    <i class="ti ti-file-spreadsheet" aria-hidden="true"></i> ส่งออก Excel (CSV)
+                  </button>
+                </div>
+              </div>
+
+              <div class="table-container" id="reportTableContainer">
+                <!-- Report output table will be rendered here -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 3. ADD PRODUCT MODAL DIALOG -->
+  <!-- ========================================== -->
+  <div class="modal-bg" id="addModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">ลงทะเบียนเพิ่มสินค้าใหม่</h3>
+        <button class="modal-close" onclick="closeAddModal()"><i class="ti ti-x" aria-hidden="true"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="newCode">รหัสสินค้า</label>
+              <input type="text" id="newCode" class="form-control" style="font-weight: 600;" placeholder="ระบุรหัสสินค้า (ถ้ามี)" />
+              <small style="color: var(--color-text-muted); font-size: 11px; margin-top: 4px; display: block;">* ระบบระบุอัตโนมัติ (สามารถแก้ไขหรือพิมพ์ใส่เองได้ถ้ามี)</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="newCat">หมวดหมู่สินค้า</label>
+              <select id="newCat" class="form-control">
+                <option>อุปกรณ์สำนักงาน</option>
+                <option>วัสดุสิ้นเปลือง</option>
+                <option>อะไหล่</option>
+                <option>อื่นๆ</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="newName">ชื่อสินค้า</label>
+            <input type="text" id="newName" class="form-control" placeholder="ระบุชื่อเรียกสินค้าที่ชัดเจน" />
+          </div>
+          
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="newQty">จำนวนสินค้า</label>
+              <input type="number" id="newQty" class="form-control" value="0" min="0" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="newUnit">หน่วยนับ</label>
+              <input type="text" id="newUnit" class="form-control" placeholder="เช่น ชิ้น, รีม, ตลับ" />
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="newLoc">ตำแหน่งจัดเก็บ (Location)</label>
+            <input type="text" id="newLoc" class="form-control" placeholder="เช่น ชั้น A ชั้นวาง B1-02" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeAddModal()">ยกเลิก</button>
+        <button class="btn btn-primary" onclick="addProduct()">บันทึกข้อมูลสินค้า</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- EDIT PRODUCT MODAL DIALOG -->
+  <!-- ========================================== -->
+  <div class="modal-bg" id="editModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">แก้ไขข้อมูลสินค้า</h3>
+        <button class="modal-close" onclick="closeEditModal()"><i class="ti ti-x" aria-hidden="true"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="editCode">รหัสสินค้า (แก้ไขไม่ได้)</label>
+              <input type="text" id="editCode" class="form-control" disabled style="background: #f1f5f9; cursor: not-allowed;" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="editCat">หมวดหมู่สินค้า</label>
+              <select id="editCat" class="form-control">
+                <option>อุปกรณ์สำนักงาน</option>
+                <option>วัสดุสิ้นเปลือง</option>
+                <option>อะไหล่</option>
+                <option>อื่นๆ</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="editName">ชื่อสินค้า</label>
+            <input type="text" id="editName" class="form-control" placeholder="ระบุชื่อเรียกสินค้าที่ชัดเจน" />
+          </div>
+          
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="editQty">จำนวนสินค้า</label>
+              <input type="number" id="editQty" class="form-control" min="0" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="editUnit">หน่วยนับ</label>
+              <input type="text" id="editUnit" class="form-control" placeholder="เช่น ชิ้น, รีม, ตลับ" />
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="editLoc">ตำแหน่งจัดเก็บ (Location)</label>
+            <input type="text" id="editLoc" class="form-control" placeholder="เช่น ชั้น A ชั้นวาง B1-02" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeEditModal()">ยกเลิก</button>
+        <button class="btn btn-primary" onclick="saveEditProduct()">บันทึกการแก้ไข</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- RECEIVE PRODUCT MODAL DIALOG (NEW POPUP) -->
+  <!-- ========================================== -->
+  <div class="modal-bg" id="recvModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">บันทึกรับสินค้าเข้าคลัง</h3>
+        <button class="modal-close" onclick="closeRecvModal()"><i class="ti ti-x" aria-hidden="true"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group" style="position: relative;">
+            <label class="form-label" for="recvItemSearch">เลือกสินค้า (ค้นหาด้วยรหัสหรือชื่อ)</label>
+            <div style="position: relative; width: 100%;">
+              <input type="text" id="recvItemSearch" class="form-control" placeholder="พิมพ์รหัสสินค้า หรือ ชื่อสินค้าเพื่อค้นหา..." autocomplete="off" oninput="filterRecvProductDropdown(this.value)" onfocus="filterRecvProductDropdown(this.value)" onblur="hideRecvProductDropdown()" style="padding-right: 36px;" />
+              <button type="button" id="clearRecvItemBtn" onclick="clearRecvItemInput()" style="display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 16px; color: var(--color-text-muted); cursor: pointer; padding: 0;">
+                <i class="ti ti-x" aria-hidden="true"></i>
+              </button>
+            </div>
+            <input type="hidden" id="recvItem" value="" />
+            <div id="recvProductSuggestions" class="suggestions-box"></div>
+          </div>
+          
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="recvQty">จำนวนที่นำเข้า</label>
+              <input type="number" id="recvQty" class="form-control" min="1" placeholder="ระบุตัวเลข" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="recvLot">เลขครุภัณฑ์ / Serial Number</label>
+              <input type="text" id="recvLot" class="form-control" placeholder="ระบุเลขครุภัณฑ์ หรือ S/N (ถ้ามี)" />
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="recvExp">วันหมดอายุสินค้า (ถ้ามี)</label>
+            <input type="date" id="recvExp" class="form-control" />
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="recvSource">แหล่งที่มา / โครงการที่จัดซื้อ (Source)</label>
+            <input type="text" id="recvSource" class="form-control" placeholder="ระบุแหล่งงบประมาณ โครงการ หรือหน่วยงานที่สนับสนุน" />
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="recvNote">รายละเอียด / หมายเหตุ</label>
+            <input type="text" id="recvNote" class="form-control" placeholder="ระบุรายละเอียดเพิ่มเติม" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeRecvModal()">ยกเลิก</button>
+        <button class="btn btn-success" onclick="doReceive()">บันทึกรับสินค้า</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- ISSUE PRODUCT MODAL DIALOG (NEW POPUP) -->
+  <!-- ========================================== -->
+  <div class="modal-bg" id="issueModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">บันทึกเบิกพัสดุออกจากสต็อก</h3>
+        <button class="modal-close" onclick="closeIssueModal()"><i class="ti ti-x" aria-hidden="true"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group" style="position: relative;">
+            <label class="form-label" for="issueItemSearch">เลือกสินค้าที่ต้องการเบิก (ค้นหาด้วยรหัสหรือชื่อ)</label>
+            <div style="position: relative; width: 100%;">
+              <input type="text" id="issueItemSearch" class="form-control" placeholder="พิมพ์รหัสสินค้า หรือ ชื่อสินค้าเพื่อค้นหา..." autocomplete="off" oninput="filterIssueProductDropdown(this.value)" onfocus="filterIssueProductDropdown(this.value)" onblur="hideIssueProductDropdown()" style="padding-right: 36px;" />
+              <button type="button" id="clearIssueItemBtn" onclick="clearIssueItemInput()" style="display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 16px; color: var(--color-text-muted); cursor: pointer; padding: 0;">
+                <i class="ti ti-x" aria-hidden="true"></i>
+              </button>
+            </div>
+            <input type="hidden" id="issueItem" value="" />
+            <div id="issueProductSuggestions" class="suggestions-box"></div>
+          </div>
+          
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="issueQty">จำนวนที่ต้องการเบิก</label>
+              <input type="number" id="issueQty" class="form-control" min="1" placeholder="ระบุตัวเลข" />
+            </div>
+            <div class="form-group" style="position: relative;">
+              <label class="form-label" for="issuePerson">ชื่อผู้เบิก / ผู้รับมอบพัสดุ</label>
+              <div style="position: relative; width: 100%;">
+                <input type="text" id="issuePerson" class="form-control" placeholder="พิมพ์ยศ ชื่อ หรือตำแหน่งเพื่อค้นหา..." autocomplete="off" oninput="filterPersonnelDropdown(this.value); toggleClearBtn(this.value);" onfocus="filterPersonnelDropdown(this.value)" onblur="hidePersonnelDropdown()" style="padding-right: 36px;" />
+                <button type="button" id="clearIssuePersonBtn" onclick="clearIssuePersonInput()" style="display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 16px; color: var(--color-text-muted); cursor: pointer; padding: 0;">
+                  <i class="ti ti-x" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div id="personnelSuggestions" class="suggestions-box"></div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="issuePurpose">วัตถุประสงค์การใช้งาน</label>
+            <select id="issuePurpose" class="form-control">
+              <option value="">-- กรุณาเลือกวัตถุประสงค์ --</option>
+              <option value="ใช้งานในออฟฟิศ">ใช้งานในออฟฟิศ</option>
+              <option value="ส่งมอบลูกค้า">ส่งมอบให้ลูกค้า</option>
+              <option value="งานซ่อมบำรุง">งานซ่อมบำรุง / ซ่อมแซม</option>
+              <option value="ทดสอบระบบ">ใช้งานสำหรับทดสอบ</option>
+              <option value="อื่นๆ">อื่นๆ (กรุณาระบุในหมายเหตุ)</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="issueNote">รายละเอียด / หมายเหตุ</label>
+            <input type="text" id="issueNote" class="form-control" placeholder="ระบุหมายเหตุเพิ่มเติม (ถ้ามี)" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeIssueModal()">ยกเลิก</button>
+        <button class="btn btn-danger" onclick="doIssue()">บันทึกเบิกสินค้า</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- PERSONNEL MODAL DIALOG (NEW POPUP) -->
+  <!-- ========================================== -->
+  <div class="modal-bg" id="personnelModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="personnelModalTitle">ลงทะเบียนเพิ่มบุคลากร</h3>
+        <button class="modal-close" onclick="closePersonnelModal()"><i class="ti ti-x" aria-hidden="true"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="personnelIndex" value="" />
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="personnelName">ยศ - ชื่อ - นามสกุล</label>
+            <input type="text" id="personnelName" class="form-control" placeholder="ระบุยศและชื่อ-นามสกุล เช่น น.อ.บุญทวี ช่วยเนียม" />
+            <small style="color: var(--color-text-muted); font-size: 11px; margin-top: 4px; display: block;">
+              * ยศที่รองรับการเรียงลำดับอัตโนมัติ: น.อ., น.ท., ร.อ., ร.ท., ร.ต., พ.อ.อ., พ.อ.ท., พ.อ.ต., จ.อ., จ.ท., จ.ต.
+            </small>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="personnelPosition">ตำแหน่ง</label>
+            <input type="text" id="personnelPosition" class="form-control" placeholder="เช่น หก.กกม.บก.ซอ." />
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="personnelPhone">เบอร์ติดต่อ</label>
+            <input type="text" id="personnelPhone" class="form-control" placeholder="เช่น 081-9129091" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closePersonnelModal()">ยกเลิก</button>
+        <button class="btn btn-primary" onclick="savePersonnel()">บันทึกข้อมูล</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 4. APPLICATION LOGIC SCRIPT -->
+  <!-- ========================================== -->
+    <script src="js/app.js"></script>
+</body>
+</html>
