@@ -385,32 +385,32 @@
 
         if (data.products && Array.isArray(data.products) && data.products.length > 0) {
           products = data.products.map(p => ({
-            code: p.code || '',
-            name: p.name || '',
-            cat: p.cat || 'อื่นๆ',
-            qty: parseInt(p.qty) || 0,
-            min: parseInt(p.min) || 0,
-            unit: p.unit || 'ชิ้น',
-            loc: p.loc || ''
+            code: p["รหัสสินค้า"] || p.code || '',
+            name: p["ชื่อสินค้า"] || p.name || '',
+            cat: p["หมวดหมู่"] || p.cat || 'อื่นๆ',
+            qty: parseInt(p["คงเหลือ"] || p.qty) || 0,
+            min: parseInt(p["ขั้นต่ำ"] || p.min) || 0,
+            unit: p["หน่วยนับ"] || p.unit || 'ชิ้น',
+            loc: p["ที่เก็บ"] || p.loc || ''
           }));
         }
         if (data.history && Array.isArray(data.history) && data.history.length > 0) {
           history = data.history.map(h => ({
-            date: h.date || '',
-            type: h.type || 'ปรับปรุง',
-            code: h.code || '',
-            name: h.name || '',
-            qty: parseInt(h.qty) || 0,
-            user: h.user || 'system',
-            userPosition: h.userPosition || '',
-            note: h.note || ''
+            date: h["วันที่"] || h.date || '',
+            type: h["ประเภท"] || h.type || 'ปรับปรุง',
+            code: h["รหัสสินค้า"] || h.code || '',
+            name: h["ชื่อสินค้า"] || h.name || '',
+            qty: parseInt(h["จำนวน"] || h.qty) || 0,
+            user: h["ผู้บันทึก"] || h.user || 'system',
+            userPosition: h["ตำแหน่ง"] || h.userPosition || '',
+            note: h["หมายเหตุ"] || h.note || ''
           }));
         }
         if (data.personnel && Array.isArray(data.personnel) && data.personnel.length > 0) {
           PERSONNEL = data.personnel.map(p => ({
-            name: p.name || '',
-            position: p.position || '',
-            phone: p.phone || ''
+            name: p["ยศ-ชื่อ-สกุล"] || p.name || '',
+            position: p["ตำแหน่ง"] || p.position || '',
+            phone: p["เบอร์โทร"] || p.phone || ''
           }));
         }
 
@@ -438,7 +438,34 @@
       localStorage.setItem('dpd_personnel', JSON.stringify(PERSONNEL));
 
       // 2. POST updates to Google Sheets in the background silently
-      // We perform this asynchronously in the background so it does not block the UI or hang
+      // Convert standard JSON keys to Thai keys for Google Sheets compatibility
+      const thaiProducts = products.map(p => ({
+        "รหัสสินค้า": p.code,
+        "ชื่อสินค้า": p.name,
+        "หมวดหมู่": p.cat,
+        "คงเหลือ": p.qty,
+        "ขั้นต่ำ": p.min,
+        "หน่วยนับ": p.unit,
+        "ที่เก็บ": p.loc
+      }));
+
+      const thaiHistory = history.map(h => ({
+        "วันที่": h.date,
+        "ประเภท": h.type,
+        "รหัสสินค้า": h.code,
+        "ชื่อสินค้า": h.name,
+        "จำนวน": h.qty,
+        "ผู้บันทึก": h.user,
+        "ตำแหน่ง": h.userPosition,
+        "หมายเหตุ": h.note
+      }));
+
+      const thaiPersonnel = PERSONNEL.map(p => ({
+        "ยศ-ชื่อ-สกุล": p.name,
+        "ตำแหน่ง": p.position,
+        "เบอร์โทร": p.phone
+      }));
+
       fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
@@ -446,9 +473,9 @@
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          products: products,
-          history: history,
-          personnel: PERSONNEL
+          products: thaiProducts,
+          history: thaiHistory,
+          personnel: thaiPersonnel
         })
       }).then(() => {
         console.log('Background cloud database sync completed successfully.');
