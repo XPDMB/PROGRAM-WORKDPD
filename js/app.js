@@ -42,7 +42,7 @@
       "ลบ": "Delete",
       "รับเข้า": "Received",
       "เบิกออก": "Issued",
-      "รายชื่อบุคลากร (ผู้เบิกพัสดุ)": "Personnel List (Borrowers)",
+      "รายชื่อข้าราชการ": "Personnel List",
       "รายชื่อข้าราชการและเจ้าหน้าที่ เรียงลำดับตามชั้นยศและตำแหน่งในการเบิกจ่ายพัสดุ": "List of officials and staff ordered by rank and position",
       "ค้นหาด้วยชื่อ หรือ ตำแหน่ง...": "Search by name or position...",
       "ค้นหาด้วยรหัสสินค้า หรือ ชื่อสินค้า...": "Search by code or name...",
