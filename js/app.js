@@ -329,8 +329,20 @@
         try { PERSONNEL = JSON.parse(storedPersonnel); } catch (e) { PERSONNEL = DEFAULT_PERSONNEL; }
       } else { PERSONNEL = DEFAULT_PERSONNEL; }
 
-      // 2. Fetch fresh data from Google Sheets Cloud Database
-      showSyncLoading('กำลังเชื่อมต่อฐานข้อมูล Google Sheets...');
+      // Re-render views immediately with cached/default data so user can login/interact instantly
+      renderDashboard();
+      renderStock();
+      renderHistory();
+      renderPersonnel();
+      populateFiscalYears();
+
+      // 2. Fetch fresh data from Google Sheets Cloud Database in the background
+      // If we don't have stored cache, show a loader, otherwise fetch silently in the background
+      const hasCache = storedProducts && storedHistory && storedPersonnel;
+      if (!hasCache) {
+        showSyncLoading('กำลังเชื่อมต่อฐานข้อมูล Google Sheets...');
+      }
+      
       try {
         const response = await fetch(GOOGLE_SCRIPT_URL);
         if (!response.ok) throw new Error('Failed to fetch');
@@ -371,10 +383,14 @@
         localStorage.setItem('dpd_products', JSON.stringify(products));
         localStorage.setItem('dpd_history', JSON.stringify(history));
         localStorage.setItem('dpd_personnel', JSON.stringify(PERSONNEL));
-        showToast('เชื่อมต่อฐานข้อมูลเสร็จสมบูรณ์', 'success');
+        if (!hasCache) {
+          showToast('เชื่อมต่อฐานข้อมูลเสร็จสมบูรณ์', 'success');
+        }
       } catch (err) {
         console.error('Cloud Sync failed, using offline fallback cache:', err);
-        showToast('ไม่สามารถเชื่อมต่อคลาวด์ได้ กำลังใช้โหมดออฟไลน์', 'warning');
+        if (!hasCache) {
+          showToast('ไม่สามารถเชื่อมต่อคลาวด์ได้ กำลังใช้โหมดออฟไลน์', 'warning');
+        }
       } finally {
         hideSyncLoading();
         // Re-render UI views with loaded data
