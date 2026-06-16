@@ -220,21 +220,12 @@
       {name: 'นายภูรินทร์ อินทร์บุญช่วย', position: 'ช่างโครงสร้างฯ ช่วยราชการ กกม.บก.ซอ.', phone: '095-4048230'}
     ];
 
-    const fallbackProducts = [
-      {code:'DPD-001',name:'กระดาษ A4',cat:'วัสดุสิ้นเปลือง',qty:150,min:50,unit:'รีม',loc:'A1-01'},
-      {code:'DPD-002',name:'หมึกพิมพ์ดำ HP',cat:'วัสดุสิ้นเปลือง',qty:12,min:20,unit:'ตลับ',loc:'A1-02'},
-      {code:'DPD-003',name:'แบตเตอรี่ AA',cat:'อะไหล่',qty:80,min:30,unit:'ก้อน',loc:'B2-01'},
-      {code:'DPD-004',name:'สายไฟ USB-C',cat:'อุปกรณ์สำนักงาน',qty:5,min:10,unit:'เส้น',loc:'B2-03'},
-      {code:'DPD-005',name:'กล่องพัสดุ M',cat:'วัสดุสิ้นเปลือง',qty:200,min:100,unit:'ใบ',loc:'C3-01'},
-    ];
+    const fallbackProducts = [];
 
     const todayStr = new Date().toISOString().slice(0, 10);
     const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
 
-    const fallbackHistory = [
-      {date: yesterdayStr,type:'รับ',code:'DPD-001',name:'กระดาษ A4',qty:50,user:'น.อ.บุญทวี ช่วยเนียม',note:'รับเข้าสต็อกแรกเข้า'},
-      {date: todayStr,type:'เบิก',code:'DPD-002',name:'หมึกพิมพ์ดำ HP',qty:3,user:'ร.อ.นที กล้าแข็ง',userPosition:'นปก.ฝปก.กกม.บก.ขอ.',note:'ใช้งานในออฟฟิศ แผนกบัญชี'},
-    ];
+    const fallbackHistory = [];
 
     // Initialization
     window.addEventListener('DOMContentLoaded', () => {
@@ -255,10 +246,10 @@
       
       setLang('th');
 
-      // Check persisted session login state on page refresh
-      const isLoggedIn = localStorage.getItem('dpd_logged_in') === 'true';
+      // Auth Check
+      const isLoggedIn = sessionStorage.getItem('dpd_logged_in') === 'true';
       if (isLoggedIn) {
-        currentUser = localStorage.getItem('dpd_current_user') || 'admin';
+        currentUser = sessionStorage.getItem('dpd_current_user') || 'admin';
         document.getElementById('userBadge').textContent = currentUser;
         document.getElementById('userAvatar').textContent = currentUser.slice(0, 1).toUpperCase();
         document.getElementById('loginScreen').classList.remove('active');
@@ -543,8 +534,8 @@
       if (p === '36335') {
         currentUser = 'admin';
         // Persist session state
-        localStorage.setItem('dpd_logged_in', 'true');
-        localStorage.setItem('dpd_current_user', 'admin');
+        sessionStorage.setItem('dpd_logged_in', 'true');
+        sessionStorage.setItem('dpd_current_user', 'admin');
         
         errEl.style.display = 'none';
         document.getElementById('userBadge').textContent = 'admin';
@@ -564,8 +555,8 @@
     function doLogout() {
       currentUser = '';
       // Clear session state
-      localStorage.removeItem('dpd_logged_in');
-      localStorage.removeItem('dpd_current_user');
+      sessionStorage.removeItem('dpd_logged_in');
+      sessionStorage.removeItem('dpd_current_user');
       localStorage.removeItem('dpd_active_tab');
       
       const loginPassEl = document.getElementById('loginPass');
@@ -1868,6 +1859,7 @@
         }];
         saveDatabase();
         renderHistory();
+        renderDashboard();
         populateFiscalYears();
         showToast(t('ล้างข้อมูลประวัติสำเร็จ'), 'success');
       }
