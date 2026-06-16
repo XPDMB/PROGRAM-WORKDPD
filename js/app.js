@@ -1,4 +1,4 @@
-// Authentic user database
+﻿// Authentic user database
     const USERS = {
       admin: '36335',
       dpd: '36335',
@@ -12,132 +12,132 @@
 
     // --- i18n Translation Dictionary ---
     const i18n = {
-      "ภาพรวม": "Overview",
-      "สต็อกสินค้า": "Stock",
-      "ประวัติการเบิก-รับ": "History",
-      "รายชื่อบุคลากร": "Personnel",
-      "ผู้ดูแลระบบ": "Administrator",
-      "ออกจากระบบ": "Logout",
-      "ภาพรวมสต็อกวันนี้": "Stock Overview Today",
-      "แสดงข้อมูลเชิงสรุปและการแจ้งเตือนของสินค้าคงเหลือในระบบ": "Summary and alerts of remaining stock in the system",
-      "สินค้าใกล้หมดสต็อก (ต่ำกว่าจุดสั่งซื้อขั้นต่ำ / Min Stock)": "Low Stock Items (Below Min Stock)",
-      "รหัสสินค้า": "Product Code",
-      "ชื่อ": "Name",
-      "คงเหลือ": "Remaining",
-      "ขั้นต่ำ": "Min",
-      "รายการสต็อกสินค้า": "Stock List",
-      "ค้นหา จัดการ และลงทะเบียนพัสดุในคลังสินค้า": "Search, manage, and register items in warehouse",
-      "เพิ่มสินค้าใหม่": "Add New Product",
-      "รับสินค้าเข้า": "Receive Stock",
-      "เบิกสินค้าออก": "Issue Stock",
-      "ประวัติการเคลื่อนไหวสต็อก": "Stock Movement History",
-      "แสดงรายการประวัติรับเข้า เบิกจ่าย และการลงทะเบียนสินค้าทั้งหมดในระบบ": "History of receiving, issuing, and registration",
-      "ประเภทกิจกรรม:": "Activity Type:",
-      "ทั้งหมด": "All",
-      "รับ": "Receive",
-      "เบิก": "Issue",
-      "เพิ่ม": "Add",
-      "แก้ไข": "Edit",
-      "ปรับปรุง": "Update",
-      "ลบ": "Delete",
-      "รับเข้า": "Received",
-      "เบิกออก": "Issued",
-      "รายชื่อข้าราชการ": "Personnel List",
-      "รายชื่อข้าราชการและเจ้าหน้าที่ เรียงลำดับตามชั้นยศและตำแหน่งในการเบิกจ่ายพัสดุ": "List of officials and staff ordered by rank and position",
-      "ค้นหาด้วยชื่อ หรือ ตำแหน่ง...": "Search by name or position...",
-      "ค้นหาด้วยรหัสสินค้า หรือ ชื่อสินค้า...": "Search by code or name...",
-      "เพิ่มบุคลากรใหม่": "Add New Personnel",
-      "ยศ-ชื่อ-สกุล": "Rank-Name-Surname",
-      "ตำแหน่ง": "Position",
-      "เบอร์ติดต่อ": "Phone Number",
-      "จัดการ": "Action",
-      "ลงทะเบียนเพิ่มสินค้าใหม่": "Register New Product",
-      "หมวดหมู่สินค้า": "Category",
-      "อุปกรณ์สำนักงาน": "Office Supplies",
-      "วัสดุสิ้นเปลือง": "Consumables",
-      "อะไหล่": "Spare Parts",
-      "อื่นๆ": "Others",
-      "ชื่อสินค้า": "Product Name",
-      "จำนวนสินค้า": "Quantity",
-      "หน่วยนับ": "Unit",
-      "ตำแหน่งจัดเก็บ (Location)": "Storage Location",
-      "ยกเลิก": "Cancel",
-      "บันทึกข้อมูลสินค้า": "Save Product Info",
-      "แก้ไขข้อมูลสินค้า": "Edit Product",
-      "บันทึกการแก้ไข": "Save Changes",
-      "บันทึกรับสินค้าเข้าคลัง": "Receive Product to Stock",
-      "เลือกสินค้า": "Select Product",
-      "จำนวนรับเข้า": "Quantity to Receive",
-      "เลขครุภัณฑ์ / Serial Number": "Asset / Serial Number",
-      "วันหมดอายุสินค้า (ถ้ามี)": "Exp. Date (if any)",
-      "รายละเอียด / หมายเหตุ": "Details / Note",
-      "บันทึกรับสินค้า": "Save Received",
-      "บันทึกเบิกพัสดุออกจากสต็อก": "Issue Product from Stock",
-      "เลือกสินค้าที่ต้องการเบิก": "Select Product to Issue",
-      "จำนวนที่ต้องการเบิก": "Quantity to Issue",
-      "ชื่อผู้เบิก / ผู้รับมอบพัสดุ": "Borrower / Receiver Name",
-      "วัตถุประสงค์การใช้งาน": "Purpose of Use",
-      "ใช้งานในออฟฟิศ": "Office Use",
-      "ส่งมอบลูกค้า": "Deliver to Customer",
-      "งานซ่อมบำรุง": "Maintenance Work",
-      "ทดสอบระบบ": "System Testing",
-      "บันทึกเบิกสินค้า": "Save Issued",
-      "ลงทะเบียนเพิ่มบุคลากร": "Register New Personnel",
-      "ยศ - ชื่อ - นามสกุล": "Rank - Name - Surname",
-      "บันทึกข้อมูล": "Save Data",
-      "รหัสสินค้า (แก้ไขไม่ได้)": "Product Code (Read-only)",
-      "-- กรุณาเลือกสินค้า --": "-- Select Product --",
-      "-- กรุณาเลือกผู้เบิก --": "-- Select Borrower --",
-      "-- กรุณาเลือกวัตถุประสงค์ --": "-- Select Purpose --",
-      "รายการทั้งหมด": "All Items",
-      "สินค้าใกล้หมด": "Low Stock",
-      "สต็อกรวม": "Total Stock",
-      "รายการวันนี้": "Today's Activity",
-      "ผู้ใช้: ": "User: ",
-      "จำนวน": "Quantity",
-      "หน่วย": "Unit",
-      "วันที่ทำรายการ": "Transaction Date",
-      "ประเภท": "Type",
-      "ผู้ดำเนินการ/ผู้เบิก": "Operator/Borrower",
-      "บันทึกช่วยจำ/วัตถุประสงค์": "Note/Purpose",
-      "ใบเบิก": "Slip",
-      "ปกติทุกรายการ": "All Items Normal",
-      "รายการ": "Items",
-      "ชิ้น": "Pcs",
-      "ยังไม่มีรายการประวัติความเคลื่อนไหวในระบบ": "No movement history in the system yet",
-      "ไม่พบรายชื่อบุคลากรที่ตรงกับการค้นหา": "No personnel found matching the search",
-      "ไม่ระบุชื่อ": "Unnamed",
-      "แก้ไขข้อมูล": "Edit Data",
-      "ลบรายชื่อ": "Delete Name",
-      "พิมพ์ใบเบิก": "Print Slip",
-      "📊 ภาพรวม": "📊 Overview",
-      "📦 สต็อกสินค้า": "📦 Stock",
-      "📜 ประวัติการเบิก-รับ": "📜 History",
-      "👥 รายชื่อบุคลากร": "👥 Personnel",
-      "📋 รายงานราชการ": "📋 Gov Reports",
-      "รายงานสรุปพัสดุราชการ": "Gov Requisition & Stock Report",
-      "จัดทำรายงานความเคลื่อนไหวและพัสดุคงเหลือเพื่อเสนอผู้บังคับบัญชา": "Generate reports of movement and stock balance for commanders",
-      "ประเภทรายงาน": "Report Type",
-      "รายงานสรุปรายเดือน": "Monthly Summary Report",
-      "รายงานสรุปรายปีงบประมาณ": "Fiscal Year Summary Report",
-      "เลือกเดือน": "Select Month",
-      "เลือกปี ค.ศ. (Calendar Year)": "Select Calendar Year",
-      "เลือกปีงบประมาณ (Fiscal Year B.E.)": "Select Fiscal Year (B.E.)",
-      "พิมพ์รายงาน (Print PDF)": "Print Report (PDF)",
-      "ส่งออก Excel (CSV)": "Export Excel (CSV)",
-      "ชื่อพัสดุ": "Item Name",
-      "หมวดหมู่": "Category",
-      "สถานที่เก็บ": "Location",
-      "จำนวนที่รับเข้า": "Received Qty",
-      "จำนวนที่เบิกออก": "Issued Qty",
-      "คงเหลือปัจจุบัน": "Current Qty",
-      "ปีงบประมาณ:": "Fiscal Year:",
-      "ปีงบประมาณ": "Fiscal Year",
-      "ล้างประวัติทั้งหมด": "Clear All History",
-      "คุณแน่ใจหรือไม่ที่จะล้างข้อมูลประวัติความเคลื่อนไหวทั้งหมด?\n*การกระทำนี้จะลบข้อมูลประวัติทั้งหมดอย่างถาวรและไม่สามารถกู้คืนได้*": "Are you sure you want to clear all movement history?\n*This action will permanently delete all history logs and cannot be undone.*",
-      "ล้างข้อมูลประวัติสำเร็จ": "History cleared successfully",
-      "จำนวนพัสดุที่เบิก": "Quantity Issued",
-      "ไม่มีข้อมูลการเบิก": "No Requisitions"
+      "à¸ à¸²à¸žà¸£à¸§à¸¡": "Overview",
+      "à¸ªà¸•à¹‡à¸­à¸à¸ªà¸´à¸™à¸„à¹‰à¸²": "Stock",
+      "à¸›à¸£à¸°à¸§à¸±à¸•à¸´à¸à¸²à¸£à¹€à¸šà¸´à¸-à¸£à¸±à¸š": "History",
+      "à¸£à¸²à¸¢à¸Šà¸·à¹ˆà¸­à¸šà¸¸à¸„à¸¥à¸²à¸à¸£": "Personnel",
+      "à¸œà¸¹à¹‰à¸”à¸¹à¹à¸¥à¸£à¸°à¸šà¸š": "Administrator",
+      "à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š": "Logout",
+      "à¸ à¸²à¸žà¸£à¸§à¸¡à¸ªà¸•à¹‡à¸­à¸à¸§à¸±à¸™à¸™à¸µà¹‰": "Stock Overview Today",
+      "à¹à¸ªà¸”à¸‡à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¹€à¸Šà¸´à¸‡à¸ªà¸£à¸¸à¸›à¹à¸¥à¸°à¸à¸²à¸£à¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™à¸‚à¸­à¸‡à¸ªà¸´à¸™à¸„à¹‰à¸²à¸„à¸‡à¹€à¸«à¸¥à¸·à¸­à¹ƒà¸™à¸£à¸°à¸šà¸š": "Summary and alerts of remaining stock in the system",
+      "à¸ªà¸´à¸™à¸„à¹‰à¸²à¹ƒà¸à¸¥à¹‰à¸«à¸¡à¸”à¸ªà¸•à¹‡à¸­à¸ (à¸•à¹ˆà¸³à¸à¸§à¹ˆà¸²à¸ˆà¸¸à¸”à¸ªà¸±à¹ˆà¸‡à¸‹à¸·à¹‰à¸­à¸‚à¸±à¹‰à¸™à¸•à¹ˆà¸³ / Min Stock)": "Low Stock Items (Below Min Stock)",
+      "à¸£à¸«à¸±à¸ªà¸ªà¸´à¸™à¸„à¹‰à¸²": "Product Code",
+      "à¸Šà¸·à¹ˆà¸­": "Name",
+      "à¸„à¸‡à¹€à¸«à¸¥à¸·à¸­": "Remaining",
+      "à¸‚à¸±à¹‰à¸™à¸•à¹ˆà¸³": "Min",
+      "à¸£à¸²à¸¢à¸à¸²à¸£à¸ªà¸•à¹‡à¸­à¸à¸ªà¸´à¸™à¸„à¹‰à¸²": "Stock List",
+      "à¸„à¹‰à¸™à¸«à¸² à¸ˆà¸±à¸”à¸à¸²à¸£ à¹à¸¥à¸°à¸¥à¸‡à¸—à¸°à¹€à¸šà¸µà¸¢à¸™à¸žà¸±à¸ªà¸”à¸¸à¹ƒà¸™à¸„à¸¥à¸±à¸‡à¸ªà¸´à¸™à¸„à¹‰à¸²": "Search, manage, and register items in warehouse",
+      "à¹€à¸žà¸´à¹ˆà¸¡à¸ªà¸´à¸™à¸„à¹‰à¸²à¹ƒà¸«à¸¡à¹ˆ": "Add New Product",
+      "à¸£à¸±à¸šà¸ªà¸´à¸™à¸„à¹‰à¸²à¹€à¸‚à¹‰à¸²": "Receive Stock",
+      "à¹€à¸šà¸´à¸à¸ªà¸´à¸™à¸„à¹‰à¸²à¸­à¸­à¸": "Issue Stock",
+      "à¸›à¸£à¸°à¸§à¸±à¸•à¸´à¸à¸²à¸£à¹€à¸„à¸¥à¸·à¹ˆà¸­à¸™à¹„à¸«à¸§à¸ªà¸•à¹‡à¸­à¸": "Stock Movement History",
+      "à¹à¸ªà¸”à¸‡à¸£à¸²à¸¢à¸à¸²à¸£à¸›à¸£à¸°à¸§à¸±à¸•à¸´à¸£à¸±à¸šà¹€à¸‚à¹‰à¸² à¹€à¸šà¸´à¸à¸ˆà¹ˆà¸²à¸¢ à¹à¸¥à¸°à¸à¸²à¸£à¸¥à¸‡à¸—à¸°à¹€à¸šà¸µà¸¢à¸™à¸ªà¸´à¸™à¸„à¹‰à¸²à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”à¹ƒà¸™à¸£à¸°à¸šà¸š": "History of receiving, issuing, and registration",
+      "à¸›à¸£à¸°à¹€à¸ à¸—à¸à¸´à¸ˆà¸à¸£à¸£à¸¡:": "Activity Type:",
+      "à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”": "All",
+      "à¸£à¸±à¸š": "Receive",
+      "à¹€à¸šà¸´à¸": "Issue",
+      "à¹€à¸žà¸´à¹ˆà¸¡": "Add",
+      "à¹à¸à¹‰à¹„à¸‚": "Edit",
+      "à¸›à¸£à¸±à¸šà¸›à¸£à¸¸à¸‡": "Update",
+      "à¸¥à¸š": "Delete",
+      "à¸£à¸±à¸šà¹€à¸‚à¹‰à¸²": "Received",
+      "à¹€à¸šà¸´à¸à¸­à¸­à¸": "Issued",
+      "à¸£à¸²à¸¢à¸Šà¸·à¹ˆà¸­à¸‚à¹‰à¸²à¸£à¸²à¸Šà¸à¸²à¸£": "Personnel List",
+      "à¸£à¸²à¸¢à¸Šà¸·à¹ˆà¸­à¸‚à¹‰à¸²à¸£à¸²à¸Šà¸à¸²à¸£à¹à¸¥à¸°à¹€à¸ˆà¹‰à¸²à¸«à¸™à¹‰à¸²à¸—à¸µà¹ˆ à¹€à¸£à¸µà¸¢à¸‡à¸¥à¸³à¸”à¸±à¸šà¸•à¸²à¸¡à¸Šà¸±à¹‰à¸™à¸¢à¸¨à¹à¸¥à¸°à¸•à¸³à¹à¸«à¸™à¹ˆà¸‡à¹ƒà¸™à¸à¸²à¸£à¹€à¸šà¸´à¸à¸ˆà¹ˆà¸²à¸¢à¸žà¸±à¸ªà¸”à¸¸": "List of officials and staff ordered by rank and position",
+      "à¸„à¹‰à¸™à¸«à¸²à¸”à¹‰à¸§à¸¢à¸Šà¸·à¹ˆà¸­ à¸«à¸£à¸·à¸­ à¸•à¸³à¹à¸«à¸™à¹ˆà¸‡...": "Search by name or position...",
+      "à¸„à¹‰à¸™à¸«à¸²à¸”à¹‰à¸§à¸¢à¸£à¸«à¸±à¸ªà¸ªà¸´à¸™à¸„à¹‰à¸² à¸«à¸£à¸·à¸­ à¸Šà¸·à¹ˆà¸­à¸ªà¸´à¸™à¸„à¹‰à¸²...": "Search by code or name...",
+      "à¹€à¸žà¸´à¹ˆà¸¡à¸šà¸¸à¸„à¸¥à¸²à¸à¸£à¹ƒà¸«à¸¡à¹ˆ": "Add New Personnel",
+      "à¸¢à¸¨-à¸Šà¸·à¹ˆà¸­-à¸ªà¸à¸¸à¸¥": "Rank-Name-Surname",
+      "à¸•à¸³à¹à¸«à¸™à¹ˆà¸‡": "Position",
+      "à¹€à¸šà¸­à¸£à¹Œà¸•à¸´à¸”à¸•à¹ˆà¸­": "Phone Number",
+      "à¸ˆà¸±à¸”à¸à¸²à¸£": "Action",
+      "à¸¥à¸‡à¸—à¸°à¹€à¸šà¸µà¸¢à¸™à¹€à¸žà¸´à¹ˆà¸¡à¸ªà¸´à¸™à¸„à¹‰à¸²à¹ƒà¸«à¸¡à¹ˆ": "Register New Product",
+      "à¸«à¸¡à¸§à¸”à¸«à¸¡à¸¹à¹ˆà¸ªà¸´à¸™à¸„à¹‰à¸²": "Category",
+      "à¸­à¸¸à¸›à¸à¸£à¸“à¹Œà¸ªà¸³à¸™à¸±à¸à¸‡à¸²à¸™": "Office Supplies",
+      "à¸§à¸±à¸ªà¸”à¸¸à¸ªà¸´à¹‰à¸™à¹€à¸›à¸¥à¸·à¸­à¸‡": "Consumables",
+      "à¸­à¸°à¹„à¸«à¸¥à¹ˆ": "Spare Parts",
+      "à¸­à¸·à¹ˆà¸™à¹†": "Others",
+      "à¸Šà¸·à¹ˆà¸­à¸ªà¸´à¸™à¸„à¹‰à¸²": "Product Name",
+      "à¸ˆà¸³à¸™à¸§à¸™à¸ªà¸´à¸™à¸„à¹‰à¸²": "Quantity",
+      "à¸«à¸™à¹ˆà¸§à¸¢à¸™à¸±à¸š": "Unit",
+      "à¸•à¸³à¹à¸«à¸™à¹ˆà¸‡à¸ˆà¸±à¸”à¹€à¸à¹‡à¸š (Location)": "Storage Location",
+      "à¸¢à¸à¹€à¸¥à¸´à¸": "Cancel",
+      "à¸šà¸±à¸™à¸—à¸¶à¸à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸ªà¸´à¸™à¸„à¹‰à¸²": "Save Product Info",
+      "à¹à¸à¹‰à¹„à¸‚à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸ªà¸´à¸™à¸„à¹‰à¸²": "Edit Product",
+      "à¸šà¸±à¸™à¸—à¸¶à¸à¸à¸²à¸£à¹à¸à¹‰à¹„à¸‚": "Save Changes",
+      "à¸šà¸±à¸™à¸—à¸¶à¸à¸£à¸±à¸šà¸ªà¸´à¸™à¸„à¹‰à¸²à¹€à¸‚à¹‰à¸²à¸„à¸¥à¸±à¸‡": "Receive Product to Stock",
+      "à¹€à¸¥à¸·à¸­à¸à¸ªà¸´à¸™à¸„à¹‰à¸²": "Select Product",
+      "à¸ˆà¸³à¸™à¸§à¸™à¸£à¸±à¸šà¹€à¸‚à¹‰à¸²": "Quantity to Receive",
+      "à¹€à¸¥à¸‚à¸„à¸£à¸¸à¸ à¸±à¸“à¸‘à¹Œ / Serial Number": "Asset / Serial Number",
+      "à¸§à¸±à¸™à¸«à¸¡à¸”à¸­à¸²à¸¢à¸¸à¸ªà¸´à¸™à¸„à¹‰à¸² (à¸–à¹‰à¸²à¸¡à¸µ)": "Exp. Date (if any)",
+      "à¸£à¸²à¸¢à¸¥à¸°à¹€à¸­à¸µà¸¢à¸” / à¸«à¸¡à¸²à¸¢à¹€à¸«à¸•à¸¸": "Details / Note",
+      "à¸šà¸±à¸™à¸—à¸¶à¸à¸£à¸±à¸šà¸ªà¸´à¸™à¸„à¹‰à¸²": "Save Received",
+      "à¸šà¸±à¸™à¸—à¸¶à¸à¹€à¸šà¸´à¸à¸žà¸±à¸ªà¸”à¸¸à¸­à¸­à¸à¸ˆà¸²à¸à¸ªà¸•à¹‡à¸­à¸": "Issue Product from Stock",
+      "à¹€à¸¥à¸·à¸­à¸à¸ªà¸´à¸™à¸„à¹‰à¸²à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¹€à¸šà¸´à¸": "Select Product to Issue",
+      "à¸ˆà¸³à¸™à¸§à¸™à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¹€à¸šà¸´à¸": "Quantity to Issue",
+      "à¸Šà¸·à¹ˆà¸­à¸œà¸¹à¹‰à¹€à¸šà¸´à¸ / à¸œà¸¹à¹‰à¸£à¸±à¸šà¸¡à¸­à¸šà¸žà¸±à¸ªà¸”à¸¸": "Borrower / Receiver Name",
+      "à¸§à¸±à¸•à¸–à¸¸à¸›à¸£à¸°à¸ªà¸‡à¸„à¹Œà¸à¸²à¸£à¹ƒà¸Šà¹‰à¸‡à¸²à¸™": "Purpose of Use",
+      "à¹ƒà¸Šà¹‰à¸‡à¸²à¸™à¹ƒà¸™à¸­à¸­à¸Ÿà¸Ÿà¸´à¸¨": "Office Use",
+      "à¸ªà¹ˆà¸‡à¸¡à¸­à¸šà¸¥à¸¹à¸à¸„à¹‰à¸²": "Deliver to Customer",
+      "à¸‡à¸²à¸™à¸‹à¹ˆà¸­à¸¡à¸šà¸³à¸£à¸¸à¸‡": "Maintenance Work",
+      "à¸—à¸”à¸ªà¸­à¸šà¸£à¸°à¸šà¸š": "System Testing",
+      "à¸šà¸±à¸™à¸—à¸¶à¸à¹€à¸šà¸´à¸à¸ªà¸´à¸™à¸„à¹‰à¸²": "Save Issued",
+      "à¸¥à¸‡à¸—à¸°à¹€à¸šà¸µà¸¢à¸™à¹€à¸žà¸´à¹ˆà¸¡à¸šà¸¸à¸„à¸¥à¸²à¸à¸£": "Register New Personnel",
+      "à¸¢à¸¨ - à¸Šà¸·à¹ˆà¸­ - à¸™à¸²à¸¡à¸ªà¸à¸¸à¸¥": "Rank - Name - Surname",
+      "à¸šà¸±à¸™à¸—à¸¶à¸à¸‚à¹‰à¸­à¸¡à¸¹à¸¥": "Save Data",
+      "à¸£à¸«à¸±à¸ªà¸ªà¸´à¸™à¸„à¹‰à¸² (à¹à¸à¹‰à¹„à¸‚à¹„à¸¡à¹ˆà¹„à¸”à¹‰)": "Product Code (Read-only)",
+      "-- à¸à¸£à¸¸à¸“à¸²à¹€à¸¥à¸·à¸­à¸à¸ªà¸´à¸™à¸„à¹‰à¸² --": "-- Select Product --",
+      "-- à¸à¸£à¸¸à¸“à¸²à¹€à¸¥à¸·à¸­à¸à¸œà¸¹à¹‰à¹€à¸šà¸´à¸ --": "-- Select Borrower --",
+      "-- à¸à¸£à¸¸à¸“à¸²à¹€à¸¥à¸·à¸­à¸à¸§à¸±à¸•à¸–à¸¸à¸›à¸£à¸°à¸ªà¸‡à¸„à¹Œ --": "-- Select Purpose --",
+      "à¸£à¸²à¸¢à¸à¸²à¸£à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”": "All Items",
+      "à¸ªà¸´à¸™à¸„à¹‰à¸²à¹ƒà¸à¸¥à¹‰à¸«à¸¡à¸”": "Low Stock",
+      "à¸ªà¸•à¹‡à¸­à¸à¸£à¸§à¸¡": "Total Stock",
+      "à¸£à¸²à¸¢à¸à¸²à¸£à¸§à¸±à¸™à¸™à¸µà¹‰": "Today's Activity",
+      "à¸œà¸¹à¹‰à¹ƒà¸Šà¹‰: ": "User: ",
+      "à¸ˆà¸³à¸™à¸§à¸™": "Quantity",
+      "à¸«à¸™à¹ˆà¸§à¸¢": "Unit",
+      "à¸§à¸±à¸™à¸—à¸µà¹ˆà¸—à¸³à¸£à¸²à¸¢à¸à¸²à¸£": "Transaction Date",
+      "à¸›à¸£à¸°à¹€à¸ à¸—": "Type",
+      "à¸œà¸¹à¹‰à¸”à¸³à¹€à¸™à¸´à¸™à¸à¸²à¸£/à¸œà¸¹à¹‰à¹€à¸šà¸´à¸": "Operator/Borrower",
+      "à¸šà¸±à¸™à¸—à¸¶à¸à¸Šà¹ˆà¸§à¸¢à¸ˆà¸³/à¸§à¸±à¸•à¸–à¸¸à¸›à¸£à¸°à¸ªà¸‡à¸„à¹Œ": "Note/Purpose",
+      "à¹ƒà¸šà¹€à¸šà¸´à¸": "Slip",
+      "à¸›à¸à¸•à¸´à¸—à¸¸à¸à¸£à¸²à¸¢à¸à¸²à¸£": "All Items Normal",
+      "à¸£à¸²à¸¢à¸à¸²à¸£": "Items",
+      "à¸Šà¸´à¹‰à¸™": "Pcs",
+      "à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µà¸£à¸²à¸¢à¸à¸²à¸£à¸›à¸£à¸°à¸§à¸±à¸•à¸´à¸„à¸§à¸²à¸¡à¹€à¸„à¸¥à¸·à¹ˆà¸­à¸™à¹„à¸«à¸§à¹ƒà¸™à¸£à¸°à¸šà¸š": "No movement history in the system yet",
+      "à¹„à¸¡à¹ˆà¸žà¸šà¸£à¸²à¸¢à¸Šà¸·à¹ˆà¸­à¸šà¸¸à¸„à¸¥à¸²à¸à¸£à¸—à¸µà¹ˆà¸•à¸£à¸‡à¸à¸±à¸šà¸à¸²à¸£à¸„à¹‰à¸™à¸«à¸²": "No personnel found matching the search",
+      "à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸à¸Šà¸·à¹ˆà¸­": "Unnamed",
+      "à¹à¸à¹‰à¹„à¸‚à¸‚à¹‰à¸­à¸¡à¸¹à¸¥": "Edit Data",
+      "à¸¥à¸šà¸£à¸²à¸¢à¸Šà¸·à¹ˆà¸­": "Delete Name",
+      "à¸žà¸´à¸¡à¸žà¹Œà¹ƒà¸šà¹€à¸šà¸´à¸": "Print Slip",
+      "ðŸ“Š à¸ à¸²à¸žà¸£à¸§à¸¡": "ðŸ“Š Overview",
+      "ðŸ“¦ à¸ªà¸•à¹‡à¸­à¸à¸ªà¸´à¸™à¸„à¹‰à¸²": "ðŸ“¦ Stock",
+      "ðŸ“œ à¸›à¸£à¸°à¸§à¸±à¸•à¸´à¸à¸²à¸£à¹€à¸šà¸´à¸-à¸£à¸±à¸š": "ðŸ“œ History",
+      "ðŸ‘¥ à¸£à¸²à¸¢à¸Šà¸·à¹ˆà¸­à¸šà¸¸à¸„à¸¥à¸²à¸à¸£": "ðŸ‘¥ Personnel",
+      "ðŸ“‹ à¸£à¸²à¸¢à¸‡à¸²à¸™à¸£à¸²à¸Šà¸à¸²à¸£": "ðŸ“‹ Gov Reports",
+      "à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸£à¸¸à¸›à¸žà¸±à¸ªà¸”à¸¸à¸£à¸²à¸Šà¸à¸²à¸£": "Gov Requisition & Stock Report",
+      "à¸ˆà¸±à¸”à¸—à¸³à¸£à¸²à¸¢à¸‡à¸²à¸™à¸„à¸§à¸²à¸¡à¹€à¸„à¸¥à¸·à¹ˆà¸­à¸™à¹„à¸«à¸§à¹à¸¥à¸°à¸žà¸±à¸ªà¸”à¸¸à¸„à¸‡à¹€à¸«à¸¥à¸·à¸­à¹€à¸žà¸·à¹ˆà¸­à¹€à¸ªà¸™à¸­à¸œà¸¹à¹‰à¸šà¸±à¸‡à¸„à¸±à¸šà¸šà¸±à¸à¸Šà¸²": "Generate reports of movement and stock balance for commanders",
+      "à¸›à¸£à¸°à¹€à¸ à¸—à¸£à¸²à¸¢à¸‡à¸²à¸™": "Report Type",
+      "à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸£à¸¸à¸›à¸£à¸²à¸¢à¹€à¸”à¸·à¸­à¸™": "Monthly Summary Report",
+      "à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸£à¸¸à¸›à¸£à¸²à¸¢à¸›à¸µà¸‡à¸šà¸›à¸£à¸°à¸¡à¸²à¸“": "Fiscal Year Summary Report",
+      "à¹€à¸¥à¸·à¸­à¸à¹€à¸”à¸·à¸­à¸™": "Select Month",
+      "à¹€à¸¥à¸·à¸­à¸à¸›à¸µ à¸„.à¸¨. (Calendar Year)": "Select Calendar Year",
+      "à¹€à¸¥à¸·à¸­à¸à¸›à¸µà¸‡à¸šà¸›à¸£à¸°à¸¡à¸²à¸“ (Fiscal Year B.E.)": "Select Fiscal Year (B.E.)",
+      "à¸žà¸´à¸¡à¸žà¹Œà¸£à¸²à¸¢à¸‡à¸²à¸™ (Print PDF)": "Print Report (PDF)",
+      "à¸ªà¹ˆà¸‡à¸­à¸­à¸ Excel (CSV)": "Export Excel (CSV)",
+      "à¸Šà¸·à¹ˆà¸­à¸žà¸±à¸ªà¸”à¸¸": "Item Name",
+      "à¸«à¸¡à¸§à¸”à¸«à¸¡à¸¹à¹ˆ": "Category",
+      "à¸ªà¸–à¸²à¸™à¸—à¸µà¹ˆà¹€à¸à¹‡à¸š": "Location",
+      "à¸ˆà¸³à¸™à¸§à¸™à¸—à¸µà¹ˆà¸£à¸±à¸šà¹€à¸‚à¹‰à¸²": "Received Qty",
+      "à¸ˆà¸³à¸™à¸§à¸™à¸—à¸µà¹ˆà¹€à¸šà¸´à¸à¸­à¸­à¸": "Issued Qty",
+      "à¸„à¸‡à¹€à¸«à¸¥à¸·à¸­à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™": "Current Qty",
+      "à¸›à¸µà¸‡à¸šà¸›à¸£à¸°à¸¡à¸²à¸“:": "Fiscal Year:",
+      "à¸›à¸µà¸‡à¸šà¸›à¸£à¸°à¸¡à¸²à¸“": "Fiscal Year",
+      "à¸¥à¹‰à¸²à¸‡à¸›à¸£à¸°à¸§à¸±à¸•à¸´à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”": "Clear All History",
+      "à¸„à¸¸à¸“à¹à¸™à¹ˆà¹ƒà¸ˆà¸«à¸£à¸·à¸­à¹„à¸¡à¹ˆà¸—à¸µà¹ˆà¸ˆà¸°à¸¥à¹‰à¸²à¸‡à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸›à¸£à¸°à¸§à¸±à¸•à¸´à¸„à¸§à¸²à¸¡à¹€à¸„à¸¥à¸·à¹ˆà¸­à¸™à¹„à¸«à¸§à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”?\n*à¸à¸²à¸£à¸à¸£à¸°à¸—à¸³à¸™à¸µà¹‰à¸ˆà¸°à¸¥à¸šà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸›à¸£à¸°à¸§à¸±à¸•à¸´à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”à¸­à¸¢à¹ˆà¸²à¸‡à¸–à¸²à¸§à¸£à¹à¸¥à¸°à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸à¸¹à¹‰à¸„à¸·à¸™à¹„à¸”à¹‰*": "Are you sure you want to clear all movement history?\n*This action will permanently delete all history logs and cannot be undone.*",
+      "à¸¥à¹‰à¸²à¸‡à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸›à¸£à¸°à¸§à¸±à¸•à¸´à¸ªà¸³à¹€à¸£à¹‡à¸ˆ": "History cleared successfully",
+      "à¸ˆà¸³à¸™à¸§à¸™à¸žà¸±à¸ªà¸”à¸¸à¸—à¸µà¹ˆà¹€à¸šà¸´à¸": "Quantity Issued",
+      "à¹„à¸¡à¹ˆà¸¡à¸µà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸à¸²à¸£à¹€à¸šà¸´à¸": "No Requisitions"
     };
 
     let currentLang = 'th';
@@ -206,18 +206,18 @@
 
     // Personnel list defaults
     const DEFAULT_PERSONNEL = [
-      {name: 'น.อ.บุญทวี ช่วยเนียม', position: 'หก.กกม.บก.ซอ.', phone: '081-9129091'},
-      {name: 'น.ท.หญิง รวีวรรณ กิตติศักดิ์กุล', position: 'รอง หก.กกม.บก.ขอ.', phone: '094-5481842'},
-      {name: 'ร.อ.นที กล้าแข็ง', position: 'นปก.ฝปก.กกม.บก.ขอ.', phone: '064-8320092'},
-      {name: 'ร.ท.ธนรัตน์ อดิศัยสกุลชัย', position: 'นวพ.ผวพ.กกม.บก.ขอ.', phone: '094-7565591'},
-      {name: 'ร.ต.จิรภัทร จำปางาม', position: 'น.โปรแกรม ผวพ.กกม.บก.ซอ.', phone: '095-5251415'},
-      {name: 'พ.อ.อ.สุภัค อัมพิลาศัย', position: 'จนท.พัสดุอาวุโสฯ ช่วยราชการ กกม.บก.ซอ.', phone: '062-4248596'},
-      {name: 'พ.อ.ท.ชนินทร์ พรมฤทธิ์', position: 'จนท.ทดสอบ ผวพ.กกม.บก.ซอ.', phone: '099-7359773'},
-      {name: 'จ.อ.ณธัชพงศ์ ภู่ขันเงิน', position: 'จนท.ข้อมูล ฝบม.กกม.บก.ขอ.', phone: '062-3902690'},
-      {name: 'จ.ท.ภูมิดล บุโรดม', position: 'จนท.ข้อมูล ฝบม.กกม.บก.ขอ.', phone: '094-1135337'},
-      {name: 'จ.ต.ภัทร พายุหะ', position: 'จนท.ปฏิบัติการ ผปก.กกม.บก.ขอ.', phone: '098-0167567'},
-      {name: 'นางพัสวีพิชญ์ หีบจินดา', position: 'พนักงานรวบรวมและเตรียมข้อมูล', phone: '095-6041354'},
-      {name: 'นายภูรินทร์ อินทร์บุญช่วย', position: 'ช่างโครงสร้างฯ ช่วยราชการ กกม.บก.ซอ.', phone: '095-4048230'}
+      {name: 'à¸™.à¸­.à¸šà¸¸à¸à¸—à¸§à¸µ à¸Šà¹ˆà¸§à¸¢à¹€à¸™à¸µà¸¢à¸¡', position: 'à¸«à¸.à¸à¸à¸¡.à¸šà¸.à¸‹à¸­.', phone: '081-9129091'},
+      {name: 'à¸™.à¸—.à¸«à¸à¸´à¸‡ à¸£à¸§à¸µà¸§à¸£à¸£à¸“ à¸à¸´à¸•à¸•à¸´à¸¨à¸±à¸à¸”à¸´à¹Œà¸à¸¸à¸¥', position: 'à¸£à¸­à¸‡ à¸«à¸.à¸à¸à¸¡.à¸šà¸.à¸‚à¸­.', phone: '094-5481842'},
+      {name: 'à¸£.à¸­.à¸™à¸—à¸µ à¸à¸¥à¹‰à¸²à¹à¸‚à¹‡à¸‡', position: 'à¸™à¸›à¸.à¸à¸›à¸.à¸à¸à¸¡.à¸šà¸.à¸‚à¸­.', phone: '064-8320092'},
+      {name: 'à¸£.à¸—.à¸˜à¸™à¸£à¸±à¸•à¸™à¹Œ à¸­à¸”à¸´à¸¨à¸±à¸¢à¸ªà¸à¸¸à¸¥à¸Šà¸±à¸¢', position: 'à¸™à¸§à¸ž.à¸œà¸§à¸ž.à¸à¸à¸¡.à¸šà¸.à¸‚à¸­.', phone: '094-7565591'},
+      {name: 'à¸£.à¸•.à¸ˆà¸´à¸£à¸ à¸±à¸—à¸£ à¸ˆà¸³à¸›à¸²à¸‡à¸²à¸¡', position: 'à¸™.à¹‚à¸›à¸£à¹à¸à¸£à¸¡ à¸œà¸§à¸ž.à¸à¸à¸¡.à¸šà¸.à¸‹à¸­.', phone: '095-5251415'},
+      {name: 'à¸ž.à¸­.à¸­.à¸ªà¸¸à¸ à¸±à¸„ à¸­à¸±à¸¡à¸žà¸´à¸¥à¸²à¸¨à¸±à¸¢', position: 'à¸ˆà¸™à¸—.à¸žà¸±à¸ªà¸”à¸¸à¸­à¸²à¸§à¸¸à¹‚à¸ªà¸¯ à¸Šà¹ˆà¸§à¸¢à¸£à¸²à¸Šà¸à¸²à¸£ à¸à¸à¸¡.à¸šà¸.à¸‹à¸­.', phone: '062-4248596'},
+      {name: 'à¸ž.à¸­.à¸—.à¸Šà¸™à¸´à¸™à¸—à¸£à¹Œ à¸žà¸£à¸¡à¸¤à¸—à¸˜à¸´à¹Œ', position: 'à¸ˆà¸™à¸—.à¸—à¸”à¸ªà¸­à¸š à¸œà¸§à¸ž.à¸à¸à¸¡.à¸šà¸.à¸‹à¸­.', phone: '099-7359773'},
+      {name: 'à¸ˆ.à¸­.à¸“à¸˜à¸±à¸Šà¸žà¸‡à¸¨à¹Œ à¸ à¸¹à¹ˆà¸‚à¸±à¸™à¹€à¸‡à¸´à¸™', position: 'à¸ˆà¸™à¸—.à¸‚à¹‰à¸­à¸¡à¸¹à¸¥ à¸à¸šà¸¡.à¸à¸à¸¡.à¸šà¸.à¸‚à¸­.', phone: '062-3902690'},
+      {name: 'à¸ˆ.à¸—.à¸ à¸¹à¸¡à¸´à¸”à¸¥ à¸šà¸¸à¹‚à¸£à¸”à¸¡', position: 'à¸ˆà¸™à¸—.à¸‚à¹‰à¸­à¸¡à¸¹à¸¥ à¸à¸šà¸¡.à¸à¸à¸¡.à¸šà¸.à¸‚à¸­.', phone: '094-1135337'},
+      {name: 'à¸ˆ.à¸•.à¸ à¸±à¸—à¸£ à¸žà¸²à¸¢à¸¸à¸«à¸°', position: 'à¸ˆà¸™à¸—.à¸›à¸à¸´à¸šà¸±à¸•à¸´à¸à¸²à¸£ à¸œà¸›à¸.à¸à¸à¸¡.à¸šà¸.à¸‚à¸­.', phone: '098-0167567'},
+      {name: 'à¸™à¸²à¸‡à¸žà¸±à¸ªà¸§à¸µà¸žà¸´à¸Šà¸à¹Œ à¸«à¸µà¸šà¸ˆà¸´à¸™à¸”à¸²', position: 'à¸žà¸™à¸±à¸à¸‡à¸²à¸™à¸£à¸§à¸šà¸£à¸§à¸¡à¹à¸¥à¸°à¹€à¸•à¸£à¸µà¸¢à¸¡à¸‚à¹‰à¸­à¸¡à¸¹à¸¥', phone: '095-6041354'},
+      {name: 'à¸™à¸²à¸¢à¸ à¸¹à¸£à¸´à¸™à¸—à¸£à¹Œ à¸­à¸´à¸™à¸—à¸£à¹Œà¸šà¸¸à¸à¸Šà¹ˆà¸§à¸¢', position: 'à¸Šà¹ˆà¸²à¸‡à¹‚à¸„à¸£à¸‡à¸ªà¸£à¹‰à¸²à¸‡à¸¯ à¸Šà¹ˆà¸§à¸¢à¸£à¸²à¸Šà¸à¸²à¸£ à¸à¸à¸¡.à¸šà¸.à¸‹à¸­.', phone: '095-4048230'}
     ];
 
     const fallbackProducts = [];
@@ -376,32 +376,32 @@
 
         if (data.products && Array.isArray(data.products)) {
           products = data.products.map(p => ({
-            code: p["รหัสสินค้า"] || p.code || '',
-            name: p["ชื่อสินค้า"] || p.name || '',
-            cat: p["หมวดหมู่"] || p.cat || 'อื่นๆ',
-            qty: parseInt(p["คงเหลือ"] || p.qty) || 0,
-            min: parseInt(p["ขั้นต่ำ"] || p.min) || 0,
-            unit: p["หน่วยนับ"] || p.unit || 'ชิ้น',
-            loc: p["ที่เก็บ"] || p.loc || ''
+            code: p["à¸£à¸«à¸±à¸ªà¸ªà¸´à¸™à¸„à¹‰à¸²"] || p.code || '',
+            name: p["à¸Šà¸·à¹ˆà¸­à¸ªà¸´à¸™à¸„à¹‰à¸²"] || p.name || '',
+            cat: p["à¸«à¸¡à¸§à¸”à¸«à¸¡à¸¹à¹ˆ"] || p.cat || 'à¸­à¸·à¹ˆà¸™à¹†',
+            qty: parseInt(p["à¸„à¸‡à¹€à¸«à¸¥à¸·à¸­"] || p.qty) || 0,
+            min: parseInt(p["à¸‚à¸±à¹‰à¸™à¸•à¹ˆà¸³"] || p.min) || 0,
+            unit: p["à¸«à¸™à¹ˆà¸§à¸¢à¸™à¸±à¸š"] || p.unit || 'à¸Šà¸´à¹‰à¸™',
+            loc: p["à¸—à¸µà¹ˆà¹€à¸à¹‡à¸š"] || p.loc || ''
           }));
         }
         if (data.history && Array.isArray(data.history)) {
           history = data.history.map(h => ({
-            date: h["วันที่"] || h.date || '',
-            type: h["ประเภท"] || h.type || 'ปรับปรุง',
-            code: h["รหัสสินค้า"] || h.code || '',
-            name: h["ชื่อสินค้า"] || h.name || '',
-            qty: parseInt(h["จำนวน"] || h.qty) || 0,
-            user: h["ผู้บันทึก"] || h.user || 'system',
-            userPosition: h["ตำแหน่ง"] || h.userPosition || '',
-            note: h["หมายเหตุ"] || h.note || ''
+            date: h["à¸§à¸±à¸™à¸—à¸µà¹ˆ"] || h.date || '',
+            type: h["à¸›à¸£à¸°à¹€à¸ à¸—"] || h.type || 'à¸›à¸£à¸±à¸šà¸›à¸£à¸¸à¸‡',
+            code: h["à¸£à¸«à¸±à¸ªà¸ªà¸´à¸™à¸„à¹‰à¸²"] || h.code || '',
+            name: h["à¸Šà¸·à¹ˆà¸­à¸ªà¸´à¸™à¸„à¹‰à¸²"] || h.name || '',
+            qty: parseInt(h["à¸ˆà¸³à¸™à¸§à¸™"] || h.qty) || 0,
+            user: h["à¸œà¸¹à¹‰à¸šà¸±à¸™à¸—à¸¶à¸"] || h.user || 'system',
+            userPosition: h["à¸•à¸³à¹à¸«à¸™à¹ˆà¸‡"] || h.userPosition || '',
+            note: h["à¸«à¸¡à¸²à¸¢à¹€à¸«à¸•à¸¸"] || h.note || ''
           }));
         }
         if (data.personnel && Array.isArray(data.personnel) && data.personnel.length > 0) {
           PERSONNEL = data.personnel.map(p => ({
-            name: p["ยศ-ชื่อ-สกุล"] || p.name || '',
-            position: p["ตำแหน่ง"] || p.position || '',
-            phone: p["เบอร์โทร"] || p.phone || ''
+            name: p["à¸¢à¸¨-à¸Šà¸·à¹ˆà¸­-à¸ªà¸à¸¸à¸¥"] || p.name || '',
+            position: p["à¸•à¸³à¹à¸«à¸™à¹ˆà¸‡"] || p.position || '',
+            phone: p["à¹€à¸šà¸­à¸£à¹Œà¹‚à¸—à¸£"] || p.phone || ''
           }));
         }
 
@@ -431,30 +431,30 @@
       // 2. POST updates to Google Sheets in the background silently
       // Convert standard JSON keys to Thai keys for Google Sheets compatibility
       const thaiProducts = products.map(p => ({
-        "รหัสสินค้า": p.code,
-        "ชื่อสินค้า": p.name,
-        "หมวดหมู่": p.cat,
-        "คงเหลือ": p.qty,
-        "ขั้นต่ำ": p.min,
-        "หน่วยนับ": p.unit,
-        "ที่เก็บ": p.loc
+        "à¸£à¸«à¸±à¸ªà¸ªà¸´à¸™à¸„à¹‰à¸²": p.code,
+        "à¸Šà¸·à¹ˆà¸­à¸ªà¸´à¸™à¸„à¹‰à¸²": p.name,
+        "à¸«à¸¡à¸§à¸”à¸«à¸¡à¸¹à¹ˆ": p.cat,
+        "à¸„à¸‡à¹€à¸«à¸¥à¸·à¸­": p.qty,
+        "à¸‚à¸±à¹‰à¸™à¸•à¹ˆà¸³": p.min,
+        "à¸«à¸™à¹ˆà¸§à¸¢à¸™à¸±à¸š": p.unit,
+        "à¸—à¸µà¹ˆà¹€à¸à¹‡à¸š": p.loc
       }));
 
       const thaiHistory = history.map(h => ({
-        "วันที่": h.date,
-        "ประเภท": h.type,
-        "รหัสสินค้า": h.code,
-        "ชื่อสินค้า": h.name,
-        "จำนวน": h.qty,
-        "ผู้บันทึก": h.user,
-        "ตำแหน่ง": h.userPosition,
-        "หมายเหตุ": h.note
+        "à¸§à¸±à¸™à¸—à¸µà¹ˆ": h.date,
+        "à¸›à¸£à¸°à¹€à¸ à¸—": h.type,
+        "à¸£à¸«à¸±à¸ªà¸ªà¸´à¸™à¸„à¹‰à¸²": h.code,
+        "à¸Šà¸·à¹ˆà¸­à¸ªà¸´à¸™à¸„à¹‰à¸²": h.name,
+        "à¸ˆà¸³à¸™à¸§à¸™": h.qty,
+        "à¸œà¸¹à¹‰à¸šà¸±à¸™à¸—à¸¶à¸": h.user,
+        "à¸•à¸³à¹à¸«à¸™à¹ˆà¸‡": h.userPosition,
+        "à¸«à¸¡à¸²à¸¢à¹€à¸«à¸•à¸¸": h.note
       }));
 
       const thaiPersonnel = PERSONNEL.map(p => ({
-        "ยศ-ชื่อ-สกุล": p.name,
-        "ตำแหน่ง": p.position,
-        "เบอร์โทร": p.phone
+        "à¸¢à¸¨-à¸Šà¸·à¹ˆà¸­-à¸ªà¸à¸¸à¸¥": p.name,
+        "à¸•à¸³à¹à¸«à¸™à¹ˆà¸‡": p.position,
+        "à¹€à¸šà¸­à¸£à¹Œà¹‚à¸—à¸£": p.phone
       }));
 
       fetch(GOOGLE_SCRIPT_URL, {
@@ -477,17 +477,17 @@
 
     function getRankWeight(name) {
       if (!name) return 0;
-      if (name.startsWith('น.อ.')) return 100;
-      if (name.startsWith('น.ท.')) return 90;
-      if (name.startsWith('ร.อ.')) return 80;
-      if (name.startsWith('ร.ท.')) return 70;
-      if (name.startsWith('ร.ต.')) return 60;
-      if (name.startsWith('พ.อ.อ.')) return 55;
-      if (name.startsWith('พ.อ.ท.')) return 50;
-      if (name.startsWith('พ.อ.ต.')) return 45;
-      if (name.startsWith('จ.อ.')) return 40;
-      if (name.startsWith('จ.ท.')) return 35;
-      if (name.startsWith('จ.ต.')) return 30;
+      if (name.startsWith('à¸™.à¸­.')) return 100;
+      if (name.startsWith('à¸™.à¸—.')) return 90;
+      if (name.startsWith('à¸£.à¸­.')) return 80;
+      if (name.startsWith('à¸£.à¸—.')) return 70;
+      if (name.startsWith('à¸£.à¸•.')) return 60;
+      if (name.startsWith('à¸ž.à¸­.à¸­.')) return 55;
+      if (name.startsWith('à¸ž.à¸­.à¸—.')) return 50;
+      if (name.startsWith('à¸ž.à¸­.à¸•.')) return 45;
+      if (name.startsWith('à¸ˆ.à¸­.')) return 40;
+      if (name.startsWith('à¸ˆ.à¸—.')) return 35;
+      if (name.startsWith('à¸ˆ.à¸•.')) return 30;
       return 0;
     }
 
@@ -545,10 +545,10 @@
         
         const activeTab = localStorage.getItem('dpd_active_tab') || 'dashboard';
         showTab(activeTab);
-        showToast('ยินดีต้อนรับเข้าสู่ระบบ', 'success');
+        showToast('à¸¢à¸´à¸™à¸”à¸µà¸•à¹‰à¸­à¸™à¸£à¸±à¸šà¹€à¸‚à¹‰à¸²à¸ªà¸¹à¹ˆà¸£à¸°à¸šà¸š', 'success');
       } else {
         errEl.style.display = 'block';
-        showToast('รหัสผ่านไม่ถูกต้อง', 'danger');
+        showToast('à¸£à¸«à¸±à¸ªà¸œà¹ˆà¸²à¸™à¹„à¸¡à¹ˆà¸–à¸¹à¸à¸•à¹‰à¸­à¸‡', 'danger');
       }
     }
 
@@ -565,7 +565,7 @@
       }
       document.getElementById('mainApp').classList.remove('active');
       document.getElementById('loginScreen').classList.add('active');
-      showToast('ออกจากระบบเรียบร้อย', 'warning');
+      showToast('à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸šà¹€à¸£à¸µà¸¢à¸šà¸£à¹‰à¸­à¸¢', 'warning');
     }
 
     function showTab(name, element) {
@@ -611,17 +611,17 @@
       const totalQty = products.reduce((a, p) => a + p.qty, 0);
       const txToday = history.filter(h => h.date === new Date().toISOString().slice(0, 10)).length;
       document.getElementById('dashCards').innerHTML = [
-        {label: t('รายการทั้งหมด'), val: total + ' ' + t('รายการ'), icon: 'ti-boxes', color: 'var(--color-primary)'},
-        {label: t('สินค้าใกล้หมด'), val: lowList.length + ' ' + t('รายการ'), icon: 'ti-alert-triangle', color: 'var(--color-warning)'},
-        {label: t('สต็อกรวม'), val: totalQty.toLocaleString() + ' ' + t('ชิ้น'), icon: 'ti-stack-2', color: 'var(--color-success)'},
-        {label: t('รายการวันนี้'), val: txToday + ' ' + t('รายการ'), icon: 'ti-activity', color: '#6366f1'}
+        {label: t('à¸£à¸²à¸¢à¸à¸²à¸£à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”'), val: total + ' ' + t('à¸£à¸²à¸¢à¸à¸²à¸£'), icon: 'ti-boxes', color: 'var(--color-primary)'},
+        {label: t('à¸ªà¸´à¸™à¸„à¹‰à¸²à¹ƒà¸à¸¥à¹‰à¸«à¸¡à¸”'), val: lowList.length + ' ' + t('à¸£à¸²à¸¢à¸à¸²à¸£'), icon: 'ti-alert-triangle', color: 'var(--color-warning)'},
+        {label: t('à¸ªà¸•à¹‡à¸­à¸à¸£à¸§à¸¡'), val: totalQty.toLocaleString() + ' ' + t('à¸Šà¸´à¹‰à¸™'), icon: 'ti-stack-2', color: 'var(--color-success)'},
+        {label: t('à¸£à¸²à¸¢à¸à¸²à¸£à¸§à¸±à¸™à¸™à¸µà¹‰'), val: txToday + ' ' + t('à¸£à¸²à¸¢à¸à¸²à¸£'), icon: 'ti-activity', color: '#6366f1'}
       ].map(c => `<div class="dash-card"><div class="dash-card-icon" style="color: ${c.color}"><i class="ti ${c.icon}"></i></div><div class="dash-card-details"><h3>${c.label}</h3><div class="value">${c.val}</div></div></div>`).join('');
       
       const lowTableEl = document.getElementById('lowStockTable');
       if (lowList.length === 0) {
-        lowTableEl.innerHTML = `<div style="text-align: center; padding: 24px; color: var(--color-text-muted);">${t('ปกติทุกรายการ')}</div>`;
+        lowTableEl.innerHTML = `<div style="text-align: center; padding: 24px; color: var(--color-text-muted);">${t('à¸›à¸à¸•à¸´à¸—à¸¸à¸à¸£à¸²à¸¢à¸à¸²à¸£')}</div>`;
       } else {
-        lowTableEl.innerHTML = `<table><thead><tr><th>${t('รหัสสินค้า')}</th><th>${t('ชื่อ')}</th><th>${t('คงเหลือ')}</th><th>${t('ขั้นต่ำ')}</th></tr></thead><tbody>${lowList.map(p => `<tr><td>${p.code}</td><td>${p.name}</td><td>${p.qty}</td><td>${p.min}</td></tr>`).join('')}</tbody></table>`;
+        lowTableEl.innerHTML = `<table><thead><tr><th>${t('à¸£à¸«à¸±à¸ªà¸ªà¸´à¸™à¸„à¹‰à¸²')}</th><th>${t('à¸Šà¸·à¹ˆà¸­')}</th><th>${t('à¸„à¸‡à¹€à¸«à¸¥à¸·à¸­')}</th><th>${t('à¸‚à¸±à¹‰à¸™à¸•à¹ˆà¸³')}</th></tr></thead><tbody>${lowList.map(p => `<tr><td>${p.code}</td><td>${p.name}</td><td>${p.qty}</td><td>${p.min}</td></tr>`).join('')}</tbody></table>`;
       }
       
       // Update interactive analytics charts
@@ -631,13 +631,13 @@
     function renderStock() {
       const q = document.getElementById('searchInput').value.trim().toLowerCase();
       const list = products.filter(p => p.code.toLowerCase().includes(q) || p.name.toLowerCase().includes(q));
-      document.getElementById('stockTable').innerHTML = `<table><thead><tr><th>${t('รหัสสินค้า')}</th><th>${t('ชื่อ')}</th><th>${t('จำนวน')}</th><th>${t('หน่วย')}</th><th>${t('จัดการ')}</th></tr></thead><tbody>${list.map(p => `<tr><td>${p.code}</td><td style="user-select: none;">${p.name}</td><td>${p.qty}</td><td>${p.unit}</td><td style="display: flex; gap: 4px; justify-content: flex-end;"><button class="btn-action" style="background-color: var(--color-success); color: white; border-color: var(--color-success);" onclick="openRecvModal('${p.code}')" title="รับสินค้าเข้า"><i class="ti ti-arrow-down-left"></i></button><button class="btn-action btn-action-edit" onclick="openEditModal('${p.code}')" title="แก้ไข"><i class="ti ti-edit"></i></button><button class="btn-action btn-action-delete" onclick="deleteProduct('${p.code}')" title="ลบ"><i class="ti ti-trash"></i></button></td></tr>`).join('')}</tbody></table>`;
+      document.getElementById('stockTable').innerHTML = `<table><thead><tr><th>${t('à¸£à¸«à¸±à¸ªà¸ªà¸´à¸™à¸„à¹‰à¸²')}</th><th>${t('à¸Šà¸·à¹ˆà¸­')}</th><th>${t('à¸ˆà¸³à¸™à¸§à¸™')}</th><th>${t('à¸«à¸™à¹ˆà¸§à¸¢')}</th><th>${t('à¸ˆà¸±à¸”à¸à¸²à¸£')}</th></tr></thead><tbody>${list.map(p => `<tr><td>${p.code}</td><td style="user-select: none;">${p.name}</td><td>${p.qty}</td><td>${p.unit}</td><td style="display: flex; gap: 4px; justify-content: flex-end;"><button class="btn-action" style="background-color: var(--color-success); color: white; border-color: var(--color-success);" onclick="openRecvModal('${p.code}')" title="à¸£à¸±à¸šà¸ªà¸´à¸™à¸„à¹‰à¸²à¹€à¸‚à¹‰à¸²"><i class="ti ti-arrow-down-left"></i></button><button class="btn-action btn-action-edit" onclick="openEditModal('${p.code}')" title="à¹à¸à¹‰à¹„à¸‚"><i class="ti ti-edit"></i></button><button class="btn-action btn-action-delete" onclick="deleteProduct('${p.code}')" title="à¸¥à¸š"><i class="ti ti-trash"></i></button></td></tr>`).join('')}</tbody></table>`;
     }
 
     function populateSelects() {
       ['recvItem', 'issueItem'].forEach(id => {
         const s = document.getElementById(id);
-        if (s) s.innerHTML = '<option value="">-- เลือกสินค้า --</option>' + products.map(p => `<option value="${p.code}">${p.code} - ${p.name}</option>`).join('');
+        if (s) s.innerHTML = '<option value="">-- à¹€à¸¥à¸·à¸­à¸à¸ªà¸´à¸™à¸„à¹‰à¸² --</option>' + products.map(p => `<option value="${p.code}">${p.code} - ${p.name}</option>`).join('');
       });
     }
 
@@ -675,41 +675,40 @@
 
       const p = products.find(x => x.code === code);
       if (!code) {
-        showToast('กรุณาเลือกสินค้า', 'danger');
+        showToast('à¸à¸£à¸¸à¸“à¸²à¹€à¸¥à¸·à¸­à¸à¸ªà¸´à¸™à¸„à¹‰à¸²', 'danger');
         return;
       }
       if (isNaN(qty) || qty <= 0) {
-        showToast('กรุณาระบุจำนวนรับเข้าให้ถูกต้อง', 'danger');
+        showToast('à¸à¸£à¸¸à¸“à¸²à¸£à¸°à¸šà¸¸à¸ˆà¸³à¸™à¸§à¸™à¸£à¸±à¸šà¹€à¸‚à¹‰à¸²à¹ƒà¸«à¹‰à¸–à¸¹à¸à¸•à¹‰à¸­à¸‡', 'danger');
         return;
       }
 
       if (p) {
         const oldQty = p.qty;
-        p.qty = qty; // เปลี่ยนจาก += เป็นการตรวจสอบ/กำหนดค่าตัวเลขที่นับได้จริงโดยตรง (Stock Check/Audit)
+        p.qty += qty;
         
-        // Formulate a clean description for receipt
         let details = [];
         if (source) details.push(`ที่มา: ${source}`);
-        if (lot) details.push(`ครุภัณฑ์/SN: ${lot}`);
+        if (lot) details.push(`ลอต/SN: ${lot}`);
         if (exp) details.push(`EXP: ${formatThaiDate(exp)}`);
         if (note) details.push(`หมายเหตุ: ${note}`);
         
-        const combinedNote = details.join(' | ') || 'ตรวจสอบ/อัปเดตยอดสินค้าคงคลัง';
+        const combinedNote = details.join(' | ') || 'รับสินค้าเข้าสต็อกคลังสินค้า';
 
         history.unshift({
           date: new Date().toISOString().slice(0, 10), 
-          type: 'ปรับปรุง', // เปลี่ยนประเภทจาก 'รับ' เป็น 'ปรับปรุง' เพื่อสะท้อนการตรวจสอบ/ปรับยอดจริง
+          type: 'รับ', 
           code: p.code, 
           name: p.name, 
-          qty: qty, // บันทึกยอด ณ ปัจจุบันที่นับได้จริง
+          qty: qty, 
           user: currentUser || 'admin', 
-          note: `ตรวจสอบยอดสินค้าคงคลัง (ยอดเดิม: ${oldQty} -> ยอดที่ถูกต้อง: ${qty}) ${combinedNote ? `| ${combinedNote}` : ''}`
+          note: `รับสินค้าเข้าสต็อก (ยอดเดิม: ${oldQty} -> ยอดใหม่: ${p.qty}) ${combinedNote ? `| ${combinedNote}` : '}`
         });
         
         saveDatabase();
         renderStock();
         closeRecvModal();
-        showToast('ตรวจสอบและปรับปรุงยอดสินค้าคงคลังสำเร็จ', 'success');
+        showToast('à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¹à¸¥à¸°à¸›à¸£à¸±à¸šà¸›à¸£à¸¸à¸‡à¸¢à¸­à¸”à¸ªà¸´à¸™à¸„à¹‰à¸²à¸„à¸‡à¸„à¸¥à¸±à¸‡à¸ªà¸³à¹€à¸£à¹‡à¸ˆ', 'success');
       }
     }
 
@@ -730,7 +729,7 @@
       const code = document.getElementById('issueItem').value;
       const qty = parseInt(document.getElementById('issueQty').value);
       const person = document.getElementById('issuePerson').value.trim();
-      const purpose = document.getElementById('issuePurpose').value || 'เบิกใช้งาน';
+      const purpose = document.getElementById('issuePurpose').value || 'à¹€à¸šà¸´à¸à¹ƒà¸Šà¹‰à¸‡à¸²à¸™';
       const note = document.getElementById('issueNote').value.trim();
       const combinedNote = note ? `${purpose} (${note})` : purpose;
 
@@ -748,7 +747,7 @@
         p.qty -= qty;
         history.unshift({
           date: new Date().toISOString().slice(0, 10),
-          type: 'เบิก',
+          type: 'à¹€à¸šà¸´à¸',
           code: p.code,
           name: p.name,
           qty: qty,
@@ -759,8 +758,8 @@
         saveDatabase();
         renderStock();
         closeIssueModal();
-        showToast('เบิกสินค้าสำเร็จ');
-      } else { showToast('ข้อมูลไม่ถูกต้องหรือสินค้าไม่พอ', 'danger'); }
+        showToast('à¹€à¸šà¸´à¸à¸ªà¸´à¸™à¸„à¹‰à¸²à¸ªà¸³à¹€à¸£à¹‡à¸ˆ');
+      } else { showToast('à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¹„à¸¡à¹ˆà¸–à¸¹à¸à¸•à¹‰à¸­à¸‡à¸«à¸£à¸·à¸­à¸ªà¸´à¸™à¸„à¹‰à¸²à¹„à¸¡à¹ˆà¸žà¸­', 'danger'); }
     }
 
     function formatUser(userStr, posStr) {
@@ -800,28 +799,28 @@
       }
 
       if (list.length === 0) {
-        container.innerHTML = `<div style="text-align: center; padding: 48px; color: var(--color-text-muted);"><i class="ti ti-notes-off" style="font-size: 40px; display: block; margin-bottom: 12px;"></i>${t('ยังไม่มีรายการประวัติความเคลื่อนไหวในระบบ')}</div>`;
+        container.innerHTML = `<div style="text-align: center; padding: 48px; color: var(--color-text-muted);"><i class="ti ti-notes-off" style="font-size: 40px; display: block; margin-bottom: 12px;"></i>${t('à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µà¸£à¸²à¸¢à¸à¸²à¸£à¸›à¸£à¸°à¸§à¸±à¸•à¸´à¸„à¸§à¸²à¸¡à¹€à¸„à¸¥à¸·à¹ˆà¸­à¸™à¹„à¸«à¸§à¹ƒà¸™à¸£à¸°à¸šà¸š')}</div>`;
         return;
       }
 
-      container.innerHTML = `<table><thead><tr><th>${t('วันที่ทำรายการ')}</th><th>${t('ประเภท')}</th><th>${t('รหัสสินค้า')}</th><th>${t('ชื่อสินค้า')}</th><th style="text-align: right;">${t('จำนวน')}</th><th>${t('ผู้ดำเนินการ/ผู้เบิก')}</th><th>${t('บันทึกช่วยจำ/วัตถุประสงค์')}</th><th style="text-align: center; width: 100px;">${t('ใบเบิก')}</th></tr></thead><tbody>${list.map(h => {
+      container.innerHTML = `<table><thead><tr><th>${t('à¸§à¸±à¸™à¸—à¸µà¹ˆà¸—à¸³à¸£à¸²à¸¢à¸à¸²à¸£')}</th><th>${t('à¸›à¸£à¸°à¹€à¸ à¸—')}</th><th>${t('à¸£à¸«à¸±à¸ªà¸ªà¸´à¸™à¸„à¹‰à¸²')}</th><th>${t('à¸Šà¸·à¹ˆà¸­à¸ªà¸´à¸™à¸„à¹‰à¸²')}</th><th style="text-align: right;">${t('à¸ˆà¸³à¸™à¸§à¸™')}</th><th>${t('à¸œà¸¹à¹‰à¸”à¸³à¹€à¸™à¸´à¸™à¸à¸²à¸£/à¸œà¸¹à¹‰à¹€à¸šà¸´à¸')}</th><th>${t('à¸šà¸±à¸™à¸—à¸¶à¸à¸Šà¹ˆà¸§à¸¢à¸ˆà¸³/à¸§à¸±à¸•à¸–à¸¸à¸›à¸£à¸°à¸ªà¸‡à¸„à¹Œ')}</th><th style="text-align: center; width: 100px;">${t('à¹ƒà¸šà¹€à¸šà¸´à¸')}</th></tr></thead><tbody>${list.map(h => {
         let badgeClass = 'badge-primary';
-        if (h.type === 'รับ') badgeClass = 'badge-success';
-        if (h.type === 'เบิก') badgeClass = 'badge-danger';
-        if (h.type === 'เพิ่ม') badgeClass = 'badge-primary';
-        if (h.type === 'แก้ไข') badgeClass = 'badge-warning';
-        if (h.type === 'ปรับปรุง') badgeClass = 'badge-warning';
-        if (h.type === 'ลบ') badgeClass = 'badge-danger';
+        if (h.type === 'à¸£à¸±à¸š') badgeClass = 'badge-success';
+        if (h.type === 'à¹€à¸šà¸´à¸') badgeClass = 'badge-danger';
+        if (h.type === 'à¹€à¸žà¸´à¹ˆà¸¡') badgeClass = 'badge-primary';
+        if (h.type === 'à¹à¸à¹‰à¹„à¸‚') badgeClass = 'badge-warning';
+        if (h.type === 'à¸›à¸£à¸±à¸šà¸›à¸£à¸¸à¸‡') badgeClass = 'badge-warning';
+        if (h.type === 'à¸¥à¸š') badgeClass = 'badge-danger';
 
         let printBtn = '';
-        if (h.type === 'เบิก') {
+        if (h.type === 'à¹€à¸šà¸´à¸') {
           const origIndex = history.indexOf(h);
-          printBtn = `<button class="btn-action btn-action-print" onclick="printIssueSlip(${origIndex})" title="${t('พิมพ์ใบเบิก')}"><i class="ti ti-printer"></i></button>`;
+          printBtn = `<button class="btn-action btn-action-print" onclick="printIssueSlip(${origIndex})" title="${t('à¸žà¸´à¸¡à¸žà¹Œà¹ƒà¸šà¹€à¸šà¸´à¸')}"><i class="ti ti-printer"></i></button>`;
         } else {
           printBtn = '<span style="color:var(--color-text-muted); font-size:12px;">-</span>';
         }
 
-        return `<tr><td><i class="ti ti-calendar-event" style="color: var(--color-text-muted);"></i> ${h.date}</td><td><span class="badge ${badgeClass}">${h.type === 'เบิก' ? t('เบิกออก') : (h.type === 'รับ' ? t('รับเข้า') : t(h.type))}</span></td><td><strong>${h.code}</strong></td><td>${h.name}</td><td style="text-align: right; font-weight: 600; ${h.type === 'เบิก' ? 'color: var(--color-danger)' : (h.type === 'รับ' ? 'color: var(--color-success)' : '')}">${h.type === 'เบิก' ? '-' : '+'}${h.qty.toLocaleString()}</td><td>${formatUser(h.user, h.userPosition)}</td><td><span style="font-size: 13px; color: var(--color-text-secondary);">${h.note || '-'}</span></td><td style="text-align: center;">${printBtn}</td></tr>`;
+        return `<tr><td><i class="ti ti-calendar-event" style="color: var(--color-text-muted);"></i> ${h.date}</td><td><span class="badge ${badgeClass}">${h.type === 'à¹€à¸šà¸´à¸' ? t('à¹€à¸šà¸´à¸à¸­à¸­à¸') : (h.type === 'à¸£à¸±à¸š' ? t('à¸£à¸±à¸šà¹€à¸‚à¹‰à¸²') : t(h.type))}</span></td><td><strong>${h.code}</strong></td><td>${h.name}</td><td style="text-align: right; font-weight: 600; ${h.type === 'à¹€à¸šà¸´à¸' ? 'color: var(--color-danger)' : (h.type === 'à¸£à¸±à¸š' ? 'color: var(--color-success)' : '')}">${h.type === 'à¹€à¸šà¸´à¸' ? '-' : '+'}${h.qty.toLocaleString()}</td><td>${formatUser(h.user, h.userPosition)}</td><td><span style="font-size: 13px; color: var(--color-text-secondary);">${h.note || '-'}</span></td><td style="text-align: center;">${printBtn}</td></tr>`;
       }).join('')}</tbody></table>`;
     }
 
@@ -832,7 +831,7 @@
       const y = parseInt(parts[0]) + 543;
       const m = parseInt(parts[1]);
       const d = parseInt(parts[2]);
-      const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+      const months = ['à¸¡à¸à¸£à¸²à¸„à¸¡', 'à¸à¸¸à¸¡à¸ à¸²à¸žà¸±à¸™à¸˜à¹Œ', 'à¸¡à¸µà¸™à¸²à¸„à¸¡', 'à¹€à¸¡à¸©à¸²à¸¢à¸™', 'à¸žà¸¤à¸©à¸ à¸²à¸„à¸¡', 'à¸¡à¸´à¸–à¸¸à¸™à¸²à¸¢à¸™', 'à¸à¸£à¸à¸Žà¸²à¸„à¸¡', 'à¸ªà¸´à¸‡à¸«à¸²à¸„à¸¡', 'à¸à¸±à¸™à¸¢à¸²à¸¢à¸™', 'à¸•à¸¸à¸¥à¸²à¸„à¸¡', 'à¸žà¸¤à¸¨à¸ˆà¸´à¸à¸²à¸¢à¸™', 'à¸˜à¸±à¸™à¸§à¸²à¸„à¸¡'];
       return `${d} ${months[m - 1]} ${y}`;
     }
 
@@ -841,7 +840,7 @@
       if (!h) return;
       
       const p = products.find(x => x.code === h.code);
-      const unit = p ? p.unit : 'ชิ้น';
+      const unit = p ? p.unit : 'à¸Šà¸´à¹‰à¸™';
       
       const printWindow = window.open('', '_blank', 'width=800,height=700');
       if (!printWindow) return;
@@ -992,70 +991,70 @@
         <body>
           <div class="screen-preview">
             <div class="spinner"></div>
-            <p style="font-weight: 600; font-size: 16px; margin: 0 0 8px 0; color: #0f172a;">กำลังเรียกใช้หน้าต่างพิมพ์ใบเบิกพัสดุ</p>
-            <p style="font-size: 13px; color: #64748b; margin: 0; line-height: 1.5;">ระบบกำลังเปิดกล่องพิมพ์ของเบราว์เซอร์ หน้าต่างนี้จะปิดตัวเองโดยอัตโนมัติเมื่อพิมพ์เสร็จหรือยกเลิก</p>
+            <p style="font-weight: 600; font-size: 16px; margin: 0 0 8px 0; color: #0f172a;">à¸à¸³à¸¥à¸±à¸‡à¹€à¸£à¸µà¸¢à¸à¹ƒà¸Šà¹‰à¸«à¸™à¹‰à¸²à¸•à¹ˆà¸²à¸‡à¸žà¸´à¸¡à¸žà¹Œà¹ƒà¸šà¹€à¸šà¸´à¸à¸žà¸±à¸ªà¸”à¸¸</p>
+            <p style="font-size: 13px; color: #64748b; margin: 0; line-height: 1.5;">à¸£à¸°à¸šà¸šà¸à¸³à¸¥à¸±à¸‡à¹€à¸›à¸´à¸”à¸à¸¥à¹ˆà¸­à¸‡à¸žà¸´à¸¡à¸žà¹Œà¸‚à¸­à¸‡à¹€à¸šà¸£à¸²à¸§à¹Œà¹€à¸‹à¸­à¸£à¹Œ à¸«à¸™à¹‰à¸²à¸•à¹ˆà¸²à¸‡à¸™à¸µà¹‰à¸ˆà¸°à¸›à¸´à¸”à¸•à¸±à¸§à¹€à¸­à¸‡à¹‚à¸”à¸¢à¸­à¸±à¸•à¹‚à¸™à¸¡à¸±à¸•à¸´à¹€à¸¡à¸·à¹ˆà¸­à¸žà¸´à¸¡à¸žà¹Œà¹€à¸ªà¸£à¹‡à¸ˆà¸«à¸£à¸·à¸­à¸¢à¸à¹€à¸¥à¸´à¸</p>
           </div>
           
           <div class="print-content">
             <div class="header">
-              <div class="title">ใบเบิกจ่ายพัสดุ</div>
-              <div class="subtitle">กองกรรมวิธีข้อมูล</div>
+              <div class="title">à¹ƒà¸šà¹€à¸šà¸´à¸à¸ˆà¹ˆà¸²à¸¢à¸žà¸±à¸ªà¸”à¸¸</div>
+              <div class="subtitle">à¸à¸­à¸‡à¸à¸£à¸£à¸¡à¸§à¸´à¸˜à¸µà¸‚à¹‰à¸­à¸¡à¸¹à¸¥</div>
             </div>
           
           <table class="details-table">
             <tr>
-              <th>รหัสใบเบิก</th>
+              <th>à¸£à¸«à¸±à¸ªà¹ƒà¸šà¹€à¸šà¸´à¸</th>
               <td>TR-${h.date.replace(/-/g, '')}-${String(index + 1).padStart(4, '0')}</td>
             </tr>
             <tr>
-              <th>วันที่ทำรายการ</th>
+              <th>à¸§à¸±à¸™à¸—à¸µà¹ˆà¸—à¸³à¸£à¸²à¸¢à¸à¸²à¸£</th>
               <td>${formatThaiDate(h.date)}</td>
             </tr>
             <tr>
-              <th>รหัสพัสดุ</th>
+              <th>à¸£à¸«à¸±à¸ªà¸žà¸±à¸ªà¸”à¸¸</th>
               <td><strong>${h.code}</strong></td>
             </tr>
             <tr>
-              <th>รายการสินค้า/พัสดุ</th>
+              <th>à¸£à¸²à¸¢à¸à¸²à¸£à¸ªà¸´à¸™à¸„à¹‰à¸²/à¸žà¸±à¸ªà¸”à¸¸</th>
               <td>${h.name}</td>
             </tr>
             <tr>
-              <th>จำนวนที่เบิก</th>
+              <th>à¸ˆà¸³à¸™à¸§à¸™à¸—à¸µà¹ˆà¹€à¸šà¸´à¸</th>
               <td style="font-size: 16px; font-weight: 700; color: #e11d48;">
                 ${h.qty.toLocaleString()} ${unit}
               </td>
             </tr>
             <tr>
-              <th>ผู้ขอเบิกพัสดุ</th>
+              <th>à¸œà¸¹à¹‰à¸‚à¸­à¹€à¸šà¸´à¸à¸žà¸±à¸ªà¸”à¸¸</th>
               <td><strong>${h.user}</strong> ${h.userPosition ? `(${h.userPosition})` : ''}</td>
             </tr>
             <tr>
-              <th>วัตถุประสงค์ / หมายเหตุ</th>
+              <th>à¸§à¸±à¸•à¸–à¸¸à¸›à¸£à¸°à¸ªà¸‡à¸„à¹Œ / à¸«à¸¡à¸²à¸¢à¹€à¸«à¸•à¸¸</th>
               <td>${h.note || '-'}</td>
             </tr>
           </table>
           
           <div class="signatures-grid">
             <div class="signature-box">
-              <p class="role">ผู้ขอเบิกพัสดุ</p>
+              <p class="role">à¸œà¸¹à¹‰à¸‚à¸­à¹€à¸šà¸´à¸à¸žà¸±à¸ªà¸”à¸¸</p>
               <div class="signature-line"></div>
               <p class="name">( ${h.user} )</p>
-              <p style="font-size: 13px; color: #64748b;">${h.userPosition ? `ตำแหน่ง ${h.userPosition}` : '&nbsp;'}</p>
-              <p>วันที่ ........../........../..........</p>
+              <p style="font-size: 13px; color: #64748b;">${h.userPosition ? `à¸•à¸³à¹à¸«à¸™à¹ˆà¸‡ ${h.userPosition}` : '&nbsp;'}</p>
+              <p>à¸§à¸±à¸™à¸—à¸µà¹ˆ ........../........../..........</p>
             </div>
             <div class="signature-box">
-              <p class="role">ผู้จ่ายพัสดุ</p>
+              <p class="role">à¸œà¸¹à¹‰à¸ˆà¹ˆà¸²à¸¢à¸žà¸±à¸ªà¸”à¸¸</p>
               <div class="signature-line"></div>
-              <p class="name">( พ.อ.อ. สุภัค อัมพิลาศัย )</p>
-              <p style="font-size: 13px; color: #64748b;">ตำแหน่ง จนท.พัสดุ กกม.บก.ซอ.</p>
-              <p>วันที่ ........../........../..........</p>
+              <p class="name">( à¸ž.à¸­.à¸­. à¸ªà¸¸à¸ à¸±à¸„ à¸­à¸±à¸¡à¸žà¸´à¸¥à¸²à¸¨à¸±à¸¢ )</p>
+              <p style="font-size: 13px; color: #64748b;">à¸•à¸³à¹à¸«à¸™à¹ˆà¸‡ à¸ˆà¸™à¸—.à¸žà¸±à¸ªà¸”à¸¸ à¸à¸à¸¡.à¸šà¸.à¸‹à¸­.</p>
+              <p>à¸§à¸±à¸™à¸—à¸µà¹ˆ ........../........../..........</p>
             </div>
             <div class="signature-box">
-              <p class="role">ผู้อนุมัติพัสดุ</p>
+              <p class="role">à¸œà¸¹à¹‰à¸­à¸™à¸¸à¸¡à¸±à¸•à¸´à¸žà¸±à¸ªà¸”à¸¸</p>
               <div class="signature-line"></div>
-              <p class="name">( น.อ. บุญทวี ช่วยเนียม )</p>
-              <p style="font-size: 13px; color: #64748b;">ตำแหน่ง หก.กกม.บก.ซอ.</p>
-              <p>วันที่ ........../........../..........</p>
+              <p class="name">( à¸™.à¸­. à¸šà¸¸à¸à¸—à¸§à¸µ à¸Šà¹ˆà¸§à¸¢à¹€à¸™à¸µà¸¢à¸¡ )</p>
+              <p style="font-size: 13px; color: #64748b;">à¸•à¸³à¹à¸«à¸™à¹ˆà¸‡ à¸«à¸.à¸à¸à¸¡.à¸šà¸.à¸‹à¸­.</p>
+              <p>à¸§à¸±à¸™à¸—à¸µà¹ˆ ........../........../..........</p>
             </div>
             </div>
           </div>
@@ -1098,7 +1097,7 @@
       const cat = document.getElementById('newCat').value;
       const qty = parseInt(document.getElementById('newQty').value) || 0;
       const min = Math.max(1, Math.floor(qty * 0.2)) || 10;
-      const unit = document.getElementById('newUnit').value.trim() || 'ชิ้น';
+      const unit = document.getElementById('newUnit').value.trim() || 'à¸Šà¸´à¹‰à¸™';
       const loc = document.getElementById('newLoc').value.trim();
       
       const codeEl = document.getElementById('newCode');
@@ -1109,27 +1108,27 @@
       
       if (!code) {
         codeEl.style.borderColor = 'var(--color-danger)';
-        showToast('กรุณาระบุรหัสสินค้า', 'danger');
+        showToast('à¸à¸£à¸¸à¸“à¸²à¸£à¸°à¸šà¸¸à¸£à¸«à¸±à¸ªà¸ªà¸´à¸™à¸„à¹‰à¸²', 'danger');
         return;
       }
       if (!name) {
         nameEl.style.borderColor = 'var(--color-danger)';
-        showToast('กรุณาระบุชื่อสินค้า', 'danger');
+        showToast('à¸à¸£à¸¸à¸“à¸²à¸£à¸°à¸šà¸¸à¸Šà¸·à¹ˆà¸­à¸ªà¸´à¸™à¸„à¹‰à¸²', 'danger');
         return;
       }
       if (products.find(p => p.code.toLowerCase() === code.toLowerCase())) {
         codeEl.style.borderColor = 'var(--color-danger)';
-        showToast('รหัสสินค้านี้ซ้ำและถูกใช้งานอยู่ในระบบแล้ว', 'danger');
+        showToast('à¸£à¸«à¸±à¸ªà¸ªà¸´à¸™à¸„à¹‰à¸²à¸™à¸µà¹‰à¸‹à¹‰à¸³à¹à¸¥à¸°à¸–à¸¹à¸à¹ƒà¸Šà¹‰à¸‡à¸²à¸™à¸­à¸¢à¸¹à¹ˆà¹ƒà¸™à¸£à¸°à¸šà¸šà¹à¸¥à¹‰à¸§', 'danger');
         return;
       }
       
       products.push({ code, name, cat, qty, min, unit, loc });
 
-      const combinedNote = 'จดทะเบียนพัสดุรายการใหม่เข้าสต็อกคลังสินค้า';
+      const combinedNote = 'à¸ˆà¸”à¸—à¸°à¹€à¸šà¸µà¸¢à¸™à¸žà¸±à¸ªà¸”à¸¸à¸£à¸²à¸¢à¸à¸²à¸£à¹ƒà¸«à¸¡à¹ˆà¹€à¸‚à¹‰à¸²à¸ªà¸•à¹‡à¸­à¸à¸„à¸¥à¸±à¸‡à¸ªà¸´à¸™à¸„à¹‰à¸²';
 
       history.unshift({
         date: new Date().toISOString().slice(0, 10),
-        type: 'เพิ่ม',
+        type: 'à¹€à¸žà¸´à¹ˆà¸¡',
         code,
         name,
         qty,
@@ -1137,7 +1136,7 @@
         note: combinedNote
       });
       saveDatabase();
-      showToast(`จดทะเบียนสินค้า "${name}" สำเร็จ`, 'success');
+      showToast(`à¸ˆà¸”à¸—à¸°à¹€à¸šà¸µà¸¢à¸™à¸ªà¸´à¸™à¸„à¹‰à¸² "${name}" à¸ªà¸³à¹€à¸£à¹‡à¸ˆ`, 'success');
       closeAddModal();
       renderStock();
       renderDashboard();
@@ -1163,7 +1162,7 @@
       const name = document.getElementById('editName').value.trim();
       const qty = parseInt(document.getElementById('editQty').value) || 0;
       const min = Math.max(1, Math.floor(qty * 0.2)) || 10;
-      const unit = document.getElementById('editUnit').value.trim() || 'ชิ้น';
+      const unit = document.getElementById('editUnit').value.trim() || 'à¸Šà¸´à¹‰à¸™';
       const loc = document.getElementById('editLoc').value.trim();
       
       const nameEl = document.getElementById('editName');
@@ -1171,7 +1170,7 @@
       
       if (!name) {
         nameEl.style.borderColor = 'var(--color-danger)';
-        showToast('กรุณาระบุชื่อสินค้า', 'danger');
+        showToast('à¸à¸£à¸¸à¸“à¸²à¸£à¸°à¸šà¸¸à¸Šà¸·à¹ˆà¸­à¸ªà¸´à¸™à¸„à¹‰à¸²', 'danger');
         return;
       }
       
@@ -1189,27 +1188,27 @@
       if (oldQty !== qty) {
         history.unshift({
           date: new Date().toISOString().slice(0, 10),
-          type: 'ปรับปรุง',
+          type: 'à¸›à¸£à¸±à¸šà¸›à¸£à¸¸à¸‡',
           code: p.code,
           name: p.name,
           qty: Math.abs(qty - oldQty),
           user: currentUser || 'admin',
-          note: `ปรับยอดสต็อกโดยตรง: ${oldQty} -> ${qty} ${unit}`
+          note: `à¸›à¸£à¸±à¸šà¸¢à¸­à¸”à¸ªà¸•à¹‡à¸­à¸à¹‚à¸”à¸¢à¸•à¸£à¸‡: ${oldQty} -> ${qty} ${unit}`
         });
       } else {
         history.unshift({
           date: new Date().toISOString().slice(0, 10),
-          type: 'แก้ไข',
+          type: 'à¹à¸à¹‰à¹„à¸‚',
           code: p.code,
           name: p.name,
           qty: 0,
           user: currentUser || 'admin',
-          note: 'แก้ไขข้อมูลรายละเอียดสินค้า'
+          note: 'à¹à¸à¹‰à¹„à¸‚à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸£à¸²à¸¢à¸¥à¸°à¹€à¸­à¸µà¸¢à¸”à¸ªà¸´à¸™à¸„à¹‰à¸²'
         });
       }
       
       saveDatabase();
-      showToast(`ปรับปรุงข้อมูลสินค้า "${name}" สำเร็จ`, 'success');
+      showToast(`à¸›à¸£à¸±à¸šà¸›à¸£à¸¸à¸‡à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸ªà¸´à¸™à¸„à¹‰à¸² "${name}" à¸ªà¸³à¹€à¸£à¹‡à¸ˆ`, 'success');
       closeEditModal();
       renderStock();
       renderDashboard();
@@ -1218,22 +1217,22 @@
     function deleteProduct(code) {
       const p = products.find(x => x.code === code);
       if (!p) return;
-      const confirmDelete = confirm(`คุณแน่ใจหรือไม่ที่จะลบสินค้า "${p.name}" (${p.code}) ออกจากระบบ?\n*คำเตือน: ข้อมูลสินค้าชิ้นนี้จะถูกนำออกอย่างถาวร*`);
+      const confirmDelete = confirm(`à¸„à¸¸à¸“à¹à¸™à¹ˆà¹ƒà¸ˆà¸«à¸£à¸·à¸­à¹„à¸¡à¹ˆà¸—à¸µà¹ˆà¸ˆà¸°à¸¥à¸šà¸ªà¸´à¸™à¸„à¹‰à¸² "${p.name}" (${p.code}) à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š?\n*à¸„à¸³à¹€à¸•à¸·à¸­à¸™: à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸ªà¸´à¸™à¸„à¹‰à¸²à¸Šà¸´à¹‰à¸™à¸™à¸µà¹‰à¸ˆà¸°à¸–à¸¹à¸à¸™à¸³à¸­à¸­à¸à¸­à¸¢à¹ˆà¸²à¸‡à¸–à¸²à¸§à¸£*`);
       if (!confirmDelete) return;
       
       history.unshift({
         date: new Date().toISOString().slice(0, 10),
-        type: 'ลบ',
+        type: 'à¸¥à¸š',
         code: p.code,
         name: p.name,
         qty: p.qty,
         user: currentUser || 'admin',
-        note: `ลบสินค้าออกจากระบบ (ยอดคงเหลือเดิม: ${p.qty} ${p.unit})`
+        note: `à¸¥à¸šà¸ªà¸´à¸™à¸„à¹‰à¸²à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸š (à¸¢à¸­à¸”à¸„à¸‡à¹€à¸«à¸¥à¸·à¸­à¹€à¸”à¸´à¸¡: ${p.qty} ${p.unit})`
       });
       
       products = products.filter(x => x.code !== code);
       saveDatabase();
-      showToast(`ลบสินค้า "${p.name}" ออกจากระบบสำเร็จ`, 'success');
+      showToast(`à¸¥à¸šà¸ªà¸´à¸™à¸„à¹‰à¸² "${p.name}" à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸°à¸šà¸šà¸ªà¸³à¹€à¸£à¹‡à¸ˆ`, 'success');
       renderStock();
       renderDashboard();
     }
@@ -1253,7 +1252,7 @@
       });
       
       // Default common units
-      ['ชิ้น', 'อัน', 'เครื่อง', 'กล่อง', 'แพ็ค', 'ลัง', 'ม้วน', 'ขวด', 'เส้น', 'ก้อน', 'รีม', 'ตลับ', 'ใบ', 'ชุด'].forEach(u => units.add(u));
+      ['à¸Šà¸´à¹‰à¸™', 'à¸­à¸±à¸™', 'à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡', 'à¸à¸¥à¹ˆà¸­à¸‡', 'à¹à¸žà¹‡à¸„', 'à¸¥à¸±à¸‡', 'à¸¡à¹‰à¸§à¸™', 'à¸‚à¸§à¸”', 'à¹€à¸ªà¹‰à¸™', 'à¸à¹‰à¸­à¸™', 'à¸£à¸µà¸¡', 'à¸•à¸¥à¸±à¸š', 'à¹ƒà¸š', 'à¸Šà¸¸à¸”'].forEach(u => units.add(u));
       
       datalist.innerHTML = Array.from(units)
         .filter(u => u !== '')
@@ -1274,16 +1273,16 @@
       );
       
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 48px; color: var(--color-text-muted);"><i class="ti ti-users" style="font-size: 32px; display: block; margin-bottom: 8px;"></i>${t('ไม่พบรายชื่อบุคลากรที่ตรงกับการค้นหา')}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 48px; color: var(--color-text-muted);"><i class="ti ti-users" style="font-size: 32px; display: block; margin-bottom: 8px;"></i>${t('à¹„à¸¡à¹ˆà¸žà¸šà¸£à¸²à¸¢à¸Šà¸·à¹ˆà¸­à¸šà¸¸à¸„à¸¥à¸²à¸à¸£à¸—à¸µà¹ˆà¸•à¸£à¸‡à¸à¸±à¸šà¸à¸²à¸£à¸„à¹‰à¸™à¸«à¸²')}</td></tr>`;
         return;
       }
       
       tbody.innerHTML = filtered.map(p => {
         const origIndex = PERSONNEL.indexOf(p);
-        const name = p.name || t('ไม่ระบุชื่อ');
+        const name = p.name || t('à¹„à¸¡à¹ˆà¸£à¸°à¸šà¸¸à¸Šà¸·à¹ˆà¸­');
         const position = p.position || '';
         const phone = p.phone || '-';
-        return `<tr><td><strong>${name}</strong></td><td><span class="badge badge-primary">${position}</span></td><td><i class="ti ti-phone" style="color: var(--color-text-muted); margin-right: 6px;"></i>${phone}</td><td style="text-align: center;"><div style="display: flex; gap: 6px; justify-content: center;"><button class="btn-action btn-action-edit" onclick="openPersonnelModal(${origIndex})" title="${t('แก้ไขข้อมูล')}"><i class="ti ti-edit"></i></button><button class="btn-action btn-action-delete" onclick="deletePersonnel(${origIndex})" title="${t('ลบรายชื่อ')}"><i class="ti ti-trash"></i></button></div></td></tr>`;
+        return `<tr><td><strong>${name}</strong></td><td><span class="badge badge-primary">${position}</span></td><td><i class="ti ti-phone" style="color: var(--color-text-muted); margin-right: 6px;"></i>${phone}</td><td style="text-align: center;"><div style="display: flex; gap: 6px; justify-content: center;"><button class="btn-action btn-action-edit" onclick="openPersonnelModal(${origIndex})" title="${t('à¹à¸à¹‰à¹„à¸‚à¸‚à¹‰à¸­à¸¡à¸¹à¸¥')}"><i class="ti ti-edit"></i></button><button class="btn-action btn-action-delete" onclick="deletePersonnel(${origIndex})" title="${t('à¸¥à¸šà¸£à¸²à¸¢à¸Šà¸·à¹ˆà¸­')}"><i class="ti ti-trash"></i></button></div></td></tr>`;
       }).join('');
     }
 
@@ -1299,13 +1298,13 @@
       posInput.style.borderColor = '';
       
       if (index !== null && index >= 0) {
-        titleEl.textContent = 'แก้ไขข้อมูลบุคลากร';
+        titleEl.textContent = 'à¹à¸à¹‰à¹„à¸‚à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸šà¸¸à¸„à¸¥à¸²à¸à¸£';
         indexInput.value = index;
         nameInput.value = PERSONNEL[index].name;
         posInput.value = PERSONNEL[index].position;
         phoneInput.value = PERSONNEL[index].phone || '';
       } else {
-        titleEl.textContent = 'ลงทะเบียนเพิ่มบุคลากร';
+        titleEl.textContent = 'à¸¥à¸‡à¸—à¸°à¹€à¸šà¸µà¸¢à¸™à¹€à¸žà¸´à¹ˆà¸¡à¸šà¸¸à¸„à¸¥à¸²à¸à¸£';
         indexInput.value = '';
         nameInput.value = '';
         posInput.value = '';
@@ -1330,27 +1329,27 @@
       
       if (!nameVal) {
         nameInput.style.borderColor = 'var(--color-danger)';
-        showToast('กรุณาระบุยศและชื่อ-นามสกุล', 'danger');
+        showToast('à¸à¸£à¸¸à¸“à¸²à¸£à¸°à¸šà¸¸à¸¢à¸¨à¹à¸¥à¸°à¸Šà¸·à¹ˆà¸­-à¸™à¸²à¸¡à¸ªà¸à¸¸à¸¥', 'danger');
         return;
       }
       if (!posVal) {
         posInput.style.borderColor = 'var(--color-danger)';
-        showToast('กรุณาระบุตำแหน่ง', 'danger');
+        showToast('à¸à¸£à¸¸à¸“à¸²à¸£à¸°à¸šà¸¸à¸•à¸³à¹à¸«à¸™à¹ˆà¸‡', 'danger');
         return;
       }
 
       if (idxVal !== '') {
         const idx = parseInt(idxVal);
         PERSONNEL[idx] = { name: nameVal, position: posVal, phone: phoneVal };
-        showToast('แก้ไขข้อมูลบุคลากรสำเร็จ', 'success');
+        showToast('à¹à¸à¹‰à¹„à¸‚à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸šà¸¸à¸„à¸¥à¸²à¸à¸£à¸ªà¸³à¹€à¸£à¹‡à¸ˆ', 'success');
       } else {
         if (PERSONNEL.find(p => p.name.toLowerCase() === nameVal.toLowerCase())) {
           nameInput.style.borderColor = 'var(--color-danger)';
-          showToast('รายชื่อบุคลากรนี้ซ้ำและมีอยู่แล้วในระบบ', 'danger');
+          showToast('à¸£à¸²à¸¢à¸Šà¸·à¹ˆà¸­à¸šà¸¸à¸„à¸¥à¸²à¸à¸£à¸™à¸µà¹‰à¸‹à¹‰à¸³à¹à¸¥à¸°à¸¡à¸µà¸­à¸¢à¸¹à¹ˆà¹à¸¥à¹‰à¸§à¹ƒà¸™à¸£à¸°à¸šà¸š', 'danger');
           return;
         }
         PERSONNEL.push({ name: nameVal, position: posVal, phone: phoneVal });
-        showToast('เพิ่มรายชื่อบุคลากรใหม่สำเร็จ', 'success');
+        showToast('à¹€à¸žà¸´à¹ˆà¸¡à¸£à¸²à¸¢à¸Šà¸·à¹ˆà¸­à¸šà¸¸à¸„à¸¥à¸²à¸à¸£à¹ƒà¸«à¸¡à¹ˆà¸ªà¸³à¹€à¸£à¹‡à¸ˆ', 'success');
       }
       savePersonnelData();
       closePersonnelModal();
@@ -1360,12 +1359,12 @@
     function deletePersonnel(index) {
       const p = PERSONNEL[index];
       if (!p) return;
-      const confirmDelete = confirm(`คุณแน่ใจที่จะลบ "${p.name}" (${p.position}) ออกจากรายชื่อบุคลากรหรือไม่?`);
+      const confirmDelete = confirm(`à¸„à¸¸à¸“à¹à¸™à¹ˆà¹ƒà¸ˆà¸—à¸µà¹ˆà¸ˆà¸°à¸¥à¸š "${p.name}" (${p.position}) à¸­à¸­à¸à¸ˆà¸²à¸à¸£à¸²à¸¢à¸Šà¸·à¹ˆà¸­à¸šà¸¸à¸„à¸¥à¸²à¸à¸£à¸«à¸£à¸·à¸­à¹„à¸¡à¹ˆ?`);
       if (!confirmDelete) return;
       
       PERSONNEL.splice(index, 1);
       savePersonnelData();
-      showToast('ลบรายชื่อบุคลากรสำเร็จ', 'success');
+      showToast('à¸¥à¸šà¸£à¸²à¸¢à¸Šà¸·à¹ˆà¸­à¸šà¸¸à¸„à¸¥à¸²à¸à¸£à¸ªà¸³à¹€à¸£à¹‡à¸ˆ', 'success');
       renderPersonnel();
     }
 
@@ -1399,13 +1398,13 @@
 
       const histSelect = document.getElementById('histFiscalFilter');
       if (histSelect) {
-        histSelect.innerHTML = '<option value="">' + t('ทั้งหมด') + '</option>' +
-          sortedYears.map(y => `<option value="${y}">ปีงบประมาณ ${y}</option>`).join('');
+        histSelect.innerHTML = '<option value="">' + t('à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”') + '</option>' +
+          sortedYears.map(y => `<option value="${y}">à¸›à¸µà¸‡à¸šà¸›à¸£à¸°à¸¡à¸²à¸“ ${y}</option>`).join('');
       }
 
       const reportFiscalSelect = document.getElementById('reportFiscalYear');
       if (reportFiscalSelect) {
-        reportFiscalSelect.innerHTML = sortedYears.map(y => `<option value="${y}">ปีงบประมาณ ${y}</option>`).join('');
+        reportFiscalSelect.innerHTML = sortedYears.map(y => `<option value="${y}">à¸›à¸µà¸‡à¸šà¸›à¸£à¸°à¸¡à¸²à¸“ ${y}</option>`).join('');
         reportFiscalSelect.value = String(currentFY);
       }
 
@@ -1422,7 +1421,7 @@
           }
         });
         const sortedCalYears = Array.from(calendarYears).sort((a, b) => b - a);
-        reportYearSelect.innerHTML = sortedCalYears.map(y => `<option value="${y}">${y + 543} (ค.ศ. ${y})</option>`).join('');
+        reportYearSelect.innerHTML = sortedCalYears.map(y => `<option value="${y}">${y + 543} (à¸„.à¸¨. ${y})</option>`).join('');
         reportYearSelect.value = String(currentYear);
       }
 
@@ -1470,11 +1469,11 @@
 
       const reportData = products.map(p => {
         const recv = filteredHistory
-          .filter(h => h.code === p.code && (h.type === 'รับ' || h.type === 'เพิ่ม'))
+          .filter(h => h.code === p.code && (h.type === 'à¸£à¸±à¸š' || h.type === 'à¹€à¸žà¸´à¹ˆà¸¡'))
           .reduce((sum, h) => sum + h.qty, 0);
 
         const issue = filteredHistory
-          .filter(h => h.code === p.code && h.type === 'เบิก')
+          .filter(h => h.code === p.code && h.type === 'à¹€à¸šà¸´à¸')
           .reduce((sum, h) => sum + h.qty, 0);
 
         return {
@@ -1494,14 +1493,14 @@
 
       let titleText = '';
       if (reportType === 'monthly') {
-        const monthsTH = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+        const monthsTH = ['à¸¡à¸à¸£à¸²à¸„à¸¡', 'à¸à¸¸à¸¡à¸ à¸²à¸žà¸±à¸™à¸˜à¹Œ', 'à¸¡à¸µà¸™à¸²à¸„à¸¡', 'à¹€à¸¡à¸©à¸²à¸¢à¸™', 'à¸žà¸¤à¸©à¸ à¸²à¸„à¸¡', 'à¸¡à¸´à¸–à¸¸à¸™à¸²à¸¢à¸™', 'à¸à¸£à¸à¸Žà¸²à¸„à¸¡', 'à¸ªà¸´à¸‡à¸«à¸²à¸„à¸¡', 'à¸à¸±à¸™à¸¢à¸²à¸¢à¸™', 'à¸•à¸¸à¸¥à¸²à¸„à¸¡', 'à¸žà¸¤à¸¨à¸ˆà¸´à¸à¸²à¸¢à¸™', 'à¸˜à¸±à¸™à¸§à¸²à¸„à¸¡'];
         const monthsEN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
         titleText = currentLang === 'th' 
-          ? `รายงานสรุปความเคลื่อนไหวพัสดุ ประจำเดือน ${monthsTH[month - 1]} ปี พ.ศ. ${year + 543}`
+          ? `à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸£à¸¸à¸›à¸„à¸§à¸²à¸¡à¹€à¸„à¸¥à¸·à¹ˆà¸­à¸™à¹„à¸«à¸§à¸žà¸±à¸ªà¸”à¸¸ à¸›à¸£à¸°à¸ˆà¸³à¹€à¸”à¸·à¸­à¸™ ${monthsTH[month - 1]} à¸›à¸µ à¸ž.à¸¨. ${year + 543}`
           : `Monthly Requisition Summary - ${monthsEN[month - 1]} ${year}`;
       } else {
         titleText = currentLang === 'th'
-          ? `รายงานสรุปความเคลื่อนไหวพัสดุ ประจำปีงบประมาณ พ.ศ. ${fy}`
+          ? `à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸£à¸¸à¸›à¸„à¸§à¸²à¸¡à¹€à¸„à¸¥à¸·à¹ˆà¸­à¸™à¹„à¸«à¸§à¸žà¸±à¸ªà¸”à¸¸ à¸›à¸£à¸°à¸ˆà¸³à¸›à¸µà¸‡à¸šà¸›à¸£à¸°à¸¡à¸²à¸“ à¸ž.à¸¨. ${fy}`
           : `Fiscal Year Requisition Summary - FY ${fy}`;
       }
 
@@ -1512,14 +1511,14 @@
         <table>
           <thead>
             <tr>
-              <th>${t('รหัสสินค้า')}</th>
-              <th>${t('ชื่อพัสดุ')}</th>
-              <th>${t('หมวดหมู่')}</th>
-              <th>${t('สถานที่เก็บ')}</th>
-              <th style="text-align: right;">${t('จำนวนที่รับเข้า')}</th>
-              <th style="text-align: right;">${t('จำนวนที่เบิกออก')}</th>
-              <th style="text-align: right;">${t('คงเหลือปัจจุบัน')}</th>
-              <th>${t('หน่วยนับ')}</th>
+              <th>${t('à¸£à¸«à¸±à¸ªà¸ªà¸´à¸™à¸„à¹‰à¸²')}</th>
+              <th>${t('à¸Šà¸·à¹ˆà¸­à¸žà¸±à¸ªà¸”à¸¸')}</th>
+              <th>${t('à¸«à¸¡à¸§à¸”à¸«à¸¡à¸¹à¹ˆ')}</th>
+              <th>${t('à¸ªà¸–à¸²à¸™à¸—à¸µà¹ˆà¹€à¸à¹‡à¸š')}</th>
+              <th style="text-align: right;">${t('à¸ˆà¸³à¸™à¸§à¸™à¸—à¸µà¹ˆà¸£à¸±à¸šà¹€à¸‚à¹‰à¸²')}</th>
+              <th style="text-align: right;">${t('à¸ˆà¸³à¸™à¸§à¸™à¸—à¸µà¹ˆà¹€à¸šà¸´à¸à¸­à¸­à¸')}</th>
+              <th style="text-align: right;">${t('à¸„à¸‡à¹€à¸«à¸¥à¸·à¸­à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™')}</th>
+              <th>${t('à¸«à¸™à¹ˆà¸§à¸¢à¸™à¸±à¸š')}</th>
             </tr>
           </thead>
           <tbody>
@@ -1561,11 +1560,11 @@
 
       const reportData = products.map(p => {
         const recv = filteredHistory
-          .filter(h => h.code === p.code && h.type === 'รับ')
+          .filter(h => h.code === p.code && h.type === 'à¸£à¸±à¸š')
           .reduce((sum, h) => sum + h.qty, 0);
 
         const issue = filteredHistory
-          .filter(h => h.code === p.code && h.type === 'เบิก')
+          .filter(h => h.code === p.code && h.type === 'à¹€à¸šà¸´à¸')
           .reduce((sum, h) => sum + h.qty, 0);
 
         return {
@@ -1582,10 +1581,10 @@
 
       let reportTitle = '';
       if (reportType === 'monthly') {
-        const monthsTH = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
-        reportTitle = `รายงานสรุปความเคลื่อนไหวพัสดุประจำเดือน ${monthsTH[month - 1]} พ.ศ. ${year + 543}`;
+        const monthsTH = ['à¸¡à¸à¸£à¸²à¸„à¸¡', 'à¸à¸¸à¸¡à¸ à¸²à¸žà¸±à¸™à¸˜à¹Œ', 'à¸¡à¸µà¸™à¸²à¸„à¸¡', 'à¹€à¸¡à¸©à¸²à¸¢à¸™', 'à¸žà¸¤à¸©à¸ à¸²à¸„à¸¡', 'à¸¡à¸´à¸–à¸¸à¸™à¸²à¸¢à¸™', 'à¸à¸£à¸à¸Žà¸²à¸„à¸¡', 'à¸ªà¸´à¸‡à¸«à¸²à¸„à¸¡', 'à¸à¸±à¸™à¸¢à¸²à¸¢à¸™', 'à¸•à¸¸à¸¥à¸²à¸„à¸¡', 'à¸žà¸¤à¸¨à¸ˆà¸´à¸à¸²à¸¢à¸™', 'à¸˜à¸±à¸™à¸§à¸²à¸„à¸¡'];
+        reportTitle = `à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸£à¸¸à¸›à¸„à¸§à¸²à¸¡à¹€à¸„à¸¥à¸·à¹ˆà¸­à¸™à¹„à¸«à¸§à¸žà¸±à¸ªà¸”à¸¸à¸›à¸£à¸°à¸ˆà¸³à¹€à¸”à¸·à¸­à¸™ ${monthsTH[month - 1]} à¸ž.à¸¨. ${year + 543}`;
       } else {
-        reportTitle = `รายงานสรุปความเคลื่อนไหวพัสดุประจำปีงบประมาณ พ.ศ. ${fy}`;
+        reportTitle = `à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸£à¸¸à¸›à¸„à¸§à¸²à¸¡à¹€à¸„à¸¥à¸·à¹ˆà¸­à¸™à¹„à¸«à¸§à¸žà¸±à¸ªà¸”à¸¸à¸›à¸£à¸°à¸ˆà¸³à¸›à¸µà¸‡à¸šà¸›à¸£à¸°à¸¡à¸²à¸“ à¸ž.à¸¨. ${fy}`;
       }
 
       const printWindow = window.open('', '_blank', 'width=1000,height=800');
@@ -1721,27 +1720,27 @@
         <body>
           <div class="screen-preview">
             <div class="spinner"></div>
-            <p style="font-weight: 600; font-size: 16px; margin: 0 0 8px 0; color: #0f172a; font-family: 'Sarabun', sans-serif;">กำลังเรียกใช้หน้าต่างพิมพ์รายงานพัสดุ</p>
-            <p style="font-size: 13px; color: #64748b; margin: 0; line-height: 1.5; font-family: 'Sarabun', sans-serif;">ระบบกำลังเปิดกล่องพิมพ์ของเบราว์เซอร์ หน้าต่างนี้จะปิดตัวเองโดยอัตโนมัติเมื่อพิมพ์เสร็จหรือยกเลิก</p>
+            <p style="font-weight: 600; font-size: 16px; margin: 0 0 8px 0; color: #0f172a; font-family: 'Sarabun', sans-serif;">à¸à¸³à¸¥à¸±à¸‡à¹€à¸£à¸µà¸¢à¸à¹ƒà¸Šà¹‰à¸«à¸™à¹‰à¸²à¸•à¹ˆà¸²à¸‡à¸žà¸´à¸¡à¸žà¹Œà¸£à¸²à¸¢à¸‡à¸²à¸™à¸žà¸±à¸ªà¸”à¸¸</p>
+            <p style="font-size: 13px; color: #64748b; margin: 0; line-height: 1.5; font-family: 'Sarabun', sans-serif;">à¸£à¸°à¸šà¸šà¸à¸³à¸¥à¸±à¸‡à¹€à¸›à¸´à¸”à¸à¸¥à¹ˆà¸­à¸‡à¸žà¸´à¸¡à¸žà¹Œà¸‚à¸­à¸‡à¹€à¸šà¸£à¸²à¸§à¹Œà¹€à¸‹à¸­à¸£à¹Œ à¸«à¸™à¹‰à¸²à¸•à¹ˆà¸²à¸‡à¸™à¸µà¹‰à¸ˆà¸°à¸›à¸´à¸”à¸•à¸±à¸§à¹€à¸­à¸‡à¹‚à¸”à¸¢à¸­à¸±à¸•à¹‚à¸™à¸¡à¸±à¸•à¸´à¹€à¸¡à¸·à¹ˆà¸­à¸žà¸´à¸¡à¸žà¹Œà¹€à¸ªà¸£à¹‡à¸ˆà¸«à¸£à¸·à¸­à¸¢à¸à¹€à¸¥à¸´à¸</p>
           </div>
           
           <div class="print-content">
             <div class="header">
               <div class="title">${reportTitle}</div>
-              <div class="subtitle">กองกรรมวิธีข้อมูล</div>
+              <div class="subtitle">à¸à¸­à¸‡à¸à¸£à¸£à¸¡à¸§à¸´à¸˜à¸µà¸‚à¹‰à¸­à¸¡à¸¹à¸¥</div>
             </div>
           <table>
             <thead>
               <tr>
-                <th>ลำดับ</th>
-                <th>รหัสพัสดุ</th>
-                <th>ชื่อรายการพัสดุ</th>
-                <th>หมวดหมู่</th>
-                <th>สถานที่จัดเก็บ</th>
-                <th>จำนวนรับเข้า</th>
-                <th>จำนวนเบิกออก</th>
-                <th>ยอดคงเหลือปัจจุบัน</th>
-                <th>หน่วยนับ</th>
+                <th>à¸¥à¸³à¸”à¸±à¸š</th>
+                <th>à¸£à¸«à¸±à¸ªà¸žà¸±à¸ªà¸”à¸¸</th>
+                <th>à¸Šà¸·à¹ˆà¸­à¸£à¸²à¸¢à¸à¸²à¸£à¸žà¸±à¸ªà¸”à¸¸</th>
+                <th>à¸«à¸¡à¸§à¸”à¸«à¸¡à¸¹à¹ˆ</th>
+                <th>à¸ªà¸–à¸²à¸™à¸—à¸µà¹ˆà¸ˆà¸±à¸”à¹€à¸à¹‡à¸š</th>
+                <th>à¸ˆà¸³à¸™à¸§à¸™à¸£à¸±à¸šà¹€à¸‚à¹‰à¸²</th>
+                <th>à¸ˆà¸³à¸™à¸§à¸™à¹€à¸šà¸´à¸à¸­à¸­à¸</th>
+                <th>à¸¢à¸­à¸”à¸„à¸‡à¹€à¸«à¸¥à¸·à¸­à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™</th>
+                <th>à¸«à¸™à¹ˆà¸§à¸¢à¸™à¸±à¸š</th>
               </tr>
             </thead>
             <tbody>
@@ -1763,18 +1762,18 @@
           
           <div class="footer-section">
             <div class="signature-block">
-              <p>เจ้าหน้าที่ผู้จัดทำรายงาน</p>
+              <p>à¹€à¸ˆà¹‰à¸²à¸«à¸™à¹‰à¸²à¸—à¸µà¹ˆà¸œà¸¹à¹‰à¸ˆà¸±à¸”à¸—à¸³à¸£à¸²à¸¢à¸‡à¸²à¸™</p>
               <div class="sig-line"></div>
-              <p>( พ.อ.อ. สุภัค อัมพิลาศัย )</p>
-              <p>ตำแหน่ง จนท.พัสดุ กกม.บก.ซо.</p>
-              <p>วันที่ ........../........../..........</p>
+              <p>( à¸ž.à¸­.à¸­. à¸ªà¸¸à¸ à¸±à¸„ à¸­à¸±à¸¡à¸žà¸´à¸¥à¸²à¸¨à¸±à¸¢ )</p>
+              <p>à¸•à¸³à¹à¸«à¸™à¹ˆà¸‡ à¸ˆà¸™à¸—.à¸žà¸±à¸ªà¸”à¸¸ à¸à¸à¸¡.à¸šà¸.à¸‹Ð¾.</p>
+              <p>à¸§à¸±à¸™à¸—à¸µà¹ˆ ........../........../..........</p>
             </div>
             <div class="signature-block">
-              <p>ผู้ตรวจสอบความถูกต้อง</p>
+              <p>à¸œà¸¹à¹‰à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¸„à¸§à¸²à¸¡à¸–à¸¹à¸à¸•à¹‰à¸­à¸‡</p>
               <div class="sig-line"></div>
-              <p>( น.อ. บุญทวี ช่วยเนียม )</p>
-              <p>ตำแหน่ง หก.กกม.บก.ซо.</p>
-              <p>วันที่ ........../........../..........</p>
+              <p>( à¸™.à¸­. à¸šà¸¸à¸à¸—à¸§à¸µ à¸Šà¹ˆà¸§à¸¢à¹€à¸™à¸µà¸¢à¸¡ )</p>
+              <p>à¸•à¸³à¹à¸«à¸™à¹ˆà¸‡ à¸«à¸.à¸à¸à¸¡.à¸šà¸.à¸‹Ð¾.</p>
+              <p>à¸§à¸±à¸™à¸—à¸µà¹ˆ ........../........../..........</p>
             </div>
             </div>
           </div>
@@ -1812,11 +1811,11 @@
 
       const reportData = products.map(p => {
         const recv = filteredHistory
-          .filter(h => h.code === p.code && h.type === 'รับ')
+          .filter(h => h.code === p.code && h.type === 'à¸£à¸±à¸š')
           .reduce((sum, h) => sum + h.qty, 0);
 
         const issue = filteredHistory
-          .filter(h => h.code === p.code && h.type === 'เบิก')
+          .filter(h => h.code === p.code && h.type === 'à¹€à¸šà¸´à¸')
           .reduce((sum, h) => sum + h.qty, 0);
 
         return {
@@ -1833,18 +1832,18 @@
 
       let reportTitle = '';
       if (reportType === 'monthly') {
-        const monthsTH = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
-        reportTitle = `รายงานสรุปความเคลื่อนไหวพัสดุประจำเดือน ${monthsTH[month - 1]} พ.ศ. ${year + 543}`;
+        const monthsTH = ['à¸¡à¸à¸£à¸²à¸„à¸¡', 'à¸à¸¸à¸¡à¸ à¸²à¸žà¸±à¸™à¸˜à¹Œ', 'à¸¡à¸µà¸™à¸²à¸„à¸¡', 'à¹€à¸¡à¸©à¸²à¸¢à¸™', 'à¸žà¸¤à¸©à¸ à¸²à¸„à¸¡', 'à¸¡à¸´à¸–à¸¸à¸™à¸²à¸¢à¸™', 'à¸à¸£à¸à¸Žà¸²à¸„à¸¡', 'à¸ªà¸´à¸‡à¸«à¸²à¸„à¸¡', 'à¸à¸±à¸™à¸¢à¸²à¸¢à¸™', 'à¸•à¸¸à¸¥à¸²à¸„à¸¡', 'à¸žà¸¤à¸¨à¸ˆà¸´à¸à¸²à¸¢à¸™', 'à¸˜à¸±à¸™à¸§à¸²à¸„à¸¡'];
+        reportTitle = `à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸£à¸¸à¸›à¸„à¸§à¸²à¸¡à¹€à¸„à¸¥à¸·à¹ˆà¸­à¸™à¹„à¸«à¸§à¸žà¸±à¸ªà¸”à¸¸à¸›à¸£à¸°à¸ˆà¸³à¹€à¸”à¸·à¸­à¸™ ${monthsTH[month - 1]} à¸ž.à¸¨. ${year + 543}`;
       } else {
-        reportTitle = `รายงานสรุปความเคลื่อนไหวพัสดุประจำปีงบประมาณ พ.ศ. ${fy}`;
+        reportTitle = `à¸£à¸²à¸¢à¸‡à¸²à¸™à¸ªà¸£à¸¸à¸›à¸„à¸§à¸²à¸¡à¹€à¸„à¸¥à¸·à¹ˆà¸­à¸™à¹„à¸«à¸§à¸žà¸±à¸ªà¸”à¸¸à¸›à¸£à¸°à¸ˆà¸³à¸›à¸µà¸‡à¸šà¸›à¸£à¸°à¸¡à¸²à¸“ à¸ž.à¸¨. ${fy}`;
       }
 
       let csvRows = [];
       csvRows.push('\ufeff'); 
       csvRows.push(`"${reportTitle}"`);
-      csvRows.push(`"สำนักงานพัฒนาและมาตรฐาน (กกม.บก.ซอ.)"`);
+      csvRows.push(`"à¸ªà¸³à¸™à¸±à¸à¸‡à¸²à¸™à¸žà¸±à¸’à¸™à¸²à¹à¸¥à¸°à¸¡à¸²à¸•à¸£à¸à¸²à¸™ (à¸à¸à¸¡.à¸šà¸.à¸‹à¸­.)"`);
       csvRows.push('');
-      csvRows.push('"รหัสพัสดุ","ชื่อรายการ","หมวดหมู่","สถานที่เก็บ","จำนวนรับเข้า","จำนวนเบิกออก","คงเหลือปัจจุบัน","หน่วยนับ"');
+      csvRows.push('"à¸£à¸«à¸±à¸ªà¸žà¸±à¸ªà¸”à¸¸","à¸Šà¸·à¹ˆà¸­à¸£à¸²à¸¢à¸à¸²à¸£","à¸«à¸¡à¸§à¸”à¸«à¸¡à¸¹à¹ˆ","à¸ªà¸–à¸²à¸™à¸—à¸µà¹ˆà¹€à¸à¹‡à¸š","à¸ˆà¸³à¸™à¸§à¸™à¸£à¸±à¸šà¹€à¸‚à¹‰à¸²","à¸ˆà¸³à¸™à¸§à¸™à¹€à¸šà¸´à¸à¸­à¸­à¸","à¸„à¸‡à¹€à¸«à¸¥à¸·à¸­à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™","à¸«à¸™à¹ˆà¸§à¸¢à¸™à¸±à¸š"');
 
       reportData.forEach(r => {
         csvRows.push(`"${r.code}","${r.name}","${r.cat}","${r.loc}",${r.received},${r.issued},${r.currentQty},"${r.unit}"`);
@@ -1861,26 +1860,26 @@
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      showToast('ส่งออกไฟล์ Excel (CSV) สำเร็จ');
+      showToast('à¸ªà¹ˆà¸‡à¸­à¸­à¸à¹„à¸Ÿà¸¥à¹Œ Excel (CSV) à¸ªà¸³à¹€à¸£à¹‡à¸ˆ');
     }
 
     function clearHistory() {
-      const confirmClear = confirm(t('คุณแน่ใจหรือไม่ที่จะล้างข้อมูลประวัติความเคลื่อนไหวทั้งหมด?\n*การกระทำนี้จะลบข้อมูลประวัติทั้งหมดอย่างถาวรและไม่สามารถกู้คืนได้*'));
+      const confirmClear = confirm(t('à¸„à¸¸à¸“à¹à¸™à¹ˆà¹ƒà¸ˆà¸«à¸£à¸·à¸­à¹„à¸¡à¹ˆà¸—à¸µà¹ˆà¸ˆà¸°à¸¥à¹‰à¸²à¸‡à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸›à¸£à¸°à¸§à¸±à¸•à¸´à¸„à¸§à¸²à¸¡à¹€à¸„à¸¥à¸·à¹ˆà¸­à¸™à¹„à¸«à¸§à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”?\n*à¸à¸²à¸£à¸à¸£à¸°à¸—à¸³à¸™à¸µà¹‰à¸ˆà¸°à¸¥à¸šà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸›à¸£à¸°à¸§à¸±à¸•à¸´à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”à¸­à¸¢à¹ˆà¸²à¸‡à¸–à¸²à¸§à¸£à¹à¸¥à¸°à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸à¸¹à¹‰à¸„à¸·à¸™à¹„à¸”à¹‰*'));
       if (confirmClear) {
         history = [{
           date: new Date().toISOString().slice(0, 10),
-          type: 'ลบ',
+          type: 'à¸¥à¸š',
           code: '-',
           name: 'System',
           qty: 0,
           user: currentUser || 'admin',
-          note: 'ผู้ดูแลระบบสั่งล้างข้อมูลประวัติทั้งหมด'
+          note: 'à¸œà¸¹à¹‰à¸”à¸¹à¹à¸¥à¸£à¸°à¸šà¸šà¸ªà¸±à¹ˆà¸‡à¸¥à¹‰à¸²à¸‡à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸›à¸£à¸°à¸§à¸±à¸•à¸´à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”'
         }];
         saveDatabase();
         renderHistory();
         renderDashboard();
         populateFiscalYears();
-        showToast(t('ล้างข้อมูลประวัติสำเร็จ'), 'success');
+        showToast(t('à¸¥à¹‰à¸²à¸‡à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸›à¸£à¸°à¸§à¸±à¸•à¸´à¸ªà¸³à¹€à¸£à¹‡à¸ˆ'), 'success');
       }
     }
 
@@ -1989,7 +1988,7 @@
       const p = products.find(x => x.code === code);
       const unitLabel = document.getElementById('recvUnitLabel');
       if (unitLabel && p) {
-        unitLabel.textContent = `(หน่วย: ${t(p.unit)})`;
+        unitLabel.textContent = `(à¸«à¸™à¹ˆà¸§à¸¢: ${t(p.unit)})`;
       }
 
       hideRecvProductDropdown();
@@ -2060,7 +2059,7 @@
       const p = products.find(x => x.code === code);
       const unitLabel = document.getElementById('issueUnitLabel');
       if (unitLabel && p) {
-        unitLabel.textContent = `(หน่วย: ${t(p.unit)})`;
+        unitLabel.textContent = `(à¸«à¸™à¹ˆà¸§à¸¢: ${t(p.unit)})`;
       }
 
       hideIssueProductDropdown();
@@ -2108,9 +2107,9 @@
         downloadAnchor.click();
         downloadAnchor.remove();
         URL.revokeObjectURL(url);
-        showToast('สำรองข้อมูลเรียบร้อย (Backup JSON Downloaded)', 'success');
+        showToast('à¸ªà¸³à¸£à¸­à¸‡à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¹€à¸£à¸µà¸¢à¸šà¸£à¹‰à¸­à¸¢ (Backup JSON Downloaded)', 'success');
       } catch (e) {
-        showToast('เกิดข้อผิดพลาดในการสำรองข้อมูล', 'danger');
+        showToast('à¹€à¸à¸´à¸”à¸‚à¹‰à¸­à¸œà¸´à¸”à¸žà¸¥à¸²à¸”à¹ƒà¸™à¸à¸²à¸£à¸ªà¸³à¸£à¸­à¸‡à¸‚à¹‰à¸­à¸¡à¸¹à¸¥', 'danger');
       }
     }
 
@@ -2128,7 +2127,7 @@
         try {
           const importedData = JSON.parse(e.target.result);
           if (importedData && Array.isArray(importedData.products) && Array.isArray(importedData.history) && Array.isArray(importedData.personnel)) {
-            const confirmRestore = confirm('คุณต้องการกู้คืนข้อมูลระบบด้วยไฟล์สำรองนี้หรือไม่?\n*คำเตือน: ข้อมูลพัสดุ ประวัติการเบิกจ่าย และบุคลากรทั้งหมดที่มีอยู่ในปัจจุบันจะถูกเขียนทับทันที*');
+            const confirmRestore = confirm('à¸„à¸¸à¸“à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸à¸¹à¹‰à¸„à¸·à¸™à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸£à¸°à¸šà¸šà¸”à¹‰à¸§à¸¢à¹„à¸Ÿà¸¥à¹Œà¸ªà¸³à¸£à¸­à¸‡à¸™à¸µà¹‰à¸«à¸£à¸·à¸­à¹„à¸¡à¹ˆ?\n*à¸„à¸³à¹€à¸•à¸·à¸­à¸™: à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸žà¸±à¸ªà¸”à¸¸ à¸›à¸£à¸°à¸§à¸±à¸•à¸´à¸à¸²à¸£à¹€à¸šà¸´à¸à¸ˆà¹ˆà¸²à¸¢ à¹à¸¥à¸°à¸šà¸¸à¸„à¸¥à¸²à¸à¸£à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”à¸—à¸µà¹ˆà¸¡à¸µà¸­à¸¢à¸¹à¹ˆà¹ƒà¸™à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™à¸ˆà¸°à¸–à¸¹à¸à¹€à¸‚à¸µà¸¢à¸™à¸—à¸±à¸šà¸—à¸±à¸™à¸—à¸µ*');
             if (confirmRestore) {
               products = importedData.products;
               history = importedData.history;
@@ -2142,13 +2141,13 @@
               renderPersonnel();
               populateFiscalYears();
               
-              showToast('กู้คืนข้อมูลสำเร็จ (Database Restored)', 'success');
+              showToast('à¸à¸¹à¹‰à¸„à¸·à¸™à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸ªà¸³à¹€à¸£à¹‡à¸ˆ (Database Restored)', 'success');
             }
           } else {
-            showToast('ไฟล์สำรองไม่ถูกต้อง หรือโครงสร้างข้อมูลผิดพลาด', 'danger');
+            showToast('à¹„à¸Ÿà¸¥à¹Œà¸ªà¸³à¸£à¸­à¸‡à¹„à¸¡à¹ˆà¸–à¸¹à¸à¸•à¹‰à¸­à¸‡ à¸«à¸£à¸·à¸­à¹‚à¸„à¸£à¸‡à¸ªà¸£à¹‰à¸²à¸‡à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸œà¸´à¸”à¸žà¸¥à¸²à¸”', 'danger');
           }
         } catch (err) {
-          showToast('ไม่สามารถอ่านไฟล์ได้ หรือข้อมูลในไฟล์ไม่ใช่ JSON', 'danger');
+          showToast('à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸­à¹ˆà¸²à¸™à¹„à¸Ÿà¸¥à¹Œà¹„à¸”à¹‰ à¸«à¸£à¸·à¸­à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¹ƒà¸™à¹„à¸Ÿà¸¥à¹Œà¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ JSON', 'danger');
         }
         event.target.value = '';
       };
@@ -2234,7 +2233,7 @@
 
       // Sum quantities issued for each of the last 6 months
       history.forEach(h => {
-        if (h.type === 'เบิก' && h.date) {
+        if (h.type === 'à¹€à¸šà¸´à¸' && h.date) {
           const parts = h.date.split('-');
           const hYear = parseInt(parts[0]);
           const hMonth = parseInt(parts[1]);
@@ -2248,7 +2247,7 @@
       // Calculate Top 5 Issued Products
       const productTotals = {};
       history.forEach(h => {
-        if (h.type === 'เบิก') {
+        if (h.type === 'à¹€à¸šà¸´à¸') {
           const key = h.name || h.code;
           productTotals[key] = (productTotals[key] || 0) + h.qty;
         }
@@ -2276,7 +2275,7 @@
         data: {
           labels: last6Months.map(m => m.label),
           datasets: [{
-            label: t('จำนวนพัสดุที่เบิก'),
+            label: t('à¸ˆà¸³à¸™à¸§à¸™à¸žà¸±à¸ªà¸”à¸¸à¸—à¸µà¹ˆà¹€à¸šà¸´à¸'),
             data: last6Months.map(m => m.totalQty),
             borderColor: '#6366f1',
             backgroundColor: 'rgba(99, 102, 241, 0.15)',
@@ -2295,7 +2294,7 @@
             legend: { display: false },
             tooltip: {
               callbacks: {
-                label: function(context) { return ` ${context.parsed.y.toLocaleString()} ${t('ชิ้น')}`; }
+                label: function(context) { return ` ${context.parsed.y.toLocaleString()} ${t('à¸Šà¸´à¹‰à¸™')}`; }
               }
             }
           },
@@ -2319,9 +2318,9 @@
       window.topProductsChartInstance = new Chart(topBarCtx, {
         type: 'bar',
         data: {
-          labels: topLabels.length > 0 ? topLabels : [t('ไม่มีข้อมูลการเบิก')],
+          labels: topLabels.length > 0 ? topLabels : [t('à¹„à¸¡à¹ˆà¸¡à¸µà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸à¸²à¸£à¹€à¸šà¸´à¸')],
           datasets: [{
-            label: t('จำนวนพัสดุที่เบิก'),
+            label: t('à¸ˆà¸³à¸™à¸§à¸™à¸žà¸±à¸ªà¸”à¸¸à¸—à¸µà¹ˆà¹€à¸šà¸´à¸'),
             data: topData.length > 0 ? topData : [0],
             backgroundColor: [
               'rgba(99, 102, 241, 0.85)',
@@ -2341,7 +2340,7 @@
             legend: { display: false },
             tooltip: {
               callbacks: {
-                label: function(context) { return ` ${context.parsed.y.toLocaleString()} ${t('ชิ้น')}`; }
+                label: function(context) { return ` ${context.parsed.y.toLocaleString()} ${t('à¸Šà¸´à¹‰à¸™')}`; }
               }
             }
           },
