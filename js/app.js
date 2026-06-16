@@ -631,7 +631,7 @@
     function renderStock() {
       const q = document.getElementById('searchInput').value.trim().toLowerCase();
       const list = products.filter(p => p.code.toLowerCase().includes(q) || p.name.toLowerCase().includes(q));
-      document.getElementById('stockTable').innerHTML = `<table><thead><tr><th>${t('รหัสสินค้า')}</th><th>${t('ชื่อ')}</th><th>${t('จำนวน')}</th><th>${t('หน่วย')}</th><th>${t('จัดการ')}</th></tr></thead><tbody>${list.map(p => `<tr><td>${p.code}</td><td style="user-select: none;">${p.name}</td><td>${p.qty}</td><td>${p.unit}</td><td><button class="btn-action btn-action-edit" onclick="openEditModal('${p.code}')"><i class="ti ti-edit"></i></button><button class="btn-action btn-action-delete" onclick="deleteProduct('${p.code}')"><i class="ti ti-trash"></i></button></td></tr>`).join('')}</tbody></table>`;
+      document.getElementById('stockTable').innerHTML = `<table><thead><tr><th>${t('รหัสสินค้า')}</th><th>${t('ชื่อ')}</th><th>${t('จำนวน')}</th><th>${t('หน่วย')}</th><th>${t('จัดการ')}</th></tr></thead><tbody>${list.map(p => `<tr><td>${p.code}</td><td style="user-select: none;">${p.name}</td><td>${p.qty}</td><td>${p.unit}</td><td style="display: flex; gap: 4px; justify-content: flex-end;"><button class="btn-action" style="background-color: var(--color-success); color: white; border-color: var(--color-success);" onclick="openRecvModal('${p.code}')" title="รับสินค้าเข้า"><i class="ti ti-arrow-down-left"></i></button><button class="btn-action btn-action-edit" onclick="openEditModal('${p.code}')" title="แก้ไข"><i class="ti ti-edit"></i></button><button class="btn-action btn-action-delete" onclick="deleteProduct('${p.code}')" title="ลบ"><i class="ti ti-trash"></i></button></td></tr>`).join('')}</tbody></table>`;
     }
 
     function populateSelects() {
@@ -641,10 +641,21 @@
       });
     }
 
-    function openRecvModal() { 
+    function openRecvModal(code) { 
       document.getElementById('recvItemSearch').value = '';
       document.getElementById('recvItem').value = '';
-      if (document.getElementById('clearRecvItemBtn')) document.getElementById('clearRecvItemBtn').style.display = 'none';
+      
+      if (code && typeof code === 'string') {
+        const p = products.find(x => x.code === code);
+        if (p) {
+          document.getElementById('recvItemSearch').value = p.name;
+          document.getElementById('recvItem').value = p.code;
+        }
+      }
+      
+      if (document.getElementById('clearRecvItemBtn')) {
+        document.getElementById('clearRecvItemBtn').style.display = code ? 'block' : 'none';
+      }
       document.getElementById('recvQty').value = '';
       document.getElementById('recvLot').value = '';
       document.getElementById('recvExp').value = '';
