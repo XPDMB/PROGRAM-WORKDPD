@@ -413,12 +413,12 @@
         console.error('Cloud Sync failed, using offline fallback cache:', err);
       } finally {
         hideSyncLoading();
-        // Re-render UI views with loaded data
         renderDashboard();
         renderStock();
         renderHistory();
         renderPersonnel();
         populateFiscalYears();
+        populateUnitDatalist();
       }
     }
 
@@ -1088,9 +1088,6 @@
       document.getElementById('newUnit').value = '';
       document.getElementById('newLoc').value = '';
       document.getElementById('newCat').selectedIndex = 0;
-      document.getElementById('newExp').value = '';
-      document.getElementById('newSource').value = '';
-      document.getElementById('newNote').value = '';
       document.getElementById('addModal').classList.add('open');
     }
     function closeAddModal() { document.getElementById('addModal').classList.remove('open'); }
@@ -1103,9 +1100,6 @@
       const min = Math.max(1, Math.floor(qty * 0.2)) || 10;
       const unit = document.getElementById('newUnit').value.trim() || 'ชิ้น';
       const loc = document.getElementById('newLoc').value.trim();
-      const exp = document.getElementById('newExp').value;
-      const source = document.getElementById('newSource').value.trim();
-      const note = document.getElementById('newNote').value.trim();
       
       const codeEl = document.getElementById('newCode');
       const nameEl = document.getElementById('newName');
@@ -1131,12 +1125,7 @@
       
       products.push({ code, name, cat, qty, min, unit, loc });
 
-      // Build historical combined note
-      let details = [];
-      if (source) details.push(`ที่มา: ${source}`);
-      if (exp) details.push(`EXP: ${formatThaiDate(exp)}`);
-      if (note) details.push(`หมายเหตุ: ${note}`);
-      const combinedNote = details.join(' | ') || 'จดทะเบียนพัสดุรายการใหม่เข้าสต็อกคลังสินค้า';
+      const combinedNote = 'จดทะเบียนพัสดุรายการใหม่เข้าสต็อกคลังสินค้า';
 
       history.unshift({
         date: new Date().toISOString().slice(0, 10),
@@ -1251,6 +1240,25 @@
 
     function populatePersonnelSelect() {
       // Handled dynamically by autocomplete drop list
+    }
+
+    function populateUnitDatalist() {
+      const datalist = document.getElementById('unitOptions');
+      if (!datalist) return;
+      
+      const units = new Set();
+      // Add existing product units
+      products.forEach(p => {
+        if (p.unit) units.add(p.unit.trim());
+      });
+      
+      // Default common units
+      ['ชิ้น', 'อัน', 'เครื่อง', 'กล่อง', 'แพ็ค', 'ลัง', 'ม้วน', 'ขวด', 'เส้น', 'ก้อน', 'รีม', 'ตลับ', 'ใบ', 'ชุด'].forEach(u => units.add(u));
+      
+      datalist.innerHTML = Array.from(units)
+        .filter(u => u !== '')
+        .map(u => `<option value="${u}"></option>`)
+        .join('');
     }
 
     function renderPersonnel() {
