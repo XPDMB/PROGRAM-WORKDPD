@@ -594,6 +594,24 @@
       if (name === 'history') renderHistory();
       if (name === 'personnel') renderPersonnel();
       if (name === 'reports') renderReport();
+
+      // Auto-close sidebar on mobile
+      if (window.innerWidth <= 1024) {
+        const sidebar = document.querySelector('.sidebar');
+        const backdrop = document.querySelector('.sidebar-backdrop');
+        if (sidebar && sidebar.classList.contains('sidebar-open')) {
+          sidebar.classList.remove('sidebar-open');
+          if (backdrop) backdrop.classList.remove('sidebar-open');
+        }
+      }
+    }
+
+    // Toggle Sidebar for mobile view
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      const backdrop = document.querySelector('.sidebar-backdrop');
+      if (sidebar) sidebar.classList.toggle('sidebar-open');
+      if (backdrop) backdrop.classList.toggle('sidebar-open');
     }
 
     function renderDashboard() {
@@ -1839,7 +1857,15 @@
     function clearHistory() {
       const confirmClear = confirm(t('คุณแน่ใจหรือไม่ที่จะล้างข้อมูลประวัติความเคลื่อนไหวทั้งหมด?\n*การกระทำนี้จะลบข้อมูลประวัติทั้งหมดอย่างถาวรและไม่สามารถกู้คืนได้*'));
       if (confirmClear) {
-        history = [];
+        history = [{
+          date: new Date().toISOString().slice(0, 10),
+          type: 'ลบ',
+          code: '-',
+          name: 'System',
+          qty: 0,
+          user: currentUser || 'admin',
+          note: 'ผู้ดูแลระบบสั่งล้างข้อมูลประวัติทั้งหมด'
+        }];
         saveDatabase();
         renderHistory();
         populateFiscalYears();

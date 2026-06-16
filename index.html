@@ -133,11 +133,17 @@
     <!-- RIGHT WORKSPACE -->
     <div class="workspace">
       
+      <!-- SIDEBAR BACKDROP FOR MOBILE -->
+      <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+
       <!-- MAIN CONTENT PORTAL -->
       <div class="content-area">
         
         <!-- APP HEADER (Clock & Lang) -->
         <div class="app-header">
+          <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
+            <i class="ti ti-menu-2"></i>
+          </button>
           <div class="datetime-display" id="realtimeClock">
             <i class="ti ti-clock"></i> <span></span>
           </div>
@@ -158,7 +164,7 @@
           </div>
 
           <!-- Interactive Analytics Charts Row -->
-          <div class="charts-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+          <div class="charts-row">
             <div class="panel" style="margin-bottom: 0;">
               <div class="panel-header">
                 <span class="panel-title"><i class="ti ti-chart-line" aria-hidden="true"></i> แนวโน้มการเบิกจ่ายพัสดุรายเดือน (6 เดือนล่าสุด)</span>
