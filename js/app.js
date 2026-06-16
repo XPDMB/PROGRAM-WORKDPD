@@ -374,7 +374,7 @@
         if (!response.ok) throw new Error('Failed to fetch');
         const data = await response.json();
 
-        if (data.products && Array.isArray(data.products) && data.products.length > 0) {
+        if (data.products && Array.isArray(data.products)) {
           products = data.products.map(p => ({
             code: p["รหัสสินค้า"] || p.code || '',
             name: p["ชื่อสินค้า"] || p.name || '',
@@ -385,7 +385,7 @@
             loc: p["ที่เก็บ"] || p.loc || ''
           }));
         }
-        if (data.history && Array.isArray(data.history) && data.history.length > 0) {
+        if (data.history && Array.isArray(data.history)) {
           history = data.history.map(h => ({
             date: h["วันที่"] || h.date || '',
             type: h["ประเภท"] || h.type || 'ปรับปรุง',
