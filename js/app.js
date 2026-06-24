@@ -363,51 +363,21 @@
       });
     }
 
-    function saveCustomOverrides() {
-      const overrides = {};
-      products.forEach(p => {
-        overrides[p.code] = { cat: p.cat, name: p.name, qty: p.qty, min: p.min, unit: p.unit, loc: p.loc, img: p.img };
-      });
-      try { localStorage.setItem('dpd_custom_overrides', JSON.stringify(overrides)); } catch(e){}
-    }
-
     async function loadDatabase() {
+      // Clean up legacy custom overrides if present so they don't block Google Sheets master data
+      try { localStorage.removeItem('dpd_custom_overrides'); } catch(e){}
+
       // 1. Initial local cache load to show UI instantly
-      let storedProducts, storedHistory, storedPersonnel, storedOverrides;
+      let storedProducts, storedHistory, storedPersonnel;
       try { storedProducts = localStorage.getItem('dpd_products'); } catch (e) {}
       try { storedHistory = localStorage.getItem('dpd_history'); } catch (e) {}
       try { storedPersonnel = localStorage.getItem('dpd_personnel'); } catch (e) {}
-      try { storedOverrides = localStorage.getItem('dpd_custom_overrides'); } catch (e) {}
-
-      let overrides = {};
-      if (storedOverrides) {
-        try { overrides = JSON.parse(storedOverrides) || {}; } catch(e){}
-      }
 
       if (storedProducts) {
         try { products = JSON.parse(storedProducts); } catch (e) { products = fallbackProducts; }
       } else { products = fallbackProducts; }
 
-      // Apply overrides to cached products
-      products.forEach(p => {
-        if (overrides[p.code]) {
-          if (overrides[p.code].cat) p.cat = overrides[p.code].cat;
-          if (overrides[p.code].name) p.name = overrides[p.code].name;
-          if (overrides[p.code].qty !== undefined) p.qty = overrides[p.code].qty;
-          if (overrides[p.code].unit) p.unit = overrides[p.code].unit;
-          if (overrides[p.code].loc !== undefined) p.loc = overrides[p.code].loc;
-          if (overrides[p.code].img !== undefined) p.img = overrides[p.code].img;
-        }
-      });
-
       autoCategorize(products);
-
-      // Re-apply category overrides after autoCategorize to guarantee manual edits are preserved
-      products.forEach(p => {
-        if (overrides[p.code] && overrides[p.code].cat) {
-          p.cat = overrides[p.code].cat;
-        }
-      });
 
       if (storedHistory) {
         try { history = JSON.parse(storedHistory); } catch (e) { history = fallbackHistory; }
@@ -430,53 +400,49 @@
         if (!response.ok) throw new Error('Failed to fetch');
         const data = await response.json();
 
-        if (data.products && Array.isArray(data.products)) {
-          products = data.products.map(p => {
-            const code = p["รหัสสินค้า"] || p.code || '';
-            const ov = overrides[code];
-            return {
-              code: code,
-              name: (ov && ov.name) ? ov.name : (p["ชื่อสินค้า"] || p.name || ''),
-              cat: (ov && ov.cat) ? ov.cat : (p["หมวดหมู่"] || p.cat || 'อื่นๆ'),
-              qty: (ov && ov.qty !== undefined) ? ov.qty : (parseInt(p["คงเหลือ"] || p.qty) || 0),
-              min: (ov && ov.min !== undefined) ? ov.min : (parseInt(p["ขั้นต่ำ"] || p.min) || 0),
-              unit: (ov && ov.unit) ? ov.unit : (p["หน่วยนับ"] || p.unit || 'ชิ้น'),
-              loc: (ov && ov.loc !== undefined) ? ov.loc : (p["ที่เก็บ"] || p.loc || ''),
-              img: (ov && ov.img !== undefined) ? ov.img : (p.img || '')
-            };
-          });
-          autoCategorize(products);
-          // Re-apply overrides after autoCategorize
-          products.forEach(p => {
-            if (overrides[p.code] && overrides[p.code].cat) {
-              p.cat = overrides[p.code].cat;
-            }
-          });
-        }
-        if (data.history && Array.isArray(data.history)) {
-          history = data.history.map(h => ({
-            date: h["วันที่"] || h.date || '',
-            type: h["ประเภท"] || h.type || 'ปรับปรุง',
-            code: h["รหัสสินค้า"] || h.code || '',
-            name: h["ชื่อสินค้า"] || h.name || '',
-            qty: parseInt(h["จำนวน"] || h.qty) || 0,
-            user: h["ผู้บันทึก"] || h.user || 'system',
-            userPosition: h["ตำแหน่ง"] || h.userPosition || '',
-            note: h["หมายเหตุ"] || h.note || ''
-          }));
-        }
-        if (data.personnel && Array.isArray(data.personnel) && data.personnel.length > 0) {
-          PERSONNEL = data.personnel.map(p => ({
-            name: p["ยศ-ชื่อ-สกุล"] || p.name || '',
-            position: p["ตำแหน่ง"] || p.position || '',
-            phone: p["เบอร์โทร"] || p.phone || ''
-          }));
-        }
+        const localSaveTime = parseInt(localStorage.getItem('dpd_local_save_time')) || 0;
+        const timeSinceLocalSave = Date.now() - localSaveTime;
 
-        // Cache loaded data locally
-        localStorage.setItem('dpd_products', JSON.stringify(products));
-        localStorage.setItem('dpd_history', JSON.stringify(history));
-        localStorage.setItem('dpd_personnel', JSON.stringify(PERSONNEL));
+        // If no local save happened in the last 15 seconds, Google Sheets is the master database
+        if (timeSinceLocalSave > 15000) {
+          if (data.products && Array.isArray(data.products)) {
+            products = data.products.map(p => ({
+              code: p["รหัสสินค้า"] || p.code || '',
+              name: p["ชื่อสินค้า"] || p.name || '',
+              cat: p["หมวดหมู่"] || p.cat || 'อื่นๆ',
+              qty: parseInt(p["คงเหลือ"] || p.qty) || 0,
+              min: parseInt(p["ขั้นต่ำ"] || p.min) || 0,
+              unit: p["หน่วยนับ"] || p.unit || 'ชิ้น',
+              loc: p["ที่เก็บ"] || p.loc || '',
+              img: p.img || ''
+            }));
+            autoCategorize(products);
+          }
+          if (data.history && Array.isArray(data.history)) {
+            history = data.history.map(h => ({
+              date: h["วันที่"] || h.date || '',
+              type: h["ประเภท"] || h.type || 'ปรับปรุง',
+              code: h["รหัสสินค้า"] || h.code || '',
+              name: h["ชื่อสินค้า"] || h.name || '',
+              qty: parseInt(h["จำนวน"] || h.qty) || 0,
+              user: h["ผู้บันทึก"] || h.user || 'system',
+              userPosition: h["ตำแหน่ง"] || h.userPosition || '',
+              note: h["หมายเหตุ"] || h.note || ''
+            }));
+          }
+          if (data.personnel && Array.isArray(data.personnel) && data.personnel.length > 0) {
+            PERSONNEL = data.personnel.map(p => ({
+              name: p["ยศ-ชื่อ-สกุล"] || p.name || '',
+              position: p["ตำแหน่ง"] || p.position || '',
+              phone: p["เบอร์โทร"] || p.phone || ''
+            }));
+          }
+
+          // Cache loaded data locally
+          localStorage.setItem('dpd_products', JSON.stringify(products));
+          localStorage.setItem('dpd_history', JSON.stringify(history));
+          localStorage.setItem('dpd_personnel', JSON.stringify(PERSONNEL));
+        }
       } catch (err) {
         console.error('Cloud Sync failed, using offline fallback cache:', err);
       } finally {
@@ -495,7 +461,8 @@
       localStorage.setItem('dpd_products', JSON.stringify(products));
       localStorage.setItem('dpd_history', JSON.stringify(history));
       localStorage.setItem('dpd_personnel', JSON.stringify(PERSONNEL));
-      saveCustomOverrides();
+      localStorage.setItem('dpd_local_save_time', Date.now());
+      try { localStorage.removeItem('dpd_custom_overrides'); } catch(e){}
 
       // 2. POST updates to Google Sheets in the background silently
       // Convert standard JSON keys to Thai keys for Google Sheets compatibility
