@@ -342,6 +342,27 @@
       if (loader) loader.style.display = 'none';
     }
 
+    function autoCategorize(list) {
+      if (!Array.isArray(list)) return;
+      list.forEach(p => {
+        let c = p.cat || '';
+        if (!c || c === 'อื่นๆ' || c === 'อุปกรณ์สำนักงาน' || c === 'วัสดุสิ้นเปลือง' || c === 'อะไหล่') {
+          const n = (p.name || '').toLowerCase();
+          if (n.includes('hd ') || n.includes('ssd') || n.includes('คีย์บอร์ด') || n.includes('เมนบอร์ด') || n.includes('mouse') || n.includes('เมาส์') || n.includes('ram') || n.includes('จอ') || n.includes('คอม')) {
+            p.cat = 'อุปกรณ์คอมพิวเตอร์';
+          } else if (n.includes('hdmi') || n.includes('lan') || n.includes('สาย') || n.includes('switch') || n.includes('router') || n.includes('wifi') || n.includes('เน็ต')) {
+            p.cat = 'อุปกรณ์เครือข่าย';
+          } else if (n.includes('ถ่าน') || n.includes('แบต') || n.includes('battery') || n.includes('ปลั๊ก') || n.includes('ไฟ')) {
+            p.cat = 'อุปกรณ์ไฟฟ้า';
+          } else if (c === 'อุปกรณ์สำนักงาน' || c === 'วัสดุสิ้นเปลือง' || c === 'อะไหล่') {
+            p.cat = 'วัสดุสำนักงาน';
+          } else {
+            p.cat = 'อื่นๆ';
+          }
+        }
+      });
+    }
+
     async function loadDatabase() {
       // 1. Initial local cache load to show UI instantly
       let storedProducts, storedHistory, storedPersonnel;
@@ -352,6 +373,8 @@
       if (storedProducts) {
         try { products = JSON.parse(storedProducts); } catch (e) { products = fallbackProducts; }
       } else { products = fallbackProducts; }
+
+      autoCategorize(products);
 
       if (storedHistory) {
         try { history = JSON.parse(storedHistory); } catch (e) { history = fallbackHistory; }
@@ -384,6 +407,7 @@
             unit: p["หน่วยนับ"] || p.unit || 'ชิ้น',
             loc: p["ที่เก็บ"] || p.loc || ''
           }));
+          autoCategorize(products);
         }
         if (data.history && Array.isArray(data.history)) {
           history = data.history.map(h => ({
@@ -663,7 +687,7 @@
       const sortIcon = (col) => window.stockSortCol === col ? (window.stockSortDesc ? ' &#9660;' : ' &#9650;') : '';
 
       // Group by category
-      const categories = ['อุปกรณ์สำนักงาน', 'วัสดุสิ้นเปลือง', 'อะไหล่', 'อื่นๆ'];
+      const categories = ['อุปกรณ์คอมพิวเตอร์', 'อุปกรณ์เครือข่าย', 'อุปกรณ์ไฟฟ้า', 'วัสดุสำนักงาน', 'อื่นๆ'];
       list.forEach(p => {
         if (p.cat && !categories.includes(p.cat)) {
           categories.push(p.cat);
@@ -677,9 +701,10 @@
         if (catItems.length === 0) return; // Hide empty category sections
 
         let catIcon = '📁';
-        if (cat === 'อุปกรณ์สำนักงาน') catIcon = '🗂️';
-        if (cat === 'วัสดุสิ้นเปลือง') catIcon = '📦';
-        if (cat === 'อะไหล่') catIcon = '⚙️';
+        if (cat === 'อุปกรณ์คอมพิวเตอร์') catIcon = '💻';
+        if (cat === 'อุปกรณ์เครือข่าย') catIcon = '🌐';
+        if (cat === 'อุปกรณ์ไฟฟ้า') catIcon = '⚡';
+        if (cat === 'วัสดุสำนักงาน') catIcon = '🗂️';
         if (cat === 'อื่นๆ') catIcon = '📌';
 
         htmlOutput += `
