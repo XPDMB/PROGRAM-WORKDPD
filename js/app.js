@@ -1636,9 +1636,9 @@
         });
       }
 
-      const reportData = products.map(p => {
+      let reportData = products.map(p => {
         const recv = filteredHistory
-          .filter(h => h.code === p.code && (h.type === 'รับ' || h.type === 'เพิ่ม'))
+          .filter(h => h.code === p.code && (h.type === 'รับ' || h.type === 'เพิ่ม' || h.type === 'ปรับปรุง'))
           .reduce((sum, h) => sum + h.qty, 0);
 
         const issue = filteredHistory
@@ -1656,6 +1656,10 @@
           currentQty: p.qty
         };
       });
+
+      if (filteredHistory.length === 0) {
+        reportData = [];
+      }
 
       const container = document.getElementById('reportTableContainer');
       if (!container) return;
@@ -1691,7 +1695,14 @@
             </tr>
           </thead>
           <tbody>
-            ${reportData.map(r => `
+            ${reportData.length === 0 ? `
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 32px; color: var(--color-text-secondary);">
+                  <i class="ti ti-folder-off" style="font-size: 32px; display: block; margin-bottom: 8px;"></i>
+                  ${currentLang === 'th' ? 'ไม่พบข้อมูลรายการความเคลื่อนไหวพัสดุในระบบสำหรับปี/เดือนที่เลือก' : 'No product transaction data found for the selected period'}
+                </td>
+              </tr>
+            ` : reportData.map(r => `
               <tr>
                 <td><strong>${r.code}</strong></td>
                 <td>${r.name}</td>
@@ -1727,9 +1738,9 @@
         filteredHistory = history.filter(h => getFiscalYear(h.date) === fy);
       }
 
-      const reportData = products.map(p => {
+      let reportData = products.map(p => {
         const recv = filteredHistory
-          .filter(h => h.code === p.code && h.type === 'รับ')
+          .filter(h => h.code === p.code && (h.type === 'รับ' || h.type === 'เพิ่ม' || h.type === 'ปรับปรุง'))
           .reduce((sum, h) => sum + h.qty, 0);
 
         const issue = filteredHistory
@@ -1747,6 +1758,10 @@
           currentQty: p.qty
         };
       });
+
+      if (filteredHistory.length === 0) {
+        reportData = [];
+      }
 
       let reportTitle = '';
       if (reportType === 'monthly') {
@@ -1913,7 +1928,11 @@
               </tr>
             </thead>
             <tbody>
-              ${reportData.map((r, i) => `
+              ${reportData.length === 0 ? `
+                <tr>
+                  <td colspan="9" style="text-align: center; padding: 30px; color: #666666;">ไม่พบข้อมูลรายการความเคลื่อนไหวพัสดุในระบบสำหรับปี/เดือนที่เลือก</td>
+                </tr>
+              ` : reportData.map((r, i) => `
                 <tr>
                   <td style="text-align: center;">${i + 1}</td>
                   <td>${r.code}</td>
@@ -1978,9 +1997,9 @@
         filteredHistory = history.filter(h => getFiscalYear(h.date) === fy);
       }
 
-      const reportData = products.map(p => {
+      let reportData = products.map(p => {
         const recv = filteredHistory
-          .filter(h => h.code === p.code && h.type === 'รับ')
+          .filter(h => h.code === p.code && (h.type === 'รับ' || h.type === 'เพิ่ม' || h.type === 'ปรับปรุง'))
           .reduce((sum, h) => sum + h.qty, 0);
 
         const issue = filteredHistory
@@ -1998,6 +2017,10 @@
           currentQty: p.qty
         };
       });
+
+      if (filteredHistory.length === 0) {
+        reportData = [];
+      }
 
       let reportTitle = '';
       if (reportType === 'monthly') {
