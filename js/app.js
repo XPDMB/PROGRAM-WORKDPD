@@ -348,13 +348,13 @@
         let c = p.cat || '';
         if (!c || c === 'อื่นๆ' || c === 'อุปกรณ์สำนักงาน' || c === 'วัสดุสิ้นเปลือง' || c === 'อะไหล่') {
           const n = (p.name || '').toLowerCase();
-          if (n.includes('m.2') || n.includes('nvme') || n.includes('nyme') || n.includes('ssd') || n.includes('hd ') || n.includes('harddisk') || n.includes('dvd') || n.includes('dvd-r') || n.includes('laser presentation') || n.includes('logitech') || n.includes('คีย์บอร์ด') || n.includes('เมนบอร์ด') || n.includes('mouse') || n.includes('เมาส์') || n.includes('ram') || n.includes('จอ') || n.includes('คอม')) {
+          if (n.includes('microsoft') || n.includes('office') || n.includes('windows') || n.includes('software') || n.includes('miceophone') || n.includes('microphone') || n.includes('ไมค์') || n.includes('m.2') || n.includes('nvme') || n.includes('nyme') || n.includes('ssd') || n.includes('hd ') || n.includes('harddisk') || n.includes('dvd') || n.includes('dvd-r') || n.includes('laser presentation') || n.includes('logitech') || n.includes('คีย์บอร์ด') || n.includes('เมนบอร์ด') || n.includes('mouse') || n.includes('เมาส์') || n.includes('ram') || n.includes('จอ') || n.includes('คอม')) {
             p.cat = 'อุปกรณ์คอมพิวเตอร์';
-          } else if (n.includes('adepter') || n.includes('adapter') || n.includes('media converter') || n.includes('omada') || n.includes('wi-fi') || n.includes('wifi') || n.includes('tp-link') || n.includes('access point') || n.includes('poe') || n.includes('switch') || n.includes('router') || n.includes('lan') || n.includes('สาย') || n.includes('hdmi') || n.includes('เน็ต') || n.includes('เครือข่าย')) {
+          } else if (n.includes('adepter') || n.includes('adapter') || n.includes('media converter') || n.includes('omada') || n.includes('wi-fi') || n.includes('wifi') || n.includes('tp-link') || n.includes('access point') || n.includes('poe') || n.includes('switch') || n.includes('router') || n.includes('lan') || n.includes('สายแลน') || n.includes('hdmi') || n.includes('เน็ต') || n.includes('เครือข่าย')) {
             p.cat = 'อุปกรณ์เครือข่าย';
-          } else if (n.includes('power supply') || n.includes('dtech') || n.includes('headlamp') || n.includes('psu') || n.includes('ถ่าน') || n.includes('แบต') || n.includes('battery') || n.includes('ปลั๊ก') || n.includes('ไฟ')) {
+          } else if (n.includes('cable tie') || n.includes('cable') || n.includes('สายรัด') || n.includes('power supply') || n.includes('dtech') || n.includes('headlamp') || n.includes('psu') || n.includes('ถ่าน') || n.includes('แบต') || n.includes('battery') || n.includes('ปลั๊ก') || n.includes('ไฟ')) {
             p.cat = 'อุปกรณ์ไฟฟ้า';
-          } else if (c === 'อุปกรณ์สำนักงาน' || c === 'วัสดุสิ้นเปลือง' || c === 'อะไหล่') {
+          } else if (n.includes('lasu') || n.includes('print') || n.includes('laserjet') || n.includes('hp ') || n.includes('toner') || n.includes('หมึก') || n.includes('กระดาษ') || n.includes('ตลับ') || n.includes('brother') || n.includes('canon') || n.includes('epson') || c === 'อุปกรณ์สำนักงาน' || c === 'วัสดุสิ้นเปลือง' || c === 'อะไหล่') {
             p.cat = 'วัสดุสำนักงาน';
           } else {
             p.cat = 'อื่นๆ';
@@ -712,7 +712,18 @@
 
     function renderStock() {
       const q = document.getElementById('searchInput').value.trim().toLowerCase();
-      const catVal = document.getElementById('catFilter') ? document.getElementById('catFilter').value : '';
+      const catFilterEl = document.getElementById('catFilter');
+      if (catFilterEl) {
+        if (!catFilterEl.dataset.initialized) {
+          const savedCat = localStorage.getItem('dpd_selected_category_filter');
+          if (savedCat !== null) {
+            catFilterEl.value = savedCat;
+          }
+          catFilterEl.dataset.initialized = "true";
+        }
+        localStorage.setItem('dpd_selected_category_filter', catFilterEl.value);
+      }
+      const catVal = catFilterEl ? catFilterEl.value : '';
       let list = products.filter(p => {
         const matchSearch = p.code.toLowerCase().includes(q) || p.name.toLowerCase().includes(q);
         const matchCat = catVal === '' || p.cat === catVal;
