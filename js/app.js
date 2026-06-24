@@ -628,11 +628,127 @@
       renderCharts();
     }
 
+    window.stockSortCol = 'code';
+    window.stockSortDesc = false;
+
+    window.sortStock = function(col) {
+      if (window.stockSortCol === col) {
+        window.stockSortDesc = !window.stockSortDesc;
+      } else {
+        window.stockSortCol = col;
+        window.stockSortDesc = false;
+      }
+      renderStock();
+    };
+
     function renderStock() {
       const q = document.getElementById('searchInput').value.trim().toLowerCase();
-      const list = products.filter(p => p.code.toLowerCase().includes(q) || p.name.toLowerCase().includes(q));
-      document.getElementById('stockTable').innerHTML = `<table><thead><tr><th>${t('รหัสสินค้า')}</th><th>${t('ชื่อ')}</th><th>${t('จำนวน')}</th><th>${t('หน่วย')}</th><th>${t('จัดการ')}</th></tr></thead><tbody>${list.map(p => `<tr><td>${p.code}</td><td style="user-select: none;">${p.name}</td><td>${p.qty}</td><td>${p.unit}</td><td style="display: flex; gap: 4px; justify-content: flex-end;"><button class="btn-action" style="background-color: var(--color-success); color: white; border-color: var(--color-success);" onclick="openRecvModal('${p.code}')" title="รับสินค้าเข้า"><i class="ti ti-arrow-down-left"></i></button><button class="btn-action btn-action-edit" onclick="openEditModal('${p.code}')" title="แก้ไข"><i class="ti ti-edit"></i></button><button class="btn-action btn-action-delete" onclick="deleteProduct('${p.code}')" title="ลบ"><i class="ti ti-trash"></i></button></td></tr>`).join('')}</tbody></table>`;
+      const catVal = document.getElementById('catFilter') ? document.getElementById('catFilter').value : '';
+      let list = products.filter(p => {
+        const matchSearch = p.code.toLowerCase().includes(q) || p.name.toLowerCase().includes(q);
+        const matchCat = catVal === '' || p.cat === catVal;
+        return matchSearch && matchCat;
+      });
+      
+      list.sort((a, b) => {
+        let valA = a[window.stockSortCol] || '';
+        let valB = b[window.stockSortCol] || '';
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+        if (valA < valB) return window.stockSortDesc ? 1 : -1;
+        if (valA > valB) return window.stockSortDesc ? -1 : 1;
+        return 0;
+      });
+
+      const sortIcon = (col) => window.stockSortCol === col ? (window.stockSortDesc ? ' &#9660;' : ' &#9650;') : '';
+
+      // Group by category
+      const categories = ['อุปกรณ์สำนักงาน', 'วัสดุสิ้นเปลือง', 'อะไหล่', 'อื่นๆ'];
+      list.forEach(p => {
+        if (p.cat && !categories.includes(p.cat)) {
+          categories.push(p.cat);
+        }
+      });
+
+      let htmlOutput = '';
+
+      categories.forEach(cat => {
+        const catItems = list.filter(p => (p.cat === cat) || (!p.cat && cat === 'อื่นๆ'));
+        if (catItems.length === 0) return; // Hide empty category sections
+
+        let catIcon = '📁';
+        if (cat === 'อุปกรณ์สำนักงาน') catIcon = '🗂️';
+        if (cat === 'วัสดุสิ้นเปลือง') catIcon = '📦';
+        if (cat === 'อะไหล่') catIcon = '⚙️';
+        if (cat === 'อื่นๆ') catIcon = '📌';
+
+        htmlOutput += `
+          <div class="category-section-header" style="margin: 28px 0 12px 0; padding: 10px 18px; background: rgba(99, 102, 241, 0.15); border-left: 4px solid #6366f1; border-radius: 0 8px 8px 0; font-weight: 600; font-size: 16px; color: #cbd5e1; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <span style="display: flex; align-items: center; gap: 8px;">${catIcon} ${cat}</span>
+            <span style="font-size: 13px; font-weight: 500; opacity: 0.8; background: rgba(15, 23, 42, 0.6); padding: 2px 10px; border-radius: 12px;">จำนวน ${catItems.length} รายการ</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>${t('รูปภาพ')}</th>
+                <th style="cursor:pointer; user-select:none;" onclick="sortStock('code')">${t('รหัสสินค้า')}${sortIcon('code')}</th>
+                <th style="cursor:pointer; user-select:none;" onclick="sortStock('name')">${t('ชื่อ')}${sortIcon('name')}</th>
+                <th style="cursor:pointer; user-select:none;" onclick="sortStock('qty')">${t('จำนวน')}${sortIcon('qty')}</th>
+                <th style="cursor:pointer; user-select:none;" onclick="sortStock('unit')">${t('หน่วย')}${sortIcon('unit')}</th>
+                <th>${t('จัดการ')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${catItems.map(p => {
+                const imgSrc = p.img ? p.img : 'assets/logo.png';
+                const imgTag = `<img src="${imgSrc}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid var(--color-border);" onerror="this.src='assets/logo.png'" alt="img">`;
+                return `<tr><td style="width: 50px; padding: 4px 12px;">${imgTag}</td><td>${p.code}</td><td style="user-select: none;">${p.name}</td><td>${p.qty}</td><td>${p.unit}</td><td style="display: flex; gap: 4px; justify-content: flex-end;"><button class="btn-action" style="background-color: var(--color-success); color: white; border-color: var(--color-success);" onclick="openRecvModal('${p.code}')" title="รับสินค้าเข้า"><i class="ti ti-arrow-down-left"></i></button><button class="btn-action btn-action-edit" onclick="openEditModal('${p.code}')" title="แก้ไข"><i class="ti ti-edit"></i></button><button class="btn-action btn-action-delete" onclick="deleteProduct('${p.code}')" title="ลบ"><i class="ti ti-trash"></i></button></td></tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        `;
+      });
+
+      if (!htmlOutput) {
+        htmlOutput = `<div style="padding: 32px; text-align: center; color: var(--color-text-muted);">ไม่พบรายการสินค้าที่ตรงกับการค้นหา</div>`;
+      }
+
+      document.getElementById('stockTable').innerHTML = htmlOutput;
     }
+
+    window.exportStockCSV = function() {
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      const catVal = document.getElementById('catFilter') ? document.getElementById('catFilter').value : '';
+      let list = products.filter(p => {
+        const matchSearch = p.code.toLowerCase().includes(q) || p.name.toLowerCase().includes(q);
+        const matchCat = catVal === '' || p.cat === catVal;
+        return matchSearch && matchCat;
+      });
+      
+      let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // BOM for Excel UTF-8
+      csvContent += "รหัสสินค้า,หมวดหมู่,ชื่อสินค้า,จำนวนคงเหลือ,หน่วยนับ,ตำแหน่งจัดเก็บ\n";
+      
+      list.forEach(p => {
+        let row = [
+          `"${p.code}"`,
+          `"${p.cat}"`,
+          `"${p.name}"`,
+          `"${p.qty}"`,
+          `"${p.unit}"`,
+          `"${p.loc || ''}"`
+        ];
+        csvContent += row.join(",") + "\n";
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `DPD_Stock_Export_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('ส่งออก Excel สำเร็จ', 'success');
+    };
 
     function populateSelects() {
       ['recvItem', 'issueItem'].forEach(id => {
@@ -1100,6 +1216,7 @@
       const min = Math.max(1, Math.floor(qty * 0.2)) || 10;
       const unit = document.getElementById('newUnit').value.trim() || 'ชิ้น';
       const loc = document.getElementById('newLoc').value.trim();
+      const img = document.getElementById('newImg').value.trim();
       
       const codeEl = document.getElementById('newCode');
       const nameEl = document.getElementById('newName');
@@ -1123,7 +1240,7 @@
         return;
       }
       
-      products.push({ code, name, cat, qty, min, unit, loc });
+      products.push({ code, name, cat, qty, min, unit, loc, img });
 
       const combinedNote = 'จดทะเบียนพัสดุรายการใหม่เข้าสต็อกคลังสินค้า';
 
@@ -1152,6 +1269,7 @@
       document.getElementById('editQty').value = p.qty;
       document.getElementById('editUnit').value = p.unit;
       document.getElementById('editLoc').value = p.loc || '';
+      document.getElementById('editImg').value = p.img || '';
       document.getElementById('editModal').classList.add('open');
     }
 
@@ -1165,6 +1283,7 @@
       const min = Math.max(1, Math.floor(qty * 0.2)) || 10;
       const unit = document.getElementById('editUnit').value.trim() || 'ชิ้น';
       const loc = document.getElementById('editLoc').value.trim();
+      const img = document.getElementById('editImg').value.trim();
       
       const nameEl = document.getElementById('editName');
       nameEl.style.borderColor = '';
@@ -1185,6 +1304,7 @@
       p.min = min;
       p.unit = unit;
       p.loc = loc;
+      p.img = img;
       
       if (oldQty !== qty) {
         history.unshift({

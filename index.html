@@ -204,12 +204,26 @@
             <p class="page-subtitle">ค้นหา จัดการ และลงทะเบียนพัสดุในคลังสินค้า</p>
           </div>
           
-          <div class="action-bar">
-            <div class="search-input-box">
-              <i class="ti ti-search" aria-hidden="true"></i>
-              <input type="text" id="searchInput" class="form-control" placeholder="ค้นหาด้วยรหัสสินค้า หรือ ชื่อสินค้า..." oninput="renderStock()" />
+          <div class="action-bar" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;">
+            <div style="display: flex; gap: 12px; flex-grow: 1; max-width: 600px;">
+              <div class="search-input-box" style="flex-grow: 1;">
+                <i class="ti ti-search" aria-hidden="true"></i>
+                <input type="text" id="searchInput" class="form-control" placeholder="ค้นหาด้วยรหัสสินค้า หรือ ชื่อสินค้า..." oninput="renderStock()" />
+              </div>
+              <div style="min-width: 150px;">
+                <select id="catFilter" class="form-control" onchange="renderStock()" style="height: 100%;">
+                  <option value="">ทุกหมวดหมู่</option>
+                  <option value="อุปกรณ์สำนักงาน">อุปกรณ์สำนักงาน</option>
+                  <option value="วัสดุสิ้นเปลือง">วัสดุสิ้นเปลือง</option>
+                  <option value="อะไหล่">อะไหล่</option>
+                  <option value="อื่นๆ">อื่นๆ</option>
+                </select>
+              </div>
             </div>
             <div style="display: flex; gap: 8px;">
+              <button class="btn btn-warning" style="background-color: #f59e0b; border-color: #f59e0b; color: white;" onclick="exportStockCSV()">
+                <i class="ti ti-file-spreadsheet" aria-hidden="true"></i> ส่งออก Excel
+              </button>
               <button class="btn btn-primary" onclick="openAddModal()">
                 <i class="ti ti-plus" aria-hidden="true"></i> เพิ่มสินค้าใหม่
               </button>
@@ -434,6 +448,11 @@
             <label class="form-label" for="newLoc">ตำแหน่งจัดเก็บ (Location)</label>
             <input type="text" id="newLoc" class="form-control" placeholder="เช่น ชั้น A ชั้นวาง B1-02" />
           </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="newImg">ลิงก์รูปภาพ (Image URL)</label>
+            <input type="text" id="newImg" class="form-control" placeholder="วางลิงก์รูปภาพที่นี่ (ถ้ามี)" />
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -489,6 +508,11 @@
           <div class="form-group">
             <label class="form-label" for="editLoc">ตำแหน่งจัดเก็บ (Location)</label>
             <input type="text" id="editLoc" class="form-control" placeholder="เช่น ชั้น A ชั้นวาง B1-02" />
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="editImg">ลิงก์รูปภาพ (Image URL)</label>
+            <input type="text" id="editImg" class="form-control" placeholder="วางลิงก์รูปภาพที่นี่ (ถ้ามี)" />
           </div>
         </div>
       </div>
