@@ -348,11 +348,11 @@
         let c = p.cat || '';
         if (!c || c === 'อื่นๆ' || c === 'อุปกรณ์สำนักงาน' || c === 'วัสดุสิ้นเปลือง' || c === 'อะไหล่') {
           const n = (p.name || '').toLowerCase();
-          if (n.includes('hd ') || n.includes('ssd') || n.includes('คีย์บอร์ด') || n.includes('เมนบอร์ด') || n.includes('mouse') || n.includes('เมาส์') || n.includes('ram') || n.includes('จอ') || n.includes('คอม')) {
+          if (n.includes('m.2') || n.includes('nvme') || n.includes('nyme') || n.includes('ssd') || n.includes('hd ') || n.includes('harddisk') || n.includes('dvd') || n.includes('dvd-r') || n.includes('laser presentation') || n.includes('logitech') || n.includes('คีย์บอร์ด') || n.includes('เมนบอร์ด') || n.includes('mouse') || n.includes('เมาส์') || n.includes('ram') || n.includes('จอ') || n.includes('คอม')) {
             p.cat = 'อุปกรณ์คอมพิวเตอร์';
-          } else if (n.includes('hdmi') || n.includes('lan') || n.includes('สาย') || n.includes('switch') || n.includes('router') || n.includes('wifi') || n.includes('เน็ต')) {
+          } else if (n.includes('adepter') || n.includes('adapter') || n.includes('media converter') || n.includes('omada') || n.includes('wi-fi') || n.includes('wifi') || n.includes('tp-link') || n.includes('access point') || n.includes('poe') || n.includes('switch') || n.includes('router') || n.includes('lan') || n.includes('สาย') || n.includes('hdmi') || n.includes('เน็ต') || n.includes('เครือข่าย')) {
             p.cat = 'อุปกรณ์เครือข่าย';
-          } else if (n.includes('ถ่าน') || n.includes('แบต') || n.includes('battery') || n.includes('ปลั๊ก') || n.includes('ไฟ')) {
+          } else if (n.includes('power supply') || n.includes('dtech') || n.includes('headlamp') || n.includes('psu') || n.includes('ถ่าน') || n.includes('แบต') || n.includes('battery') || n.includes('ปลั๊ก') || n.includes('ไฟ')) {
             p.cat = 'อุปกรณ์ไฟฟ้า';
           } else if (c === 'อุปกรณ์สำนักงาน' || c === 'วัสดุสิ้นเปลือง' || c === 'อะไหล่') {
             p.cat = 'วัสดุสำนักงาน';
@@ -363,18 +363,51 @@
       });
     }
 
+    function saveCustomOverrides() {
+      const overrides = {};
+      products.forEach(p => {
+        overrides[p.code] = { cat: p.cat, name: p.name, qty: p.qty, min: p.min, unit: p.unit, loc: p.loc, img: p.img };
+      });
+      try { localStorage.setItem('dpd_custom_overrides', JSON.stringify(overrides)); } catch(e){}
+    }
+
     async function loadDatabase() {
       // 1. Initial local cache load to show UI instantly
-      let storedProducts, storedHistory, storedPersonnel;
+      let storedProducts, storedHistory, storedPersonnel, storedOverrides;
       try { storedProducts = localStorage.getItem('dpd_products'); } catch (e) {}
       try { storedHistory = localStorage.getItem('dpd_history'); } catch (e) {}
       try { storedPersonnel = localStorage.getItem('dpd_personnel'); } catch (e) {}
+      try { storedOverrides = localStorage.getItem('dpd_custom_overrides'); } catch (e) {}
+
+      let overrides = {};
+      if (storedOverrides) {
+        try { overrides = JSON.parse(storedOverrides) || {}; } catch(e){}
+      }
 
       if (storedProducts) {
         try { products = JSON.parse(storedProducts); } catch (e) { products = fallbackProducts; }
       } else { products = fallbackProducts; }
 
+      // Apply overrides to cached products
+      products.forEach(p => {
+        if (overrides[p.code]) {
+          if (overrides[p.code].cat) p.cat = overrides[p.code].cat;
+          if (overrides[p.code].name) p.name = overrides[p.code].name;
+          if (overrides[p.code].qty !== undefined) p.qty = overrides[p.code].qty;
+          if (overrides[p.code].unit) p.unit = overrides[p.code].unit;
+          if (overrides[p.code].loc !== undefined) p.loc = overrides[p.code].loc;
+          if (overrides[p.code].img !== undefined) p.img = overrides[p.code].img;
+        }
+      });
+
       autoCategorize(products);
+
+      // Re-apply category overrides after autoCategorize to guarantee manual edits are preserved
+      products.forEach(p => {
+        if (overrides[p.code] && overrides[p.code].cat) {
+          p.cat = overrides[p.code].cat;
+        }
+      });
 
       if (storedHistory) {
         try { history = JSON.parse(storedHistory); } catch (e) { history = fallbackHistory; }
@@ -398,16 +431,27 @@
         const data = await response.json();
 
         if (data.products && Array.isArray(data.products)) {
-          products = data.products.map(p => ({
-            code: p["รหัสสินค้า"] || p.code || '',
-            name: p["ชื่อสินค้า"] || p.name || '',
-            cat: p["หมวดหมู่"] || p.cat || 'อื่นๆ',
-            qty: parseInt(p["คงเหลือ"] || p.qty) || 0,
-            min: parseInt(p["ขั้นต่ำ"] || p.min) || 0,
-            unit: p["หน่วยนับ"] || p.unit || 'ชิ้น',
-            loc: p["ที่เก็บ"] || p.loc || ''
-          }));
+          products = data.products.map(p => {
+            const code = p["รหัสสินค้า"] || p.code || '';
+            const ov = overrides[code];
+            return {
+              code: code,
+              name: (ov && ov.name) ? ov.name : (p["ชื่อสินค้า"] || p.name || ''),
+              cat: (ov && ov.cat) ? ov.cat : (p["หมวดหมู่"] || p.cat || 'อื่นๆ'),
+              qty: (ov && ov.qty !== undefined) ? ov.qty : (parseInt(p["คงเหลือ"] || p.qty) || 0),
+              min: (ov && ov.min !== undefined) ? ov.min : (parseInt(p["ขั้นต่ำ"] || p.min) || 0),
+              unit: (ov && ov.unit) ? ov.unit : (p["หน่วยนับ"] || p.unit || 'ชิ้น'),
+              loc: (ov && ov.loc !== undefined) ? ov.loc : (p["ที่เก็บ"] || p.loc || ''),
+              img: (ov && ov.img !== undefined) ? ov.img : (p.img || '')
+            };
+          });
           autoCategorize(products);
+          // Re-apply overrides after autoCategorize
+          products.forEach(p => {
+            if (overrides[p.code] && overrides[p.code].cat) {
+              p.cat = overrides[p.code].cat;
+            }
+          });
         }
         if (data.history && Array.isArray(data.history)) {
           history = data.history.map(h => ({
@@ -451,6 +495,7 @@
       localStorage.setItem('dpd_products', JSON.stringify(products));
       localStorage.setItem('dpd_history', JSON.stringify(history));
       localStorage.setItem('dpd_personnel', JSON.stringify(PERSONNEL));
+      saveCustomOverrides();
 
       // 2. POST updates to Google Sheets in the background silently
       // Convert standard JSON keys to Thai keys for Google Sheets compatibility
