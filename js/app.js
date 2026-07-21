@@ -729,12 +729,12 @@
         htmlOutput += `
           <div class="category-section-header" onclick="this.nextElementSibling.style.display = (this.nextElementSibling.style.display === 'none' ? 'table' : 'none'); this.querySelector('.toggle-icon').style.transform = (this.nextElementSibling.style.display === 'none' ? 'rotate(-90deg)' : 'rotate(0deg)');" style="cursor: pointer; user-select: none; margin: 28px 0 12px 0; padding: 10px 18px; background: rgba(99, 102, 241, 0.15); border-left: 4px solid #6366f1; border-radius: 0 8px 8px 0; font-weight: 600; font-size: 16px; color: #cbd5e1; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: all 0.2s ease;">
             <span style="display: flex; align-items: center; gap: 8px;">
-              <i class="ti ti-chevron-down toggle-icon" style="transition: transform 0.2s; font-size: 18px;"></i>
+              <i class="ti ti-chevron-down toggle-icon" style="transition: transform 0.2s; font-size: 18px; transform: rotate(-90deg);"></i>
               ${catIcon} ${cat}
             </span>
             <span style="font-size: 13px; font-weight: 500; opacity: 0.8; background: rgba(15, 23, 42, 0.6); padding: 2px 10px; border-radius: 12px;">จำนวน ${catItems.length} รายการ</span>
           </div>
-          <table style="display: table; width: 100%;">
+          <table style="display: none; width: 100%;">
             <thead>
               <tr>
                 <th>${t('รูปภาพ')}</th>
