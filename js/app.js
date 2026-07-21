@@ -2475,9 +2475,7 @@
             setTimeout(() => {
               inactiveVideo.pause();
               crossfading = false;
-            };
-    updateClock();
-    setInterval(updateClock, 1000);
+            }, 1000);
           }).catch(e => {
             console.log('Crossfade video play failed:', e);
             crossfading = false;
@@ -2651,21 +2649,18 @@
         const rotateX = ((y - centerY) / centerY) * -15;
         const rotateY = ((x - centerX) / centerX) * 15;
         
-        loginCard.style.transform = 
-otateX( + rotateX + deg) rotateY( + rotateY + deg);
+        loginCard.style.transform = "rotateX(" + rotateX + "deg) rotateY(" + rotateY + "deg)";
         
         // Glare effect movement
         if (cardGlare) {
           const glareX = (x / rect.width) * 100;
           const glareY = (y / rect.height) * 100;
-          cardGlare.style.background = 
-adial-gradient(circle at  + glareX + %  + glareY + %, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
+          cardGlare.style.background = "radial-gradient(circle at " + glareX + "% " + glareY + "%, rgba(255, 255, 255, 0.15) 0%, transparent 60%)";
         }
       });
       
       loginCard.addEventListener('mouseleave', () => {
-        loginCard.style.transform = 
-otateX(0deg) rotateY(0deg);
+        loginCard.style.transform = "rotateX(0deg) rotateY(0deg)";
         if (cardGlare) {
           cardGlare.style.opacity = '0';
         }
