@@ -550,7 +550,7 @@
     }
 
     function doLogin() {
-      const u = document.getElementById('loginUser') ? document.getElementById('loginUser').value.trim() : '';
+      const u = document.getElementById('loginUser') ? document.getElementById('loginUser').value.trim().toLowerCase() : '';
       const p = document.getElementById('loginPass').value;
       const remember = document.getElementById('rememberMe') ? document.getElementById('rememberMe').checked : false;
       const errEl = document.getElementById('loginErr');
@@ -558,13 +558,13 @@
       let role = null;
       let userDisplayName = null;
       
-      if (u === 'Admin' && p === 'Admin36335') {
+      if (u === 'admin' && p === 'Admin36335') {
         role = 'admin';
         userDisplayName = 'ผู้ดูแลระบบ';
-      } else if (u === 'Staff' && p === 'Staff36335') {
+      } else if (u === 'staff' && p === 'Staff36335') {
         role = 'staff';
         userDisplayName = 'เจ้าหน้าที่คลัง';
-      } else if (u === 'View' && p === 'View36335') {
+      } else if (u === 'view' && p === 'View36335') {
         role = 'viewer';
         userDisplayName = 'ผู้ตรวจสอบ';
       } else if (u === '' && (p === 'admin' || p === '36335' || p === 'user')) {
