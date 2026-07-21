@@ -250,6 +250,8 @@
       const isLoggedIn = sessionStorage.getItem('dpd_logged_in') === 'true';
       if (isLoggedIn) {
         currentUser = sessionStorage.getItem('dpd_current_user') || 'admin';
+        const role = sessionStorage.getItem('dpd_role') || 'admin';
+        document.body.classList.add('role-' + role);
         document.getElementById('userBadge').textContent = currentUser;
         document.getElementById('userAvatar').textContent = currentUser.slice(0, 1).toUpperCase();
         document.getElementById('loginScreen').classList.remove('active');
@@ -551,15 +553,20 @@
       const p = document.getElementById('loginPass').value;
       const errEl = document.getElementById('loginErr');
       
-      if (p === '36335') {
-        currentUser = 'admin';
+      if (p === '36335' || p === 'admin' || p === 'user') {
+        const role = (p === 'user') ? 'user' : 'admin';
+        currentUser = (p === 'user') ? 'ผู้ใช้งาน' : 'admin';
         // Persist session state
         sessionStorage.setItem('dpd_logged_in', 'true');
-        sessionStorage.setItem('dpd_current_user', 'admin');
+        sessionStorage.setItem('dpd_current_user', currentUser);
+        sessionStorage.setItem('dpd_role', role);
+        
+        document.body.classList.remove('role-admin', 'role-user');
+        document.body.classList.add('role-' + role);
         
         errEl.style.display = 'none';
-        document.getElementById('userBadge').textContent = 'admin';
-        document.getElementById('userAvatar').textContent = 'A';
+        document.getElementById('userBadge').textContent = currentUser;
+        document.getElementById('userAvatar').textContent = currentUser.slice(0, 1).toUpperCase();
         document.getElementById('loginScreen').classList.remove('active');
         document.getElementById('mainApp').classList.add('active');
         
@@ -692,6 +699,11 @@
       });
 
       const sortIcon = (col) => window.stockSortCol === col ? (window.stockSortDesc ? ' &#9660;' : ' &#9650;') : '';
+
+      const stockLimitEl = document.getElementById('stockRowLimit');
+      if (stockLimitEl && stockLimitEl.value !== 'all') {
+         list = list.slice(0, parseInt(stockLimitEl.value));
+      }
 
       // Group by category
       const categories = ['อุปกรณ์คอมพิวเตอร์', 'อุปกรณ์เครือข่าย', 'อุปกรณ์ไฟฟ้า', 'วัสดุสำนักงาน', 'อื่นๆ'];
@@ -893,10 +905,16 @@
           personPosition = found.position || '';
         }
 
-        p.qty -= qty;
+        const isAdmin = document.body.classList.contains('role-admin');
+        const issueType = isAdmin ? 'เบิก' : 'ขอเบิก';
+        
+        if (isAdmin) {
+          p.qty -= qty;
+        }
+
         history.unshift({
           date: new Date().toISOString().slice(0, 10),
-          type: 'เบิก',
+          type: issueType,
           code: p.code,
           name: p.name,
           qty: qty,
@@ -907,7 +925,7 @@
         saveDatabase();
         renderStock();
         closeIssueModal();
-        showToast('เบิกสินค้าสำเร็จ');
+        showToast(isAdmin ? 'เบิกสินค้าสำเร็จ' : 'ส่งคำขอเบิกสินค้าสำเร็จ รออนุมัติ');
       } else { showToast('ข้อมูลไม่ถูกต้องหรือสินค้าไม่พอ', 'danger'); }
     }
 
@@ -947,31 +965,60 @@
         );
       }
 
+      const histLimitEl = document.getElementById('histRowLimit');
+      if (histLimitEl && histLimitEl.value !== 'all') {
+         list = list.slice(0, parseInt(histLimitEl.value));
+      }
+
       if (list.length === 0) {
         container.innerHTML = `<div style="text-align: center; padding: 48px; color: var(--color-text-muted);"><i class="ti ti-notes-off" style="font-size: 40px; display: block; margin-bottom: 12px;"></i>${t('ยังไม่มีรายการประวัติความเคลื่อนไหวในระบบ')}</div>`;
         return;
       }
 
-      container.innerHTML = `<table><thead><tr><th>${t('วันที่ทำรายการ')}</th><th>${t('ประเภท')}</th><th>${t('รหัสสินค้า')}</th><th>${t('ชื่อสินค้า')}</th><th style="text-align: right;">${t('จำนวน')}</th><th>${t('ผู้ดำเนินการ/ผู้เบิก')}</th><th>${t('บันทึกช่วยจำ/วัตถุประสงค์')}</th><th style="text-align: center; width: 100px;">${t('ใบเบิก')}</th></tr></thead><tbody>${list.map(h => {
+      container.innerHTML = `<table><thead><tr><th>${t('วันที่ทำรายการ')}</th><th>${t('ประเภท')}</th><th>${t('รหัสสินค้า')}</th><th>${t('ชื่อสินค้า')}</th><th style="text-align: right;">${t('จำนวน')}</th><th>${t('ผู้ดำเนินการ/ผู้เบิก')}</th><th>${t('บันทึกช่วยจำ/วัตถุประสงค์')}</th><th style="text-align: center; width: 100px;">${t('จัดการ')}</th></tr></thead><tbody>${list.map(h => {
         let badgeClass = 'badge-primary';
         if (h.type === 'รับ') badgeClass = 'badge-success';
         if (h.type === 'เบิก') badgeClass = 'badge-danger';
+        if (h.type === 'ขอเบิก') badgeClass = 'badge-warning';
         if (h.type === 'เพิ่ม') badgeClass = 'badge-primary';
         if (h.type === 'แก้ไข') badgeClass = 'badge-warning';
         if (h.type === 'ปรับปรุง') badgeClass = 'badge-warning';
         if (h.type === 'ลบ') badgeClass = 'badge-danger';
 
-        let printBtn = '';
+        let actionBtn = '';
+        const origIndex = history.indexOf(h);
         if (h.type === 'เบิก') {
-          const origIndex = history.indexOf(h);
-          printBtn = `<button class="btn-action btn-action-print" onclick="printIssueSlip(${origIndex})" title="${t('พิมพ์ใบเบิก')}"><i class="ti ti-printer"></i></button>`;
+          actionBtn = `<button class="btn-action btn-action-print" onclick="printIssueSlip(${origIndex})" title="${t('พิมพ์ใบเบิก')}"><i class="ti ti-printer"></i></button>`;
+        } else if (h.type === 'ขอเบิก') {
+          actionBtn = `<button class="btn-action admin-only" style="background-color: var(--color-success); color: white; border-color: var(--color-success);" onclick="approveIssue(${origIndex})" title="อนุมัติการเบิก"><i class="ti ti-check"></i></button>`;
         } else {
-          printBtn = '<span style="color:var(--color-text-muted); font-size:12px;">-</span>';
+          actionBtn = '<span style="color:var(--color-text-muted); font-size:12px;">-</span>';
         }
 
-        return `<tr><td><i class="ti ti-calendar-event" style="color: var(--color-text-muted);"></i> ${h.date}</td><td><span class="badge ${badgeClass}">${h.type === 'เบิก' ? t('เบิกออก') : (h.type === 'รับ' ? t('รับเข้า') : t(h.type))}</span></td><td><strong>${h.code}</strong></td><td>${h.name}</td><td style="text-align: right; font-weight: 600; ${h.type === 'เบิก' ? 'color: var(--color-danger)' : (h.type === 'รับ' ? 'color: var(--color-success)' : '')}">${h.type === 'เบิก' ? '-' : '+'}${h.qty.toLocaleString()}</td><td>${formatUser(h.user, h.userPosition)}</td><td><span style="font-size: 13px; color: var(--color-text-secondary);">${h.note || '-'}</span></td><td style="text-align: center;">${printBtn}</td></tr>`;
+        return `<tr><td><i class="ti ti-calendar-event" style="color: var(--color-text-muted);"></i> ${h.date}</td><td><span class="badge ${badgeClass}">${h.type === 'เบิก' ? t('เบิกออก') : (h.type === 'รับ' ? t('รับเข้า') : t(h.type))}</span></td><td><strong>${h.code}</strong></td><td>${h.name}</td><td style="text-align: right; font-weight: 600; ${h.type === 'เบิก' ? 'color: var(--color-danger)' : (h.type === 'รับ' ? 'color: var(--color-success)' : '')}">${h.type === 'เบิก' ? '-' : '+'}${h.qty.toLocaleString()}</td><td>${formatUser(h.user, h.userPosition)}</td><td><span style="font-size: 13px; color: var(--color-text-secondary);">${h.note || '-'}</span></td><td style="text-align: center;">${actionBtn}</td></tr>`;
       }).join('')}</tbody></table>`;
     }
+
+    window.approveIssue = function(index) {
+      if (confirm('ยืนยันการอนุมัติเบิกพัสดุรายการนี้?')) {
+        const h = history[index];
+        if (h && h.type === 'ขอเบิก') {
+          const p = products.find(x => x.code === h.code);
+          if (p) {
+             if (p.qty >= h.qty) {
+                p.qty -= h.qty;
+                h.type = 'เบิก';
+                saveDatabase();
+                renderStock();
+                renderHistory();
+                showToast('อนุมัติรายการเบิกสำเร็จ', 'success');
+             } else {
+                showToast('จำนวนพัสดุในคลังไม่เพียงพอ', 'danger');
+             }
+          }
+        }
+      }
+    };
 
     function formatThaiDate(dateStr) {
       if (!dateStr) return '';

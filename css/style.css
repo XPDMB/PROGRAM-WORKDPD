@@ -1427,3 +1427,6 @@
         padding: 24px 16px;
       }
     }
+/* Role Based Access Control */
+.role-user .admin-only { display: none !important; }
+.role-admin .user-only { display: none !important; }
