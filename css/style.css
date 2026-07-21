@@ -1428,5 +1428,6 @@
       }
     }
 /* Role Based Access Control */
-.role-user .admin-only { display: none !important; }
-.role-admin .user-only { display: none !important; }
+.role-staff .admin-only { display: none !important; }
+.role-viewer .admin-only { display: none !important; }
+.role-viewer .edit-only { display: none !important; }

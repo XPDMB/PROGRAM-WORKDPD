@@ -247,10 +247,10 @@
       setLang('th');
 
       // Auth Check
-      const isLoggedIn = sessionStorage.getItem('dpd_logged_in') === 'true';
+      const isLoggedIn = sessionStorage.getItem('dpd_logged_in') === 'true' || localStorage.getItem('dpd_logged_in') === 'true';
       if (isLoggedIn) {
-        currentUser = sessionStorage.getItem('dpd_current_user') || 'admin';
-        const role = sessionStorage.getItem('dpd_role') || 'admin';
+        currentUser = sessionStorage.getItem('dpd_current_user') || localStorage.getItem('dpd_current_user') || 'Admin';
+        const role = sessionStorage.getItem('dpd_role') || localStorage.getItem('dpd_role') || 'admin';
         document.body.classList.add('role-' + role);
         document.getElementById('userBadge').textContent = currentUser;
         document.getElementById('userAvatar').textContent = currentUser.slice(0, 1).toUpperCase();
@@ -550,18 +550,46 @@
     }
 
     function doLogin() {
+      const u = document.getElementById('loginUser') ? document.getElementById('loginUser').value.trim() : '';
       const p = document.getElementById('loginPass').value;
+      const remember = document.getElementById('rememberMe') ? document.getElementById('rememberMe').checked : false;
       const errEl = document.getElementById('loginErr');
       
-      if (p === '36335' || p === 'admin' || p === 'user') {
-        const role = (p === 'user') ? 'user' : 'admin';
-        currentUser = (p === 'user') ? 'ผู้ใช้งาน' : 'admin';
-        // Persist session state
-        sessionStorage.setItem('dpd_logged_in', 'true');
-        sessionStorage.setItem('dpd_current_user', currentUser);
-        sessionStorage.setItem('dpd_role', role);
+      let role = null;
+      let userDisplayName = null;
+      
+      if (u === 'Admin' && p === 'Admin36335') {
+        role = 'admin';
+        userDisplayName = 'ผู้ดูแลระบบ';
+      } else if (u === 'Staff' && p === 'Staff36335') {
+        role = 'staff';
+        userDisplayName = 'เจ้าหน้าที่คลัง';
+      } else if (u === 'View' && p === 'View36335') {
+        role = 'viewer';
+        userDisplayName = 'ผู้ตรวจสอบ';
+      } else if (u === '' && (p === 'admin' || p === '36335' || p === 'user')) {
+        // Fallback for old fast-login during testing
+        role = p === 'user' ? 'viewer' : 'admin';
+        userDisplayName = p === 'user' ? 'ผู้ใช้งาน' : 'ผู้ดูแลระบบ';
+      }
+      
+      if (role) {
+        currentUser = userDisplayName;
         
-        document.body.classList.remove('role-admin', 'role-user');
+        // Persist session state
+        if (remember) {
+          localStorage.setItem('dpd_logged_in', 'true');
+          localStorage.setItem('dpd_current_user', currentUser);
+          localStorage.setItem('dpd_role', role);
+          sessionStorage.removeItem('dpd_logged_in');
+        } else {
+          sessionStorage.setItem('dpd_logged_in', 'true');
+          sessionStorage.setItem('dpd_current_user', currentUser);
+          sessionStorage.setItem('dpd_role', role);
+          localStorage.removeItem('dpd_logged_in');
+        }
+        
+        document.body.classList.remove('role-admin', 'role-staff', 'role-viewer');
         document.body.classList.add('role-' + role);
         
         errEl.style.display = 'none';
@@ -575,21 +603,40 @@
         showToast('ยินดีต้อนรับเข้าสู่ระบบ', 'success');
       } else {
         errEl.style.display = 'block';
-        showToast('รหัสผ่านไม่ถูกต้อง', 'danger');
+        showToast('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'danger');
+      }
+    }
+
+    function togglePasswordVisibility() {
+      const passInput = document.getElementById('loginPass');
+      const toggleIcon = document.getElementById('togglePass');
+      if (passInput && toggleIcon) {
+        if (passInput.type === 'password') {
+          passInput.type = 'text';
+          toggleIcon.classList.remove('ti-eye');
+          toggleIcon.classList.add('ti-eye-off');
+        } else {
+          passInput.type = 'password';
+          toggleIcon.classList.remove('ti-eye-off');
+          toggleIcon.classList.add('ti-eye');
+        }
       }
     }
 
     function doLogout() {
       currentUser = '';
-      // Clear session state
-      sessionStorage.removeItem('dpd_logged_in');
-      sessionStorage.removeItem('dpd_current_user');
+      sessionStorage.clear();
+      localStorage.removeItem('dpd_logged_in');
+      localStorage.removeItem('dpd_current_user');
+      localStorage.removeItem('dpd_role');
       localStorage.removeItem('dpd_active_tab');
       
-      const loginPassEl = document.getElementById('loginPass');
-      if (loginPassEl) {
-        loginPassEl.value = '';
-      }
+      document.body.classList.remove('role-admin', 'role-staff', 'role-viewer');
+      
+      if(document.getElementById('loginUser')) document.getElementById('loginUser').value = '';
+      if(document.getElementById('loginPass')) document.getElementById('loginPass').value = '';
+      if(document.getElementById('rememberMe')) document.getElementById('rememberMe').checked = false;
+      
       document.getElementById('mainApp').classList.remove('active');
       document.getElementById('loginScreen').classList.add('active');
       showToast('ออกจากระบบเรียบร้อย', 'warning');
@@ -749,7 +796,7 @@
               ${catItems.map(p => {
                 const imgSrc = p.img ? p.img : 'assets/logo.png';
                 const imgTag = `<img src="${imgSrc}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid var(--color-border);" onerror="this.src='assets/logo.png'" alt="img">`;
-                return `<tr><td style="width: 50px; padding: 4px 12px;">${imgTag}</td><td>${p.code}</td><td style="user-select: none;">${p.name}</td><td>${p.qty}</td><td>${p.unit}</td><td style="display: flex; gap: 4px; justify-content: flex-end;"><button class="btn-action" style="background-color: var(--color-success); color: white; border-color: var(--color-success);" onclick="openRecvModal('${p.code}')" title="รับสินค้าเข้า"><i class="ti ti-arrow-down-left"></i></button><button class="btn-action btn-action-edit" onclick="openEditModal('${p.code}')" title="แก้ไข"><i class="ti ti-edit"></i></button><button class="btn-action btn-action-delete" onclick="deleteProduct('${p.code}')" title="ลบ"><i class="ti ti-trash"></i></button></td></tr>`;
+                return `<tr><td style="width: 50px; padding: 4px 12px;">${imgTag}</td><td>${p.code}</td><td style="user-select: none;">${p.name}</td><td>${p.qty}</td><td>${p.unit}</td><td style="display: flex; gap: 4px; justify-content: flex-end;"><button class="btn-action edit-only" style="background-color: var(--color-success); color: white; border-color: var(--color-success);" onclick="openRecvModal('${p.code}')" title="รับสินค้าเข้า"><i class="ti ti-arrow-down-left"></i></button><button class="btn-action btn-action-edit edit-only" onclick="openEditModal('${p.code}')" title="แก้ไข"><i class="ti ti-edit"></i></button><button class="btn-action btn-action-delete edit-only" onclick="deleteProduct('${p.code}')" title="ลบ"><i class="ti ti-trash"></i></button></td></tr>`;
               }).join('')}
             </tbody>
           </table>
@@ -908,10 +955,10 @@
           personPosition = found.position || '';
         }
 
-        const isAdmin = document.body.classList.contains('role-admin');
-        const issueType = isAdmin ? 'เบิก' : 'ขอเบิก';
+        const canIssueDirectly = document.body.classList.contains('role-admin') || document.body.classList.contains('role-staff');
+        const issueType = canIssueDirectly ? 'เบิก' : 'ขอเบิก';
         
-        if (isAdmin) {
+        if (canIssueDirectly) {
           p.qty -= qty;
         }
 
@@ -928,7 +975,7 @@
         saveDatabase();
         renderStock();
         closeIssueModal();
-        showToast(isAdmin ? 'เบิกสินค้าสำเร็จ' : 'ส่งคำขอเบิกสินค้าสำเร็จ รออนุมัติ');
+        showToast(canIssueDirectly ? 'เบิกสินค้าสำเร็จ' : 'ส่งคำขอเบิกสินค้าสำเร็จ รออนุมัติ');
       } else { showToast('ข้อมูลไม่ถูกต้องหรือสินค้าไม่พอ', 'danger'); }
     }
 
@@ -993,7 +1040,7 @@
         if (h.type === 'เบิก') {
           actionBtn = `<button class="btn-action btn-action-print" onclick="printIssueSlip(${origIndex})" title="${t('พิมพ์ใบเบิก')}"><i class="ti ti-printer"></i></button>`;
         } else if (h.type === 'ขอเบิก') {
-          actionBtn = `<button class="btn-action admin-only" style="background-color: var(--color-success); color: white; border-color: var(--color-success);" onclick="approveIssue(${origIndex})" title="อนุมัติการเบิก"><i class="ti ti-check"></i></button>`;
+          actionBtn = `<button class="btn-action edit-only" style="background-color: var(--color-success); color: white; border-color: var(--color-success);" onclick="approveIssue(${origIndex})" title="อนุมัติการเบิก"><i class="ti ti-check"></i></button>`;
         } else {
           actionBtn = '<span style="color:var(--color-text-muted); font-size:12px;">-</span>';
         }
@@ -2583,3 +2630,13 @@
         }
       });
     }
+    // --- Clock update for login screen ---
+    setInterval(() => {
+      const timeDisplay = document.getElementById('loginTimeDisplay');
+      if (timeDisplay && document.getElementById('loginScreen').classList.contains('active')) {
+        const now = new Date();
+        const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: false };
+        let formatted = now.toLocaleDateString('th-TH', options);
+        timeDisplay.innerHTML = '<i class="ti ti-clock"></i> <span>' + formatted + '</span>';
+      }
+    }, 1000);

@@ -33,45 +33,53 @@
   <!-- ========================================== -->
   <!-- 1. LOGIN SCREEN (Active by default) -->
   <!-- ========================================== -->
-  <div id="loginScreen" class="screen active">
-    <!-- Animated Air Force & Cyber Security Sky Background -->
-    <div class="sky-background">
-      <div class="cyber-grid"></div>
-      <div class="jet jet-1"></div>
-      <div class="jet jet-2"></div>
-      <div class="jet jet-3"></div>
-      <div class="jet jet-4"></div>
-      <div class="cloud cloud-1"></div>
-      <div class="cloud cloud-2"></div>
-      
-      <!-- Subtle Floating Cyber Elements -->
-      <div class="cyber-code" style="top: 10%; left: 15%; animation-duration: 25s; font-size: 15px;">10100110</div>
-      <div class="cyber-code" style="top: 45%; left: 80%; animation-duration: 30s; font-size: 13px;">SECURE_SYS</div>
-      <div class="cyber-code" style="top: 75%; left: 10%; animation-duration: 22s; font-size: 14px;">01101100</div>
-      <div class="cyber-code" style="top: 30%; left: 85%; animation-duration: 28s; font-size: 12px;">[DPD]</div>
-      <div class="cyber-code" style="top: 85%; left: 68%; animation-duration: 35s; font-size: 15px;">11010101</div>
-    </div>
-
-    <div class="login-wrapper">
-      <div class="login-header">
-        <div class="logo-container">
-          <img src="assets/logo.png" class="logo-floating-img" alt="DPD Logo" />
-        </div>
-        <h1>DPD Stock System</h1>
-        <p>ระบบจัดการพัสดุของกองกรรมวิธีข้อมูล DPD</p>
+  <div id="loginScreen" class="screen active" style="background-color: #070b19; background-image: radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.25) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(59, 130, 246, 0.25) 0%, transparent 50%); font-family: 'Prompt', 'Sarabun', sans-serif;">
+    <div style="position: absolute; top: 20px; right: 20px; display: flex; gap: 8px;">
+      <!-- Language Toggle -->
+      <div class="lang-switch" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(8px); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+        <div class="lang-btn active" onclick="switchLanguage('th')">TH</div>
+        <div class="lang-btn" onclick="switchLanguage('en')">EN</div>
       </div>
-      
-      <div class="login-card">
-        <div class="form-group">
-          <label class="form-label" for="loginPass">รหัสเข้าใช้งานระบบ (Passcode)</label>
-          <div class="input-wrapper">
-            <i class="ti ti-lock" aria-hidden="true"></i>
-            <input type="password" id="loginPass" class="input-field" placeholder="กรอกรหัสเข้าใช้งาน" autocomplete="current-password" />
-          </div>
+    </div>
+    
+    <div class="login-wrapper" style="width: 100%; max-width: 420px; padding: 20px; z-index: 10;">
+      <!-- Time Display -->
+      <div id="loginTimeDisplay" style="text-align: center; color: #94a3b8; font-size: 14px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <i class="ti ti-clock"></i> <span>--:--:--</span>
+      </div>
+
+      <div class="login-card glass-card" style="background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 40px 32px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);">
+        <div class="login-header" style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0 0 8px 0; letter-spacing: 1px;">DPD STOCK</h1>
+          <p style="color: #94a3b8; font-size: 15px; margin: 0;">ระบบจัดการพัสดุคงคลัง</p>
         </div>
         
-        <button class="btn-submit" onclick="doLogin()">เข้าสู่ระบบ</button>
-        <div id="loginErr" class="login-error">รหัสเข้าใช้งานไม่ถูกต้อง</div>
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" for="loginUser" style="color: #cbd5e1; font-size: 14px; margin-bottom: 8px; display: block; text-align: left;">ชื่อผู้ใช้ / Username</label>
+          <div class="input-wrapper" style="position: relative;">
+            <i class="ti ti-user" aria-hidden="true" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 20px; z-index: 2;"></i>
+            <input type="text" id="loginUser" class="input-field" placeholder="กรอกชื่อผู้ใช้" style="width: 100%; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 12px 16px 12px 48px; color: #ffffff; font-size: 15px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'"/>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label class="form-label" for="loginPass" style="color: #cbd5e1; font-size: 14px; margin-bottom: 8px; display: block; text-align: left;">รหัสผ่าน / Password</label>
+          <div class="input-wrapper" style="position: relative;">
+            <i class="ti ti-lock" aria-hidden="true" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 20px; z-index: 2;"></i>
+            <input type="password" id="loginPass" class="input-field" placeholder="กรอกรหัสผ่าน" autocomplete="current-password" style="width: 100%; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 12px 48px 12px 48px; color: #ffffff; font-size: 15px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'" onkeypress="if(event.key === 'Enter') doLogin()"/>
+            <i class="ti ti-eye" id="togglePass" aria-hidden="true" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 20px; cursor: pointer; transition: color 0.2s; z-index: 2;" onclick="togglePasswordVisibility()" onmouseover="this.style.color='#cbd5e1'" onmouseout="this.style.color='#64748b'"></i>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+          <label style="display: flex; align-items: center; gap: 8px; color: #94a3b8; font-size: 14px; cursor: pointer; user-select: none;">
+            <input type="checkbox" id="rememberMe" style="accent-color: #6366f1; width: 16px; height: 16px; cursor: pointer;"> จดจำการเข้าสู่ระบบ
+          </label>
+        </div>
+        
+        <button class="btn-submit" onclick="doLogin()" style="width: 100%; padding: 14px; border: none; border-radius: 10px; background: linear-gradient(135deg, #6366f1, #3b82f6); color: white; font-weight: 600; font-size: 16px; cursor: pointer; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(99, 102, 241, 0.5)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(99, 102, 241, 0.4)'">เข้าสู่ระบบ</button>
+        
+        <div id="loginErr" class="login-error" style="display: none; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); padding: 12px; border-radius: 8px; font-size: 14px; text-align: center; margin-top: 20px;">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</div>
       </div>
     </div>
   </div>
@@ -225,10 +233,10 @@
               <button class="btn btn-warning" style="background-color: #f59e0b; border-color: #f59e0b; color: white;" onclick="exportStockCSV()">
                 <i class="ti ti-file-spreadsheet" aria-hidden="true"></i> ส่งออก Excel
               </button>
-              <button class="btn btn-primary admin-only" onclick="openAddModal()">
+              <button class="btn btn-primary edit-only" onclick="openAddModal()">
                 <i class="ti ti-plus" aria-hidden="true"></i> เพิ่มสินค้าใหม่
               </button>
-              <button class="btn btn-success admin-only" onclick="openRecvModal()">
+              <button class="btn btn-success edit-only" onclick="openRecvModal()">
                 <i class="ti ti-arrow-down-left" aria-hidden="true"></i> รับสินค้าเข้า
               </button>
               <button class="btn btn-danger" onclick="openIssueModal()">
@@ -312,8 +320,8 @@
               <input type="text" id="searchPersonnelInput" class="form-control" placeholder="ค้นหาด้วยชื่อ หรือ ตำแหน่ง..." oninput="renderPersonnel()" />
             </div>
             <div>
-              <button class="btn btn-primary" onclick="openPersonnelModal()">
-                <i class="ti ti-plus" aria-hidden="true"></i> เพิ่มบุคลากรใหม่
+              <button class="btn btn-primary admin-only" onclick="openPersonnelModal()">
+                <i class="ti ti-plus" aria-hidden="true"></i> เพิ่มรายชื่อ
               </button>
             </div>
           </div>
