@@ -221,21 +221,9 @@
                 </select>
               </div>
             </div>
-            <div style="display: flex; gap: 12px; align-items: center; margin-right: auto; margin-left: 12px;">
-              <span style="font-size: 14px; color: var(--color-text-secondary);">แสดง:</span>
-              <select id="stockRowLimit" class="form-control" onchange="renderStock()" style="width: 80px; padding: 6px 12px;">
-                <option value="10">10</option>
-                <option value="20">20</option>
-                <option value="50">50</option>
-                <option value="all">ทั้งหมด</option>
-              </select>
-            </div>
             <div style="display: flex; gap: 8px;">
               <button class="btn btn-warning" style="background-color: #f59e0b; border-color: #f59e0b; color: white;" onclick="exportStockCSV()">
                 <i class="ti ti-file-spreadsheet" aria-hidden="true"></i> ส่งออก Excel
-              </button>
-              <button class="btn btn-primary user-only" onclick="openIssueModal()">
-                <i class="ti ti-hand-stop" aria-hidden="true"></i> ขอเบิกพัสดุ
               </button>
               <button class="btn btn-primary admin-only" onclick="openAddModal()">
                 <i class="ti ti-plus" aria-hidden="true"></i> เพิ่มสินค้าใหม่
@@ -243,7 +231,7 @@
               <button class="btn btn-success admin-only" onclick="openRecvModal()">
                 <i class="ti ti-arrow-down-left" aria-hidden="true"></i> รับสินค้าเข้า
               </button>
-              <button class="btn btn-danger admin-only" onclick="openIssueModal()">
+              <button class="btn btn-danger" onclick="openIssueModal()">
                 <i class="ti ti-arrow-up-right" aria-hidden="true"></i> เบิกสินค้าออก
               </button>
             </div>
