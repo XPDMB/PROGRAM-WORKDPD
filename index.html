@@ -13,9 +13,12 @@
   <!-- Import Tabler Icons for modern vector icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 
-    <link rel="stylesheet" href="css/style.css?v=3.2.0">
+    <link rel="stylesheet" href="css/style.css?v=3.4.0">
   <!-- Chart.js for interactive dashboard visualizations -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Three.js and Vanta.js for 3D Background -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.waves.min.js"></script>
 </head>
 <body>
   <!-- Global High-Tech Cyber Security Video Background (Double Buffered for Seamless Loop) -->
@@ -33,21 +36,13 @@
   <!-- ========================================== -->
   <!-- 1. LOGIN SCREEN (Active by default) -->
   <!-- ========================================== -->
-  <div id="loginScreen" class="screen active" style="background-color: #070b19; background-image: radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.25) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(59, 130, 246, 0.25) 0%, transparent 50%); font-family: 'Prompt', 'Sarabun', sans-serif; overflow: hidden; perspective: 1000px;">
+  <div id="loginScreen" class="screen active" style="font-family: 'Prompt', 'Sarabun', sans-serif; overflow: hidden; perspective: 1000px;">
       
-      <!-- 3D Background Elements -->
-      <div class="cube-container">
-        <div class="cube"><div class="face front"></div><div class="face back"></div><div class="face right"></div><div class="face left"></div><div class="face top"></div><div class="face bottom"></div></div>
-        <div class="cube"><div class="face front"></div><div class="face back"></div><div class="face right"></div><div class="face left"></div><div class="face top"></div><div class="face bottom"></div></div>
-        <div class="cube"><div class="face front"></div><div class="face back"></div><div class="face right"></div><div class="face left"></div><div class="face top"></div><div class="face bottom"></div></div>
-        <div class="cube"><div class="face front"></div><div class="face back"></div><div class="face right"></div><div class="face left"></div><div class="face top"></div><div class="face bottom"></div></div>
-        <div class="cube"><div class="face front"></div><div class="face back"></div><div class="face right"></div><div class="face left"></div><div class="face top"></div><div class="face bottom"></div></div>
-      </div>
-    <div style="position: absolute; top: 20px; right: 20px; display: flex; gap: 8px;">
+    <div style="position: absolute; top: 20px; right: 20px; display: flex; gap: 8px; z-index: 20;">
       <!-- Language Toggle -->
-      <div class="lang-switch" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(8px); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-        <div class="lang-btn active" onclick="switchLanguage('th')">TH</div>
-        <div class="lang-btn" onclick="switchLanguage('en')">EN</div>
+      <div class="lang-switch" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(8px); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); padding: 4px; display: flex;">
+        <div class="btn-lang active" onclick="setLang('th')" style="padding: 4px 12px; cursor: pointer; border-radius: 4px; color: white; font-size: 14px; font-weight: 600;">TH</div>
+        <div class="btn-lang" onclick="setLang('en')" style="padding: 4px 12px; cursor: pointer; border-radius: 4px; color: white; font-size: 14px; font-weight: 600;">EN</div>
       </div>
     </div>
     
@@ -733,6 +728,24 @@
     <option value="ชุด"></option>
   </datalist>
 
-  <script src="js/app.js?v=3.3.0"></script>
+  <script src="js/app.js?v=3.4.0"></script>
+  <script>
+    // Initialize Vanta.js Waves Background
+    VANTA.WAVES({
+      el: "#loginScreen",
+      mouseControls: true,
+      touchControls: true,
+      gyroControls: false,
+      minHeight: 200.00,
+      minWidth: 200.00,
+      scale: 1.00,
+      scaleMobile: 1.00,
+      color: 0x111827,
+      shininess: 40.00,
+      waveHeight: 15.00,
+      waveSpeed: 0.50,
+      zoom: 0.90
+    })
+  </script>
 </body>
 </html>
