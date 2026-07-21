@@ -1431,3 +1431,108 @@
 .role-staff .admin-only { display: none !important; }
 .role-viewer .admin-only { display: none !important; }
 .role-viewer .edit-only { display: none !important; }
+
+/* =========================================================
+   3D Animation & Parallax Effects for Login
+   ========================================================= */
+
+/* 3D Background Cubes */
+.cube-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+  perspective: 1200px;
+}
+.cube {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  transform-style: preserve-3d;
+  animation: floatCube linear infinite;
+  opacity: 0.15;
+}
+.cube .face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(129, 140, 248, 0.8);
+  background: rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.4) inset;
+}
+.cube .front  { transform: translateZ(40px); }
+.cube .back   { transform: rotateY(180deg) translateZ(40px); }
+.cube .right  { transform: rotateY(90deg) translateZ(40px); }
+.cube .left   { transform: rotateY(-90deg) translateZ(40px); }
+.cube .top    { transform: rotateX(90deg) translateZ(40px); }
+.cube .bottom { transform: rotateX(-90deg) translateZ(40px); }
+
+@keyframes floatCube {
+  0% {
+    transform: translateY(120vh) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+  }
+  100% {
+    transform: translateY(-20vh) rotateX(360deg) rotateY(360deg) rotateZ(180deg);
+  }
+}
+/* Distribute cubes */
+.cube:nth-child(1) { left: 10%; animation-duration: 25s; width: 60px; height: 60px; }
+.cube:nth-child(1) .face { transform: translateZ(30px); }
+.cube:nth-child(1) .back { transform: rotateY(180deg) translateZ(30px); }
+.cube:nth-child(1) .right { transform: rotateY(90deg) translateZ(30px); }
+.cube:nth-child(1) .left { transform: rotateY(-90deg) translateZ(30px); }
+.cube:nth-child(1) .top { transform: rotateX(90deg) translateZ(30px); }
+.cube:nth-child(1) .bottom { transform: rotateX(-90deg) translateZ(30px); }
+
+.cube:nth-child(2) { left: 25%; animation-duration: 35s; animation-delay: -10s; width: 100px; height: 100px; }
+.cube:nth-child(2) .face { transform: translateZ(50px); }
+.cube:nth-child(2) .back { transform: rotateY(180deg) translateZ(50px); }
+.cube:nth-child(2) .right { transform: rotateY(90deg) translateZ(50px); }
+.cube:nth-child(2) .left { transform: rotateY(-90deg) translateZ(50px); }
+.cube:nth-child(2) .top { transform: rotateX(90deg) translateZ(50px); }
+.cube:nth-child(2) .bottom { transform: rotateX(-90deg) translateZ(50px); }
+
+.cube:nth-child(3) { left: 55%; animation-duration: 20s; animation-delay: -5s; width: 50px; height: 50px; }
+.cube:nth-child(3) .face { transform: translateZ(25px); }
+.cube:nth-child(3) .back { transform: rotateY(180deg) translateZ(25px); }
+.cube:nth-child(3) .right { transform: rotateY(90deg) translateZ(25px); }
+.cube:nth-child(3) .left { transform: rotateY(-90deg) translateZ(25px); }
+.cube:nth-child(3) .top { transform: rotateX(90deg) translateZ(25px); }
+.cube:nth-child(3) .bottom { transform: rotateX(-90deg) translateZ(25px); }
+
+.cube:nth-child(4) { left: 75%; animation-duration: 40s; animation-delay: -20s; width: 120px; height: 120px; }
+.cube:nth-child(4) .face { transform: translateZ(60px); }
+.cube:nth-child(4) .back { transform: rotateY(180deg) translateZ(60px); }
+.cube:nth-child(4) .right { transform: rotateY(90deg) translateZ(60px); }
+.cube:nth-child(4) .left { transform: rotateY(-90deg) translateZ(60px); }
+.cube:nth-child(4) .top { transform: rotateX(90deg) translateZ(60px); }
+.cube:nth-child(4) .bottom { transform: rotateX(-90deg) translateZ(60px); }
+
+.cube:nth-child(5) { left: 90%; animation-duration: 28s; animation-delay: -15s; width: 70px; height: 70px; }
+.cube:nth-child(5) .face { transform: translateZ(35px); }
+.cube:nth-child(5) .back { transform: rotateY(180deg) translateZ(35px); }
+.cube:nth-child(5) .right { transform: rotateY(90deg) translateZ(35px); }
+.cube:nth-child(5) .left { transform: rotateY(-90deg) translateZ(35px); }
+.cube:nth-child(5) .top { transform: rotateX(90deg) translateZ(35px); }
+.cube:nth-child(5) .bottom { transform: rotateX(-90deg) translateZ(35px); }
+
+/* Glare Effect for 3D Card */
+.glare {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  transform: translateZ(1px); /* ensure it stays above background but below content */
+}
+.3d-card:hover .glare {
+  opacity: 1;
+}
+

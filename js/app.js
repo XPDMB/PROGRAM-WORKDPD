@@ -2640,3 +2640,44 @@
         timeDisplay.innerHTML = '<i class="ti ti-clock"></i> <span>' + formatted + '</span>';
       }
     }, 1000);
+
+    // --- 3D Card Parallax Effect ---
+    const loginCard = document.getElementById('loginCard');
+    const cardGlare = document.getElementById('cardGlare');
+    
+    if (loginCard) {
+      loginCard.addEventListener('mousemove', (e) => {
+        const rect = loginCard.getBoundingClientRect();
+        const x = e.clientX - rect.left; // x position within the element.
+        const y = e.clientY - rect.top;  // y position within the element.
+        
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        
+        // Calculate rotation based on mouse position (max rotation 15deg)
+        const rotateX = ((y - centerY) / centerY) * -15;
+        const rotateY = ((x - centerX) / centerX) * 15;
+        
+        loginCard.style.transform = otateX( + rotateX + deg) rotateY( + rotateY + deg);
+        
+        // Glare effect movement
+        if (cardGlare) {
+          const glareX = (x / rect.width) * 100;
+          const glareY = (y / rect.height) * 100;
+          cardGlare.style.background = adial-gradient(circle at  + glareX + %  + glareY + %, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
+        }
+      });
+      
+      loginCard.addEventListener('mouseleave', () => {
+        loginCard.style.transform = otateX(0deg) rotateY(0deg);
+        if (cardGlare) {
+          cardGlare.style.opacity = '0';
+        }
+      });
+      
+      loginCard.addEventListener('mouseenter', () => {
+        if (cardGlare) {
+          cardGlare.style.opacity = '1';
+        }
+      });
+    }
