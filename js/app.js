@@ -2632,18 +2632,7 @@
         }
       });
     }
-    // --- Clock update for login screen ---
-    const updateClock = () => {
-      const timeDisplay = document.getElementById('loginTimeDisplay');
-      if (timeDisplay && document.getElementById('loginScreen').classList.contains('active')) {
-        const now = new Date();
-        const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: false };
-        let formatted = now.toLocaleDateString('th-TH', options);
-        timeDisplay.innerHTML = '<i class="ti ti-clock"></i> <span>' + formatted + '</span>';
-      }
-    };
-    updateClock();
-    setInterval(updateClock, 1000);
+    // Clock removed
 
     // --- 3D Card Parallax Effect ---
     const loginCard = document.getElementById('loginCard');
@@ -2688,3 +2677,4 @@ otateX(0deg) rotateY(0deg);
         }
       });
     }
+
