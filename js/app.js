@@ -989,6 +989,35 @@
       return `<strong>${name}</strong>`;
     }
 
+    window.formatHistoryDate = function(dateStr) {
+      if (!dateStr) return '';
+      try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        const y = d.getFullYear() + 543;
+        const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+        const m = months[d.getMonth()];
+        const day = d.getDate().toString().padStart(2, '0');
+        const hrs = d.getHours().toString().padStart(2, '0');
+        const mins = d.getMinutes().toString().padStart(2, '0');
+        return `${day} ${m} ${y} ${hrs}:${mins}`;
+      } catch(e) { return dateStr; }
+    };
+
+    window.toggleHistoryDetail = function(id) {
+      const el = document.getElementById('hist-detail-' + id);
+      const icon = document.getElementById('hist-icon-' + id);
+      if (el) {
+        if (el.style.display === 'none') {
+          el.style.display = 'block';
+          if (icon) icon.style.transform = 'rotate(180deg)';
+        } else {
+          el.style.display = 'none';
+          if (icon) icon.style.transform = 'rotate(0deg)';
+        }
+      }
+    };
+
     function renderHistory() {
       const container = document.getElementById('historyTable');
       if (!container) return;
@@ -1025,28 +1054,60 @@
         return;
       }
 
-      container.innerHTML = `<table><thead><tr><th>${t('วันที่ทำรายการ')}</th><th>${t('ประเภท')}</th><th>${t('รหัสสินค้า')}</th><th>${t('ชื่อสินค้า')}</th><th style="text-align: right;">${t('จำนวน')}</th><th>${t('ผู้ดำเนินการ/ผู้เบิก')}</th><th>${t('บันทึกช่วยจำ/วัตถุประสงค์')}</th><th style="text-align: center; width: 100px;">${t('จัดการ')}</th></tr></thead><tbody>${list.map(h => {
+      container.innerHTML = `<div class="history-accordion" style="display: flex; flex-direction: column; gap: 12px;">${list.map(h => {
         let badgeClass = 'badge-primary';
         if (h.type === 'รับ') badgeClass = 'badge-success';
         if (h.type === 'เบิก') badgeClass = 'badge-danger';
         if (h.type === 'ขอเบิก') badgeClass = 'badge-warning';
         if (h.type === 'เพิ่ม') badgeClass = 'badge-primary';
-        if (h.type === 'แก้ไข') badgeClass = 'badge-warning';
-        if (h.type === 'ปรับปรุง') badgeClass = 'badge-warning';
+        if (h.type === 'แก้ไข' || h.type === 'ปรับปรุง') badgeClass = 'badge-warning';
         if (h.type === 'ลบ') badgeClass = 'badge-danger';
 
-        let actionBtn = '';
         const origIndex = history.indexOf(h);
+        
+        let actionBtn = '';
         if (h.type === 'เบิก') {
-          actionBtn = `<button class="btn-action btn-action-print" onclick="printIssueSlip(${origIndex})" title="${t('พิมพ์ใบเบิก')}"><i class="ti ti-printer"></i></button>`;
+          actionBtn = `<button class="btn-action btn-action-print" style="width: auto; padding: 6px 16px; background: rgba(255,255,255,0.05);" onclick="printIssueSlip(${origIndex})" title="${t('พิมพ์ใบเบิก')}"><i class="ti ti-printer"></i> ${t('พิมพ์ใบเบิก')}</button>`;
         } else if (h.type === 'ขอเบิก') {
-          actionBtn = `<button class="btn-action edit-only" style="background-color: var(--color-success); color: white; border-color: var(--color-success);" onclick="approveIssue(${origIndex})" title="อนุมัติการเบิก"><i class="ti ti-check"></i></button>`;
-        } else {
-          actionBtn = '<span style="color:var(--color-text-muted); font-size:12px;">-</span>';
+          actionBtn = `<button class="btn-action edit-only" style="background-color: var(--color-success); color: white; border-color: var(--color-success); width: auto; padding: 6px 16px;" onclick="approveIssue(${origIndex})"><i class="ti ti-check"></i> อนุมัติการเบิก</button>`;
         }
 
-        return `<tr><td><i class="ti ti-calendar-event" style="color: var(--color-text-muted);"></i> ${h.date}</td><td><span class="badge ${badgeClass}">${h.type === 'เบิก' ? t('เบิกออก') : (h.type === 'รับ' ? t('รับเข้า') : t(h.type))}</span></td><td><strong>${h.code}</strong></td><td>${h.name}</td><td style="text-align: right; font-weight: 600; ${h.type === 'เบิก' ? 'color: var(--color-danger)' : (h.type === 'รับ' ? 'color: var(--color-success)' : '')}">${h.type === 'เบิก' ? '-' : '+'}${h.qty.toLocaleString()}</td><td>${formatUser(h.user, h.userPosition)}</td><td><span style="font-size: 13px; color: var(--color-text-secondary);">${h.note || '-'}</span></td><td style="text-align: center;">${actionBtn}</td></tr>`;
-      }).join('')}</tbody></table>`;
+        const formattedDate = window.formatHistoryDate(h.date);
+        const qtyPrefix = (h.type === 'เบิก') ? '-' : '+';
+        const qtyColor = (h.type === 'เบิก') ? 'var(--color-danger)' : (h.type === 'รับ' ? 'var(--color-success)' : 'var(--color-text-primary)');
+
+        return `
+          <div class="hist-card" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; overflow: hidden; transition: all 0.2s;">
+            <div class="hist-summary" onclick="window.toggleHistoryDetail(${origIndex})" style="padding: 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+              <div style="display: flex; align-items: center; gap: 16px; flex: 1;">
+                <span class="badge ${badgeClass}" style="min-width: 65px; text-align: center;">${h.type === 'เบิก' ? t('เบิกออก') : (h.type === 'รับ' ? t('รับเข้า') : t(h.type))}</span>
+                <div style="display: flex; flex-direction: column;">
+                  <strong style="font-size: 15px; color: #e2e8f0;">${h.name} <span style="color: var(--color-text-muted); font-size: 13px; font-weight: normal;">(${h.code})</span></strong>
+                  <span style="font-size: 12px; color: #94a3b8; margin-top: 2px;"><i class="ti ti-calendar-event"></i> ${formattedDate}</span>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 16px;">
+                <strong style="font-size: 16px; color: ${qtyColor};">${qtyPrefix}${h.qty.toLocaleString()}</strong>
+                <i class="ti ti-chevron-down" id="hist-icon-${origIndex}" style="color: #64748b; transition: transform 0.3s;"></i>
+              </div>
+            </div>
+            
+            <div class="hist-details" id="hist-detail-${origIndex}" style="display: none; padding: 16px; border-top: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.15);">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                  <span style="font-size: 12px; color: var(--color-text-muted); display: block;">${t('ผู้ดำเนินการ/ผู้เบิก')}</span>
+                  <div style="font-size: 14px; color: #e2e8f0; margin-top: 4px;">${formatUser(h.user, h.userPosition)}</div>
+                </div>
+                <div>
+                  <span style="font-size: 12px; color: var(--color-text-muted); display: block;">${t('บันทึกช่วยจำ/วัตถุประสงค์')}</span>
+                  <div style="font-size: 14px; color: #e2e8f0; margin-top: 4px; line-height: 1.5;">${h.note || '-'}</div>
+                </div>
+              </div>
+              ${actionBtn ? `<div style="display: flex; justify-content: flex-end;">${actionBtn}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('')}</div>`;
     }
 
     window.approveIssue = function(index) {
