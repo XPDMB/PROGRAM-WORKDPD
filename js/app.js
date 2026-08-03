@@ -549,7 +549,7 @@
       }, 4000);
     }
 
-    function doLogin() {
+        function doLogin() {
       const u = document.getElementById('loginUser') ? document.getElementById('loginUser').value.trim().toLowerCase() : '';
       const p = document.getElementById('loginPass').value;
       const remember = document.getElementById('rememberMe') ? document.getElementById('rememberMe').checked : false;
@@ -558,19 +558,19 @@
       let role = null;
       let userDisplayName = null;
       
-      // ล็อกอินแบบใช้รหัสที่ถูกต้องเท่านั้น (ลบ Fallback 36335 ออกแล้ว)
-      if (u === 'admin' && p === 'Admin36335') {
+      // กำหนดชื่อผู้ใช้และรหัสผ่านตามที่คุณต้องการ
+      if (u === 'admin' && p === '36335') {
         role = 'admin';
         userDisplayName = 'ผู้ดูแลระบบ';
-      } else if (u === 'staff' && p === 'Staff36335') {
+      } else if (u === 'staff' && p === '36335') {
         role = 'staff';
         userDisplayName = 'เจ้าหน้าที่คลัง';
-      } else if (u === 'view' && p === 'View36335') {
-        role = 'viewer';
-        userDisplayName = 'ผู้ตรวจสอบ';
+      } else if (u === 'user' && p === '36335') {
+        role = 'viewer'; // สิทธิ์เป็นผู้เข้าชม (viewer)
+        userDisplayName = 'ผู้ใช้งาน';
       } 
       
-      // ถ้ารหัสผ่านถูกต้อง
+      // ถ้ารหัสผ่านถูกต้องและมีสิทธิ์ (role)
       if (role) {
         currentUser = userDisplayName;
         
