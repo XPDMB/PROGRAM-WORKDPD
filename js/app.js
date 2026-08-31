@@ -941,13 +941,13 @@
       csvContent += "รหัสสินค้า,หมวดหมู่,ชื่อสินค้า,จำนวนคงเหลือ,หน่วยนับ,ตำแหน่งจัดเก็บ\n";
       
       list.forEach(p => {
-        let row = [
-          `"${p.code}"`,
-          `"${p.cat}"`,
-          `"${p.name}"`,
-          `"${p.qty}"`,
-          `"${p.unit}"`,
-          `"${p.loc || ''}"`
+        const row = [
+          csvCell(p.code),
+          csvCell(p.cat),
+          csvCell(p.name),
+          csvCell(p.qty),
+          csvCell(p.unit),
+          csvCell(p.loc || '')
         ];
         csvContent += row.join(",") + "\n";
       });
@@ -2298,7 +2298,7 @@
       csvRows.push('"รหัสพัสดุ","ชื่อรายการ","หมวดหมู่","สถานที่เก็บ","จำนวนรับเข้า","จำนวนเบิกออก","คงเหลือปัจจุบัน","หน่วยนับ"');
 
       reportData.forEach(r => {
-        csvRows.push(`"${r.code}","${r.name}","${r.cat}","${r.loc}",${r.received},${r.issued},${r.currentQty},"${r.unit}"`);
+        csvRows.push([csvCell(r.code), csvCell(r.name), csvCell(r.cat), csvCell(r.loc), r.received, r.issued, r.currentQty, csvCell(r.unit)].join(','));
       });
 
       const csvString = csvRows.join('\n');
@@ -2573,33 +2573,33 @@
     function importBackupData(event) {
       const file = event.target.files[0];
       if (!file) return;
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('ไฟล์สำรองมีขนาดเกิน 5 MB', 'danger');
+        event.target.value = '';
+        return;
+      }
 
       const reader = new FileReader();
       reader.onload = function(e) {
         try {
-          const importedData = JSON.parse(e.target.result);
-          if (importedData && Array.isArray(importedData.products) && Array.isArray(importedData.history) && Array.isArray(importedData.personnel)) {
-            const confirmRestore = confirm('คุณต้องการกู้คืนข้อมูลระบบด้วยไฟล์สำรองนี้หรือไม่?\n*คำเตือน: ข้อมูลพัสดุ ประวัติการเบิกจ่าย และบุคลากรทั้งหมดที่มีอยู่ในปัจจุบันจะถูกเขียนทับทันที*');
-            if (confirmRestore) {
-              products = importedData.products;
-              history = importedData.history;
-              PERSONNEL = importedData.personnel;
-              saveDatabase();
-              
-              // Refresh views and components
-              renderDashboard();
-              renderStock();
-              renderHistory();
-              renderPersonnel();
-              populateFiscalYears();
-              
-              showToast('กู้คืนข้อมูลสำเร็จ (Database Restored)', 'success');
-            }
-          } else {
-            showToast('ไฟล์สำรองไม่ถูกต้อง หรือโครงสร้างข้อมูลผิดพลาด', 'danger');
+          const importedData = validateBackupData(JSON.parse(e.target.result));
+          const confirmRestore = confirm('คุณต้องการกู้คืนข้อมูลระบบด้วยไฟล์สำรองนี้หรือไม่?\n*คำเตือน: ข้อมูลสาธิตทั้งหมดในเบราว์เซอร์นี้จะถูกเขียนทับทันที*');
+          if (confirmRestore) {
+            products = importedData.products;
+            history = importedData.history;
+            PERSONNEL = importedData.personnel;
+            saveDatabase();
+
+            renderDashboard();
+            renderStock();
+            renderHistory();
+            renderPersonnel();
+            populateFiscalYears();
+
+            showToast('กู้คืนข้อมูลสาธิตสำเร็จ', 'success');
           }
         } catch (err) {
-          showToast('ไม่สามารถอ่านไฟล์ได้ หรือข้อมูลในไฟล์ไม่ใช่ JSON', 'danger');
+          showToast('ไฟล์สำรองไม่ถูกต้อง หรือข้อมูลไม่ผ่านการตรวจสอบ', 'danger');
         }
         event.target.value = '';
       };
