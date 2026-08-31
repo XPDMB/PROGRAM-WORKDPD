@@ -25,6 +25,21 @@ const checks = [
       throw new Error('Incomplete approval workflow');
     }
   }],
+  ['Physical stocktake is complete', () => {
+    const required = [
+      'function openStocktakeModal',
+      'function updateStocktakeDifference',
+      'function saveStocktake',
+      "type: 'ตรวจนับ'",
+      'beforeQty',
+      'actualQty',
+      'difference'
+    ];
+    for (const marker of required) {
+      if (!app.includes(marker)) throw new Error('Missing stocktake marker: ' + marker);
+    }
+    if (!html.includes('id="stocktakeModal"')) throw new Error('Missing stocktake modal');
+  }],
   ['No real-looking Thai phone number is embedded', () => {
     const numbers = app.match(/0\d{2}-\d{7}/g) || [];
     const realLooking = numbers.filter(number => number !== '000-0000000');
