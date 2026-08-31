@@ -139,6 +139,11 @@
       "ล้างประวัติทั้งหมด": "Clear All History",
       "คุณแน่ใจหรือไม่ที่จะล้างข้อมูลประวัติความเคลื่อนไหวทั้งหมด?\n*การกระทำนี้จะลบข้อมูลประวัติทั้งหมดอย่างถาวรและไม่สามารถกู้คืนได้*": "Are you sure you want to clear all movement history?\n*This action will permanently delete all history logs and cannot be undone.*",
       "ล้างข้อมูลประวัติสำเร็จ": "History cleared successfully",
+      "ตรวจนับ": "Stocktake",
+      "ตรวจนับสต็อก": "Physical Stocktake",
+      "ยอดคงเหลือในระบบ": "System Quantity",
+      "จำนวนที่ตรวจพบจริง": "Actual Count",
+      "ส่วนต่าง": "Difference",
       "จำนวนพัสดุที่เบิก": "Quantity Issued",
       "ไม่มีข้อมูลการเบิก": "No Requisitions"
     };
@@ -249,6 +254,11 @@
         if (!Number.isFinite(number) || number < 0 || number > max) throw new Error('Invalid numeric value');
         return Math.floor(number);
       };
+      const cleanSignedNumber = (value, max = 1000000000) => {
+        const number = Number(value);
+        if (!Number.isFinite(number) || Math.abs(number) > max) throw new Error('Invalid signed numeric value');
+        return Math.trunc(number);
+      };
 
       const products = input.products.map(product => {
         if (!product || typeof product !== 'object') throw new Error('Invalid product');
@@ -267,7 +277,7 @@
         };
       });
 
-      const allowedTypes = new Set(['รับ', 'เบิก', 'ขอเบิก', 'เพิ่ม', 'แก้ไข', 'ปรับปรุง', 'ลบ', 'ปฏิเสธ']);
+      const allowedTypes = new Set(['รับ', 'เบิก', 'ขอเบิก', 'เพิ่ม', 'แก้ไข', 'ปรับปรุง', 'ลบ', 'ปฏิเสธ', 'ตรวจนับ']);
       const history = input.history.map(entry => {
         if (!entry || typeof entry !== 'object') throw new Error('Invalid history entry');
         const type = cleanText(entry.type, 30);
@@ -286,7 +296,11 @@
           approvedBy: cleanText(entry.approvedBy, 200),
           approvedAt: cleanText(entry.approvedAt, 40),
           rejectedBy: cleanText(entry.rejectedBy, 200),
-          rejectedAt: cleanText(entry.rejectedAt, 40)
+          rejectedAt: cleanText(entry.rejectedAt, 40),
+          beforeQty: cleanNumber(entry.beforeQty ?? 0),
+          actualQty: cleanNumber(entry.actualQty ?? 0),
+          difference: cleanSignedNumber(entry.difference ?? 0),
+          countedBy: cleanText(entry.countedBy, 200)
         };
       });
 
@@ -812,7 +826,8 @@
       const total = products.length;
       const lowList = products.filter(p => p.qty < p.min);
       const totalQty = products.reduce((a, p) => a + p.qty, 0);
-      const txToday = history.filter(h => h.date === new Date().toISOString().slice(0, 10)).length;
+      const today = new Date().toISOString().slice(0, 10);
+      const txToday = history.filter(h => String(h.date || '').slice(0, 10) === today).length;
       document.getElementById('dashCards').innerHTML = [
         {label: t('รายการทั้งหมด'), val: total + ' ' + t('รายการ'), icon: 'ti-boxes', color: 'var(--color-primary)'},
         {label: t('สินค้าใกล้หมด'), val: lowList.length + ' ' + t('รายการ'), icon: 'ti-alert-triangle', color: 'var(--color-warning)'},
@@ -938,6 +953,7 @@
       }
 
       document.getElementById('stockTable').innerHTML = htmlOutput;
+      populateStocktakeProducts();
     }
 
     window.exportStockCSV = function() {
@@ -979,6 +995,140 @@
         const s = document.getElementById(id);
         if (s) s.innerHTML = '<option value="">-- เลือกสินค้า --</option>' + products.map(p => `<option value="${escapeHTML(p.code)}">${escapeHTML(p.code)} - ${escapeHTML(p.name)}</option>`).join('');
       });
+    }
+
+    function populateStocktakeProducts() {
+      const select = document.getElementById('stocktakeItem');
+      if (!select) return;
+      const selected = select.value;
+      select.replaceChildren();
+
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = '-- เลือกพัสดุที่ต้องการตรวจนับ --';
+      select.appendChild(placeholder);
+
+      [...products]
+        .sort((a, b) => String(a.code).localeCompare(String(b.code), 'th'))
+        .forEach(product => {
+          const option = document.createElement('option');
+          option.value = product.code;
+          option.textContent = product.code + ' - ' + product.name;
+          select.appendChild(option);
+        });
+
+      if (products.some(product => product.code === selected)) select.value = selected;
+    }
+
+    function openStocktakeModal(code = '') {
+      const allowed = document.body.classList.contains('role-admin') || document.body.classList.contains('role-staff');
+      if (!allowed) {
+        showToast('บัญชีนี้ไม่มีสิทธิ์บันทึกผลตรวจนับ', 'danger');
+        return;
+      }
+
+      populateStocktakeProducts();
+      const select = document.getElementById('stocktakeItem');
+      select.value = products.some(product => product.code === code) ? code : '';
+      document.getElementById('stocktakeActualQty').value = '';
+      document.getElementById('stocktakeReason').value = '';
+      document.getElementById('stocktakeCountedBy').value = currentUser || 'ผู้ใช้งานสาธิต';
+      updateStocktakeDifference();
+      document.getElementById('stocktakeModal').classList.add('open');
+    }
+
+    function closeStocktakeModal() {
+      document.getElementById('stocktakeModal').classList.remove('open');
+    }
+
+    function updateStocktakeDifference() {
+      const code = document.getElementById('stocktakeItem').value;
+      const product = products.find(item => item.code === code);
+      const actualValue = document.getElementById('stocktakeActualQty').value;
+      const systemInput = document.getElementById('stocktakeSystemQty');
+      const differenceInput = document.getElementById('stocktakeDifference');
+
+      if (!product) {
+        systemInput.value = '';
+        differenceInput.value = '-';
+        differenceInput.style.color = '';
+        return;
+      }
+
+      systemInput.value = product.qty;
+      if (actualValue === '') {
+        differenceInput.value = '-';
+        differenceInput.style.color = '';
+        return;
+      }
+
+      const actualQty = Number(actualValue);
+      if (!Number.isInteger(actualQty) || actualQty < 0) {
+        differenceInput.value = 'จำนวนไม่ถูกต้อง';
+        differenceInput.style.color = 'var(--color-danger)';
+        return;
+      }
+
+      const difference = actualQty - product.qty;
+      differenceInput.value = (difference > 0 ? '+' : '') + difference;
+      differenceInput.style.color = difference === 0
+        ? 'var(--color-success)'
+        : (difference > 0 ? 'var(--color-primary)' : 'var(--color-danger)');
+    }
+
+    function saveStocktake() {
+      const allowed = document.body.classList.contains('role-admin') || document.body.classList.contains('role-staff');
+      if (!allowed) {
+        showToast('บัญชีนี้ไม่มีสิทธิ์บันทึกผลตรวจนับ', 'danger');
+        return;
+      }
+
+      const code = document.getElementById('stocktakeItem').value;
+      const actualValue = document.getElementById('stocktakeActualQty').value;
+      const reason = document.getElementById('stocktakeReason').value.trim();
+      const product = products.find(item => item.code === code);
+
+      if (!product) {
+        showToast('กรุณาเลือกรายการพัสดุ', 'danger');
+        return;
+      }
+      const actualQty = Number(actualValue);
+      if (!Number.isInteger(actualQty) || actualQty < 0) {
+        showToast('กรุณาระบุจำนวนที่ตรวจพบจริงเป็นจำนวนเต็มตั้งแต่ 0 ขึ้นไป', 'danger');
+        return;
+      }
+      if (reason.length < 3) {
+        showToast('กรุณาระบุเหตุผลหรือหมายเหตุการตรวจนับ', 'danger');
+        return;
+      }
+
+      const beforeQty = product.qty;
+      const difference = actualQty - beforeQty;
+      const countedBy = currentUser || 'ผู้ใช้งานสาธิต';
+      product.qty = actualQty;
+
+      history.unshift({
+        id: createTransactionId(),
+        date: new Date().toISOString(),
+        type: 'ตรวจนับ',
+        status: 'completed',
+        code: product.code,
+        name: product.name,
+        qty: Math.abs(difference),
+        beforeQty,
+        actualQty,
+        difference,
+        user: countedBy,
+        countedBy,
+        note: reason
+      });
+
+      saveDatabase();
+      closeStocktakeModal();
+      renderDashboard();
+      renderStock();
+      renderHistory();
+      showToast(difference === 0 ? 'บันทึกผลตรวจนับแล้ว ยอดตรงกับระบบ' : 'บันทึกผลตรวจนับและปรับยอดเรียบร้อย', 'success');
     }
 
     function openRecvModal(code) { 
@@ -1195,6 +1345,7 @@
         if (h.type === 'เพิ่ม') badgeClass = 'badge-primary';
         if (h.type === 'แก้ไข' || h.type === 'ปรับปรุง') badgeClass = 'badge-warning';
         if (h.type === 'ลบ' || h.type === 'ปฏิเสธ') badgeClass = 'badge-danger';
+        if (h.type === 'ตรวจนับ') badgeClass = 'badge-primary';
 
         const origIndex = history.indexOf(h);
         
@@ -1211,8 +1362,13 @@
         }
 
         const formattedDate = window.formatHistoryDate(h.date);
-        const qtyPrefix = h.type === 'เบิก' ? '-' : (h.type === 'รับ' || h.type === 'เพิ่ม' ? '+' : '');
-        const qtyColor = (h.type === 'เบิก') ? 'var(--color-danger)' : (h.type === 'รับ' ? 'var(--color-success)' : 'var(--color-text-primary)');
+        const displayQty = h.type === 'ตรวจนับ' ? Math.abs(Number(h.difference || 0)) : h.qty;
+        const qtyPrefix = h.type === 'ตรวจนับ'
+          ? (Number(h.difference || 0) > 0 ? '+' : (Number(h.difference || 0) < 0 ? '-' : ''))
+          : (h.type === 'เบิก' ? '-' : (h.type === 'รับ' || h.type === 'เพิ่ม' ? '+' : ''));
+        const qtyColor = h.type === 'ตรวจนับ'
+          ? (Number(h.difference || 0) === 0 ? 'var(--color-success)' : (Number(h.difference || 0) > 0 ? 'var(--color-primary)' : 'var(--color-danger)'))
+          : ((h.type === 'เบิก') ? 'var(--color-danger)' : (h.type === 'รับ' ? 'var(--color-success)' : 'var(--color-text-primary)'));
 
         return `
           <div class="hist-card" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; overflow: hidden; transition: all 0.2s;">
@@ -1225,7 +1381,7 @@
                 </div>
               </div>
               <div style="display: flex; align-items: center; gap: 16px;">
-                <strong style="font-size: 16px; color: ${qtyColor};">${qtyPrefix}${h.qty.toLocaleString()}</strong>
+                <strong style="font-size: 16px; color: ${qtyColor};">${qtyPrefix}${Number(displayQty || 0).toLocaleString()}</strong>
                 <i class="ti ti-chevron-down" id="hist-icon-${origIndex}" style="color: #64748b; transition: transform 0.3s;"></i>
               </div>
             </div>
@@ -1239,6 +1395,7 @@
                 <div>
                   <span style="font-size: 12px; color: var(--color-text-muted); display: block;">${t('บันทึกช่วยจำ/วัตถุประสงค์')}</span>
                   <div style="font-size: 14px; color: #e2e8f0; margin-top: 4px; line-height: 1.5;">${escapeHTML(h.note || '-')}</div>
+                  ${h.type === 'ตรวจนับ' ? `<div style="font-size: 12px; color: var(--color-text-muted); margin-top: 8px;">ยอดระบบ ${Number(h.beforeQty || 0).toLocaleString()} → ยอดจริง ${Number(h.actualQty || 0).toLocaleString()} (ส่วนต่าง ${Number(h.difference || 0) > 0 ? '+' : ''}${Number(h.difference || 0).toLocaleString()})</div>` : ''}
                 </div>
               </div>
               ${actionBtn ? `<div style="display: flex; justify-content: flex-end;">${actionBtn}</div>` : ''}
@@ -1958,12 +2115,12 @@
 
       let reportData = products.map(p => {
         const recv = filteredHistory
-          .filter(h => h.code === p.code && (h.type === 'รับ' || h.type === 'เพิ่ม' || h.type === 'ปรับปรุง'))
-          .reduce((sum, h) => sum + h.qty, 0);
+          .filter(h => h.code === p.code && (h.type === 'รับ' || h.type === 'เพิ่ม' || h.type === 'ปรับปรุง' || (h.type === 'ตรวจนับ' && Number(h.difference || 0) > 0)))
+          .reduce((sum, h) => sum + (h.type === 'ตรวจนับ' ? Number(h.difference || 0) : Number(h.qty || 0)), 0);
 
         const issue = filteredHistory
-          .filter(h => h.code === p.code && h.type === 'เบิก')
-          .reduce((sum, h) => sum + h.qty, 0);
+          .filter(h => h.code === p.code && (h.type === 'เบิก' || (h.type === 'ตรวจนับ' && Number(h.difference || 0) < 0)))
+          .reduce((sum, h) => sum + (h.type === 'ตรวจนับ' ? Math.abs(Number(h.difference || 0)) : Number(h.qty || 0)), 0);
 
         return {
           code: p.code,
