@@ -193,6 +193,105 @@
       return (currentLang === 'en' && i18n[text]) ? i18n[text] : text;
     }
 
+    function escapeHTML(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function safeInlineArg(value) {
+      return encodeURIComponent(String(value ?? ''));
+    }
+
+    function safeImageUrl(value) {
+      const raw = String(value ?? '').trim();
+      if (!raw) return 'assets/logo.png';
+      try {
+        const url = new URL(raw, window.location.href);
+        if (url.protocol === 'https:' || url.protocol === 'http:') return escapeHTML(url.href);
+      } catch (e) {}
+      return 'assets/logo.png';
+    }
+
+    function csvCell(value) {
+      let text = String(value ?? '');
+      if (/^[=+\-@]/.test(text)) text = "'" + text;
+      return '"' + text.replace(/"/g, '""') + '"';
+    }
+
+    function validateBackupData(input) {
+      if (!input || typeof input !== 'object') throw new Error('Invalid backup root');
+      if (!Array.isArray(input.products) || !Array.isArray(input.history) || !Array.isArray(input.personnel)) {
+        throw new Error('Invalid backup structure');
+      }
+      if (input.products.length > 5000 || input.history.length > 50000 || input.personnel.length > 5000) {
+        throw new Error('Backup exceeds demo limits');
+      }
+
+      const cleanText = (value, max) => String(value ?? '').replace(/[\u0000-\u001F\u007F]/g, '').slice(0, max);
+      const cleanNumber = (value, max = 1000000000) => {
+        const number = Number(value);
+        if (!Number.isFinite(number) || number < 0 || number > max) throw new Error('Invalid numeric value');
+        return Math.floor(number);
+      };
+
+      const products = input.products.map(product => {
+        if (!product || typeof product !== 'object') throw new Error('Invalid product');
+        const code = cleanText(product.code, 50).trim();
+        const name = cleanText(product.name, 200).trim();
+        if (!code || !name) throw new Error('Product code and name are required');
+        return {
+          code,
+          name,
+          cat: cleanText(product.cat, 100) || 'อื่นๆ',
+          qty: cleanNumber(product.qty),
+          min: cleanNumber(product.min),
+          unit: cleanText(product.unit, 50) || 'ชิ้น',
+          loc: cleanText(product.loc, 200),
+          img: cleanText(product.img, 1000)
+        };
+      });
+
+      const allowedTypes = new Set(['รับ', 'เบิก', 'ขอเบิก', 'เพิ่ม', 'แก้ไข', 'ปรับปรุง', 'ลบ', 'ปฏิเสธ']);
+      const history = input.history.map(entry => {
+        if (!entry || typeof entry !== 'object') throw new Error('Invalid history entry');
+        const type = cleanText(entry.type, 30);
+        if (!allowedTypes.has(type)) throw new Error('Invalid history type');
+        return {
+          id: cleanText(entry.id, 100),
+          date: cleanText(entry.date, 40),
+          type,
+          code: cleanText(entry.code, 50),
+          name: cleanText(entry.name, 200),
+          qty: cleanNumber(entry.qty),
+          user: cleanText(entry.user, 200),
+          userPosition: cleanText(entry.userPosition, 200),
+          note: cleanText(entry.note, 1000),
+          status: cleanText(entry.status, 30),
+          approvedBy: cleanText(entry.approvedBy, 200),
+          approvedAt: cleanText(entry.approvedAt, 40),
+          rejectedBy: cleanText(entry.rejectedBy, 200),
+          rejectedAt: cleanText(entry.rejectedAt, 40)
+        };
+      });
+
+      const personnel = input.personnel.map(person => {
+        if (!person || typeof person !== 'object') throw new Error('Invalid personnel entry');
+        const name = cleanText(person.name, 200).trim();
+        if (!name) throw new Error('Personnel name is required');
+        return {
+          name,
+          position: cleanText(person.position, 200),
+          phone: cleanText(person.phone, 40)
+        };
+      });
+
+      return { products, history, personnel };
+    }
+
     // --- Real-time Clock ---
     function updateClock() {
       const now = new Date();
@@ -543,7 +642,11 @@
       const toast = document.createElement('div');
       toast.className = `toast toast-${type}`;
       let icon = type === 'danger' ? 'ti-circle-x' : (type === 'warning' ? 'ti-alert-circle' : 'ti-circle-check');
-      toast.innerHTML = `<i class="ti ${icon}"></i><span>${message}</span>`;
+      const toastIcon = document.createElement('i');
+      toastIcon.className = `ti ${icon}`;
+      const toastMessage = document.createElement('span');
+      toastMessage.textContent = String(message);
+      toast.append(toastIcon, toastMessage);
       container.appendChild(toast);
       setTimeout(() => toast.classList.add('show'), 15);
       setTimeout(() => {
@@ -709,7 +812,7 @@
       if (lowList.length === 0) {
         lowTableEl.innerHTML = `<div style="text-align: center; padding: 24px; color: var(--color-text-muted);">${t('ปกติทุกรายการ')}</div>`;
       } else {
-        lowTableEl.innerHTML = `<table><thead><tr><th>${t('รหัสสินค้า')}</th><th>${t('ชื่อ')}</th><th>${t('คงเหลือ')}</th><th>${t('ขั้นต่ำ')}</th></tr></thead><tbody>${lowList.map(p => `<tr><td>${p.code}</td><td>${p.name}</td><td>${p.qty}</td><td>${p.min}</td></tr>`).join('')}</tbody></table>`;
+        lowTableEl.innerHTML = `<table><thead><tr><th>${t('รหัสสินค้า')}</th><th>${t('ชื่อ')}</th><th>${t('คงเหลือ')}</th><th>${t('ขั้นต่ำ')}</th></tr></thead><tbody>${lowList.map(p => `<tr><td>${escapeHTML(p.code)}</td><td>${escapeHTML(p.name)}</td><td>${p.qty}</td><td>${p.min}</td></tr>`).join('')}</tbody></table>`;
       }
       
       // Update interactive analytics charts
@@ -792,7 +895,7 @@
             <span style="display: flex; align-items: center; gap: 10px;">
               <i class="ti ti-chevron-down toggle-icon" style="transition: transform 0.3s; font-size: 18px; transform: rotate(-90deg);"></i>
               <span style="font-size: 18px;">${catIcon}</span>
-              ${cat}
+              ${escapeHTML(cat)}
             </span>
             <span class="category-section-badge">จำนวน ${catItems.length} รายการ</span>
           </div>
@@ -809,9 +912,9 @@
             </thead>
             <tbody>
               ${catItems.map(p => {
-                const imgSrc = p.img ? p.img : 'assets/logo.png';
+                const imgSrc = safeImageUrl(p.img);
                 const imgTag = `<img src="${imgSrc}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid var(--color-border);" onerror="this.src='assets/logo.png'" alt="img">`;
-                return `<tr><td style="width: 50px; padding: 4px 12px;">${imgTag}</td><td>${p.code}</td><td style="user-select: none;">${p.name}</td><td>${p.qty}</td><td>${p.unit}</td><td style="display: flex; gap: 4px; justify-content: flex-end;"><button class="btn-action edit-only" style="background-color: var(--color-success); color: white; border-color: var(--color-success);" onclick="openRecvModal('${p.code}')" title="รับสินค้าเข้า"><i class="ti ti-arrow-down-left"></i></button><button class="btn-action btn-action-edit edit-only" onclick="openEditModal('${p.code}')" title="แก้ไข"><i class="ti ti-edit"></i></button><button class="btn-action btn-action-delete edit-only" onclick="deleteProduct('${p.code}')" title="ลบ"><i class="ti ti-trash"></i></button></td></tr>`;
+                return `<tr><td style="width: 50px; padding: 4px 12px;">${imgTag}</td><td>${escapeHTML(p.code)}</td><td style="user-select: none;">${escapeHTML(p.name)}</td><td>${p.qty}</td><td>${escapeHTML(p.unit)}</td><td style="display: flex; gap: 4px; justify-content: flex-end;"><button class="btn-action edit-only" style="background-color: var(--color-success); color: white; border-color: var(--color-success);" onclick="openRecvModal(decodeURIComponent('${safeInlineArg(p.code)}'))" title="รับสินค้าเข้า"><i class="ti ti-arrow-down-left"></i></button><button class="btn-action btn-action-edit edit-only" onclick="openEditModal(decodeURIComponent('${safeInlineArg(p.code)}'))" title="แก้ไข"><i class="ti ti-edit"></i></button><button class="btn-action btn-action-delete edit-only" onclick="deleteProduct(decodeURIComponent('${safeInlineArg(p.code)}'))" title="ลบ"><i class="ti ti-trash"></i></button></td></tr>`;
               }).join('')}
             </tbody>
           </table>
@@ -862,7 +965,7 @@
     function populateSelects() {
       ['recvItem', 'issueItem'].forEach(id => {
         const s = document.getElementById(id);
-        if (s) s.innerHTML = '<option value="">-- เลือกสินค้า --</option>' + products.map(p => `<option value="${p.code}">${p.code} - ${p.name}</option>`).join('');
+        if (s) s.innerHTML = '<option value="">-- เลือกสินค้า --</option>' + products.map(p => `<option value="${escapeHTML(p.code)}">${escapeHTML(p.code)} - ${escapeHTML(p.name)}</option>`).join('');
       });
     }
 
@@ -999,9 +1102,9 @@
       const name = userStr;
       const pos = posStr || '';
       if (pos) {
-        return `<strong>${name}</strong><br><span style="font-size: 11px; color: var(--color-text-muted);">${pos}</span>`;
+        return `<strong>${escapeHTML(name)}</strong><br><span style="font-size: 11px; color: var(--color-text-muted);">${escapeHTML(pos)}</span>`;
       }
-      return `<strong>${name}</strong>`;
+      return `<strong>${escapeHTML(name)}</strong>`;
     }
 
     window.formatHistoryDate = function(dateStr) {
@@ -1097,8 +1200,8 @@
               <div style="display: flex; align-items: center; gap: 16px; flex: 1;">
                 <span class="badge ${badgeClass}" style="min-width: 65px; text-align: center;">${h.type === 'เบิก' ? t('เบิกออก') : (h.type === 'รับ' ? t('รับเข้า') : t(h.type))}</span>
                 <div style="display: flex; flex-direction: column;">
-                  <strong style="font-size: 15px; color: #e2e8f0;">${h.name} <span style="color: var(--color-text-muted); font-size: 13px; font-weight: normal;">(${h.code})</span></strong>
-                  <span style="font-size: 12px; color: #94a3b8; margin-top: 2px;"><i class="ti ti-calendar-event"></i> ${formattedDate}</span>
+                  <strong style="font-size: 15px; color: #e2e8f0;">${escapeHTML(h.name)} <span style="color: var(--color-text-muted); font-size: 13px; font-weight: normal;">(${escapeHTML(h.code)})</span></strong>
+                  <span style="font-size: 12px; color: #94a3b8; margin-top: 2px;"><i class="ti ti-calendar-event"></i> ${escapeHTML(formattedDate)}</span>
                 </div>
               </div>
               <div style="display: flex; align-items: center; gap: 16px;">
@@ -1115,7 +1218,7 @@
                 </div>
                 <div>
                   <span style="font-size: 12px; color: var(--color-text-muted); display: block;">${t('บันทึกช่วยจำ/วัตถุประสงค์')}</span>
-                  <div style="font-size: 14px; color: #e2e8f0; margin-top: 4px; line-height: 1.5;">${h.note || '-'}</div>
+                  <div style="font-size: 14px; color: #e2e8f0; margin-top: 4px; line-height: 1.5;">${escapeHTML(h.note || '-')}</div>
                 </div>
               </div>
               ${actionBtn ? `<div style="display: flex; justify-content: flex-end;">${actionBtn}</div>` : ''}
@@ -1582,7 +1685,7 @@
       
       datalist.innerHTML = Array.from(units)
         .filter(u => u !== '')
-        .map(u => `<option value="${u}"></option>`)
+        .map(u => `<option value="${escapeHTML(u)}"></option>`)
         .join('');
     }
 
@@ -1608,7 +1711,7 @@
         const name = p.name || t('ไม่ระบุชื่อ');
         const position = p.position || '';
         const phone = p.phone || '-';
-        return `<tr><td><strong>${name}</strong></td><td><span class="badge badge-primary">${position}</span></td><td><i class="ti ti-phone" style="color: var(--color-text-muted); margin-right: 6px;"></i>${phone}</td><td style="text-align: center;"><div style="display: flex; gap: 6px; justify-content: center;"><button class="btn-action btn-action-edit" onclick="openPersonnelModal(${origIndex})" title="${t('แก้ไขข้อมูล')}"><i class="ti ti-edit"></i></button><button class="btn-action btn-action-delete" onclick="deletePersonnel(${origIndex})" title="${t('ลบรายชื่อ')}"><i class="ti ti-trash"></i></button></div></td></tr>`;
+        return `<tr><td><strong>${escapeHTML(name)}</strong></td><td><span class="badge badge-primary">${escapeHTML(position)}</span></td><td><i class="ti ti-phone" style="color: var(--color-text-muted); margin-right: 6px;"></i>${escapeHTML(phone)}</td><td style="text-align: center;"><div style="display: flex; gap: 6px; justify-content: center;"><button class="btn-action btn-action-edit" onclick="openPersonnelModal(${origIndex})" title="${t('แก้ไขข้อมูล')}"><i class="ti ti-edit"></i></button><button class="btn-action btn-action-delete" onclick="deletePersonnel(${origIndex})" title="${t('ลบรายชื่อ')}"><i class="ti ti-trash"></i></button></div></td></tr>`;
       }).join('');
     }
 
@@ -1836,7 +1939,7 @@
 
       container.innerHTML = `
         <div style="margin-bottom: 16px; font-weight: 600; font-size: 15px; color: var(--color-text-primary); text-align: center; border-bottom: 2px solid var(--color-border); padding-bottom: 8px;">
-          ${titleText}
+          ${escapeHTML(titleText)}
         </div>
         <table>
           <thead>
@@ -1861,14 +1964,14 @@
               </tr>
             ` : reportData.map(r => `
               <tr>
-                <td><strong>${r.code}</strong></td>
-                <td>${r.name}</td>
-                <td><span class="badge badge-primary">${t(r.cat)}</span></td>
-                <td>${r.loc}</td>
+                <td><strong>${escapeHTML(r.code)}</strong></td>
+                <td>${escapeHTML(r.name)}</td>
+                <td><span class="badge badge-primary">${escapeHTML(t(r.cat))}</span></td>
+                <td>${escapeHTML(r.loc)}</td>
                 <td style="text-align: right; font-weight: 500; color: var(--color-success);">${r.received > 0 ? '+' + r.received.toLocaleString() : '0'}</td>
                 <td style="text-align: right; font-weight: 500; color: var(--color-danger);">${r.issued > 0 ? '-' + r.issued.toLocaleString() : '0'}</td>
                 <td style="text-align: right; font-weight: 600;">${r.currentQty.toLocaleString()}</td>
-                <td>${t(r.unit)}</td>
+                <td>${escapeHTML(t(r.unit))}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -2252,8 +2355,8 @@
       }
       
       container.innerHTML = matches.map(p => `
-        <div class="suggestion-item" onmousedown="selectPersonnelSuggestion('${p.name}')">
-          <strong>${p.name}</strong>
+        <div class="suggestion-item" onmousedown="selectPersonnelSuggestion(decodeURIComponent('${safeInlineArg(p.name)}'))">
+          <strong>${escapeHTML(p.name)}</strong>
         </div>
       `).join('');
       
@@ -2317,8 +2420,8 @@
       }
       
       container.innerHTML = matches.map(p => `
-        <div class="suggestion-item" onmousedown="selectRecvProduct('${p.code}', '${p.code} - ${p.name}')">
-          <strong>${p.code}</strong> - <span>${p.name}</span>
+        <div class="suggestion-item" onmousedown="selectRecvProduct(decodeURIComponent('${safeInlineArg(p.code)}'), decodeURIComponent('${safeInlineArg(p.code + ' - ' + p.name)}'))">
+          <strong>${escapeHTML(p.code)}</strong> - <span>${escapeHTML(p.name)}</span>
         </div>
       `).join('');
       
@@ -2388,8 +2491,8 @@
       }
       
       container.innerHTML = matches.map(p => `
-        <div class="suggestion-item" onmousedown="selectIssueProduct('${p.code}', '${p.code} - ${p.name}')">
-          <strong>${p.code}</strong> - <span>${p.name}</span>
+        <div class="suggestion-item" onmousedown="selectIssueProduct(decodeURIComponent('${safeInlineArg(p.code)}'), decodeURIComponent('${safeInlineArg(p.code + ' - ' + p.name)}'))">
+          <strong>${escapeHTML(p.code)}</strong> - <span>${escapeHTML(p.name)}</span>
         </div>
       `).join('');
       
