@@ -251,6 +251,9 @@
               <button class="btn btn-success edit-only" onclick="openRecvModal()">
                 <i class="ti ti-arrow-down-left" aria-hidden="true"></i> รับสินค้าเข้า
               </button>
+              <button class="btn edit-only" style="background-color: #0891b2; border-color: #0891b2; color: white;" onclick="openStocktakeModal()">
+                <i class="ti ti-clipboard-check" aria-hidden="true"></i> ตรวจนับสต็อก
+              </button>
               <button class="btn btn-danger" onclick="openIssueModal()">
                 <i class="ti ti-arrow-up-right" aria-hidden="true"></i> เบิกสินค้าออก
               </button>
@@ -283,6 +286,7 @@
                   <option value="">ทั้งหมด</option>
                   <option value="รับ">รับสินค้าเข้า</option>
                   <option value="เบิก">เบิกสินค้าออก</option>
+                  <option value="ตรวจนับ">ตรวจนับสต็อก</option>
                   <option value="เพิ่ม">ลงทะเบียนใหม่</option>
                   <option value="แก้ไข">แก้ไขรายละเอียด</option>
                   <option value="ปรับปรุง">ปรับยอดโดยตรง</option>
@@ -551,6 +555,58 @@
       <div class="modal-footer">
         <button class="btn" onclick="closeEditModal()">ยกเลิก</button>
         <button class="btn btn-primary" onclick="saveEditProduct()">บันทึกการแก้ไข</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- PHYSICAL STOCKTAKE MODAL -->
+  <!-- ========================================== -->
+  <div class="modal-bg" id="stocktakeModal" role="dialog" aria-modal="true" aria-labelledby="stocktakeModalTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="stocktakeModalTitle">ตรวจนับสต็อกจริง</h3>
+        <button type="button" class="modal-close" onclick="closeStocktakeModal()" aria-label="ปิดหน้าตรวจนับ"><i class="ti ti-x" aria-hidden="true"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="stocktakeItem">รายการพัสดุ</label>
+            <select id="stocktakeItem" class="form-control" onchange="updateStocktakeDifference()">
+              <option value="">-- เลือกพัสดุที่ต้องการตรวจนับ --</option>
+            </select>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="stocktakeSystemQty">ยอดคงเหลือในระบบ</label>
+              <input type="number" id="stocktakeSystemQty" class="form-control" readonly />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="stocktakeActualQty">จำนวนที่ตรวจพบจริง</label>
+              <input type="number" id="stocktakeActualQty" class="form-control" min="0" step="1" inputmode="numeric" oninput="updateStocktakeDifference()" placeholder="กรอกจำนวนที่ตรวจพบ" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="stocktakeDifference">ส่วนต่าง (ยอดจริง - ยอดระบบ)</label>
+            <input type="text" id="stocktakeDifference" class="form-control" readonly value="-" style="font-weight: 700;" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="stocktakeReason">เหตุผลหรือหมายเหตุการตรวจนับ</label>
+            <textarea id="stocktakeReason" class="form-control" rows="3" maxlength="500" placeholder="เช่น ตรวจนับประจำเดือน, พบของชำรุด, บันทึกยอดเดิมคลาดเคลื่อน"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="stocktakeCountedBy">ผู้ตรวจนับ</label>
+            <input type="text" id="stocktakeCountedBy" class="form-control" readonly />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" onclick="closeStocktakeModal()">ยกเลิก</button>
+        <button type="button" class="btn btn-primary" onclick="saveStocktake()">บันทึกผลตรวจนับ</button>
       </div>
     </div>
   </div>
