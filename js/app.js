@@ -4,7 +4,8 @@
     const DEMO_ACCOUNTS = {
       'demo-admin': { password: 'admin-demo', role: 'admin', displayName: 'ผู้ดูแลระบบสาธิต' },
       'demo-stock': { password: 'stock-demo', role: 'staff', displayName: 'เจ้าหน้าที่คลังสาธิต' },
-      'demo-viewer': { password: 'viewer-demo', role: 'viewer', displayName: 'ผู้ชมระบบสาธิต' }
+      'demo-viewer': { password: 'viewer-demo', role: 'viewer', displayName: 'ผู้ชมระบบสาธิต' },
+      'demo-approver': { password: 'approver-demo', role: 'approver', displayName: 'ผู้อนุมัติสาธิต' }
     };
     
     let currentUser = '';
@@ -204,6 +205,17 @@
 
     function safeInlineArg(value) {
       return encodeURIComponent(String(value ?? ''));
+    }
+
+    function createTransactionId() {
+      if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+        return window.crypto.randomUUID();
+      }
+      return 'TX-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+    }
+
+    function canApproveRequests() {
+      return document.body.classList.contains('role-admin') || document.body.classList.contains('role-approver');
     }
 
     function safeImageUrl(value) {
@@ -687,7 +699,7 @@
           localStorage.removeItem('dpd_demo_logged_in');
         }
         
-        document.body.classList.remove('role-admin', 'role-staff', 'role-viewer');
+        document.body.classList.remove('role-admin', 'role-staff', 'role-viewer', 'role-approver');
         document.body.classList.add('role-' + role);
         
         errEl.style.display = 'none';
@@ -732,7 +744,7 @@
       localStorage.removeItem('dpd_demo_role');
       localStorage.removeItem('dpd_demo_active_tab');
       
-      document.body.classList.remove('role-admin', 'role-staff', 'role-viewer');
+      document.body.classList.remove('role-admin', 'role-staff', 'role-viewer', 'role-approver');
       
       if(document.getElementById('loginUser')) document.getElementById('loginUser').value = '';
       if(document.getElementById('loginPass')) document.getElementById('loginPass').value = '';
@@ -1081,13 +1093,16 @@
         }
 
         history.unshift({
-          date: new Date().toISOString().slice(0, 10),
+          id: createTransactionId(),
+          date: new Date().toISOString(),
           type: issueType,
+          status: canIssueDirectly ? 'completed' : 'pending',
           code: p.code,
           name: p.name,
           qty: qty,
           user: personName,
           userPosition: personPosition,
+          requestedBy: currentUser || personName,
           note: combinedNote
         });
         saveDatabase();
@@ -1179,19 +1194,24 @@
         if (h.type === 'ขอเบิก') badgeClass = 'badge-warning';
         if (h.type === 'เพิ่ม') badgeClass = 'badge-primary';
         if (h.type === 'แก้ไข' || h.type === 'ปรับปรุง') badgeClass = 'badge-warning';
-        if (h.type === 'ลบ') badgeClass = 'badge-danger';
+        if (h.type === 'ลบ' || h.type === 'ปฏิเสธ') badgeClass = 'badge-danger';
 
         const origIndex = history.indexOf(h);
         
         let actionBtn = '';
         if (h.type === 'เบิก') {
           actionBtn = `<button class="btn-action btn-action-print" style="width: auto; padding: 6px 16px; background: rgba(255,255,255,0.05);" onclick="printIssueSlip(${origIndex})" title="${t('พิมพ์ใบเบิก')}"><i class="ti ti-printer"></i> ${t('พิมพ์ใบเบิก')}</button>`;
-        } else if (h.type === 'ขอเบิก') {
-          actionBtn = `<button class="btn-action edit-only" style="background-color: var(--color-success); color: white; border-color: var(--color-success); width: auto; padding: 6px 16px;" onclick="approveIssue(${origIndex})"><i class="ti ti-check"></i> อนุมัติการเบิก</button>`;
+        } else if (h.type === 'ขอเบิก' && (!h.status || h.status === 'pending')) {
+          const requestKey = h.id || ('legacy-index:' + origIndex);
+          actionBtn = `
+            <div class="approve-only" style="display: flex; gap: 8px;">
+              <button class="btn-action" style="background-color: var(--color-success); color: white; border-color: var(--color-success); width: auto; padding: 6px 16px;" onclick="approveIssue(decodeURIComponent('${safeInlineArg(requestKey)}'))"><i class="ti ti-check"></i> อนุมัติ</button>
+              <button class="btn-action" style="background-color: var(--color-danger); color: white; border-color: var(--color-danger); width: auto; padding: 6px 16px;" onclick="rejectIssue(decodeURIComponent('${safeInlineArg(requestKey)}'))"><i class="ti ti-x"></i> ปฏิเสธ</button>
+            </div>`;
         }
 
         const formattedDate = window.formatHistoryDate(h.date);
-        const qtyPrefix = (h.type === 'เบิก') ? '-' : '+';
+        const qtyPrefix = h.type === 'เบิก' ? '-' : (h.type === 'รับ' || h.type === 'เพิ่ม' ? '+' : '');
         const qtyColor = (h.type === 'เบิก') ? 'var(--color-danger)' : (h.type === 'รับ' ? 'var(--color-success)' : 'var(--color-text-primary)');
 
         return `
@@ -1228,25 +1248,65 @@
       }).join('')}</div>`;
     }
 
-    window.approveIssue = function(index) {
-      if (confirm('ยืนยันการอนุมัติเบิกพัสดุรายการนี้?')) {
-        const h = history[index];
-        if (h && h.type === 'ขอเบิก') {
-          const p = products.find(x => x.code === h.code);
-          if (p) {
-             if (p.qty >= h.qty) {
-                p.qty -= h.qty;
-                h.type = 'เบิก';
-                saveDatabase();
-                renderStock();
-                renderHistory();
-                showToast('อนุมัติรายการเบิกสำเร็จ', 'success');
-             } else {
-                showToast('จำนวนพัสดุในคลังไม่เพียงพอ', 'danger');
-             }
-          }
-        }
+    function findRequest(requestKey) {
+      if (String(requestKey).startsWith('legacy-index:')) {
+        return history[parseInt(String(requestKey).split(':')[1], 10)];
       }
+      return history.find(entry => entry.id === requestKey);
+    }
+
+    window.approveIssue = function(requestKey) {
+      if (!canApproveRequests()) {
+        showToast('บัญชีนี้ไม่มีสิทธิ์อนุมัติคำขอ', 'danger');
+        return;
+      }
+      const request = findRequest(requestKey);
+      if (!request || request.type !== 'ขอเบิก' || (request.status && request.status !== 'pending')) {
+        showToast('คำขอนี้ถูกดำเนินการไปแล้วหรือไม่พบรายการ', 'warning');
+        return;
+      }
+      if (!confirm('ยืนยันการอนุมัติเบิกพัสดุรายการนี้?')) return;
+
+      const product = products.find(item => item.code === request.code);
+      if (!product || product.qty < request.qty) {
+        showToast('จำนวนพัสดุในคลังไม่เพียงพอ', 'danger');
+        return;
+      }
+
+      product.qty -= request.qty;
+      request.type = 'เบิก';
+      request.status = 'approved';
+      request.approvedBy = currentUser;
+      request.approvedAt = new Date().toISOString();
+      request.note = [request.note, 'อนุมัติโดย ' + currentUser].filter(Boolean).join(' | ');
+      saveDatabase();
+      renderStock();
+      renderHistory();
+      renderDashboard();
+      showToast('อนุมัติรายการเบิกสำเร็จ', 'success');
+    };
+
+    window.rejectIssue = function(requestKey) {
+      if (!canApproveRequests()) {
+        showToast('บัญชีนี้ไม่มีสิทธิ์ปฏิเสธคำขอ', 'danger');
+        return;
+      }
+      const request = findRequest(requestKey);
+      if (!request || request.type !== 'ขอเบิก' || (request.status && request.status !== 'pending')) {
+        showToast('คำขอนี้ถูกดำเนินการไปแล้วหรือไม่พบรายการ', 'warning');
+        return;
+      }
+      if (!confirm('ยืนยันการปฏิเสธคำขอเบิกรายการนี้?')) return;
+
+      request.type = 'ปฏิเสธ';
+      request.status = 'rejected';
+      request.rejectedBy = currentUser;
+      request.rejectedAt = new Date().toISOString();
+      request.note = [request.note, 'ปฏิเสธโดย ' + currentUser].filter(Boolean).join(' | ');
+      saveDatabase();
+      renderHistory();
+      renderDashboard();
+      showToast('ปฏิเสธคำขอเรียบร้อย', 'warning');
     };
 
     function formatThaiDate(dateStr) {
