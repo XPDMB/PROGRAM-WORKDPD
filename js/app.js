@@ -1,8 +1,10 @@
-// Authentic user database
-    const USERS = {
-      admin: '36335',
-      dpd: '36335',
-      stock: '36335'
+// Public demo accounts only. These credentials are intentionally non-sensitive.
+    // Production authentication must be verified by a trusted backend.
+    const DEMO_MODE = true;
+    const DEMO_ACCOUNTS = {
+      'demo-admin': { password: 'admin-demo', role: 'admin', displayName: 'ผู้ดูแลระบบสาธิต' },
+      'demo-stock': { password: 'stock-demo', role: 'staff', displayName: 'เจ้าหน้าที่คลังสาธิต' },
+      'demo-viewer': { password: 'viewer-demo', role: 'viewer', displayName: 'ผู้ชมระบบสาธิต' }
     };
     
     let currentUser = '';
@@ -206,18 +208,9 @@
 
     // Personnel list defaults
     const DEFAULT_PERSONNEL = [
-      {name: 'น.อ.บุญทวี ช่วยเนียม', position: 'หก.กกม.บก.ซอ.', phone: '081-9129091'},
-      {name: 'น.ท.หญิง รวีวรรณ กิตติศักดิ์กุล', position: 'รอง หก.กกม.บก.ขอ.', phone: '094-5481842'},
-      {name: 'ร.อ.นที กล้าแข็ง', position: 'นปก.ฝปก.กกม.บก.ขอ.', phone: '064-8320092'},
-      {name: 'ร.ท.ธนรัตน์ อดิศัยสกุลชัย', position: 'นวพ.ผวพ.กกม.บก.ขอ.', phone: '094-7565591'},
-      {name: 'ร.ต.จิรภัทร จำปางาม', position: 'น.โปรแกรม ผวพ.กกม.บก.ซอ.', phone: '095-5251415'},
-      {name: 'พ.อ.อ.สุภัค อัมพิลาศัย', position: 'จนท.พัสดุอาวุโสฯ ช่วยราชการ กกม.บก.ซอ.', phone: '062-4248596'},
-      {name: 'พ.อ.ท.ชนินทร์ พรมฤทธิ์', position: 'จนท.ทดสอบ ผวพ.กกม.บก.ซอ.', phone: '099-7359773'},
-      {name: 'จ.อ.ณธัชพงศ์ ภู่ขันเงิน', position: 'จนท.ข้อมูล ฝบม.กกม.บก.ขอ.', phone: '062-3902690'},
-      {name: 'จ.ท.ภูมิดล บุโรดม', position: 'จนท.ข้อมูล ฝบม.กกม.บก.ขอ.', phone: '094-1135337'},
-      {name: 'จ.ต.ภัทร พายุหะ', position: 'จนท.ปฏิบัติการ ผปก.กกม.บก.ขอ.', phone: '098-0167567'},
-      {name: 'นางพัสวีพิชญ์ หีบจินดา', position: 'พนักงานรวบรวมและเตรียมข้อมูล', phone: '095-6041354'},
-      {name: 'นายภูรินทร์ อินทร์บุญช่วย', position: 'ช่างโครงสร้างฯ ช่วยราชการ กกม.บก.ซอ.', phone: '095-4048230'}
+      {name: 'เจ้าหน้าที่สาธิต ก', position: 'ผู้ดูแลคลังสาธิต', phone: '000-0000000'},
+      {name: 'เจ้าหน้าที่สาธิต ข', position: 'ผู้อนุมัติสาธิต', phone: '000-0000000'},
+      {name: 'เจ้าหน้าที่สาธิต ค', position: 'ผู้ใช้งานสาธิต', phone: '000-0000000'}
     ];
 
     const fallbackProducts = [];
@@ -557,18 +550,13 @@
       
       let role = null;
       let userDisplayName = null;
-      
-      // กำหนดชื่อผู้ใช้และรหัสผ่านตามที่คุณต้องการ
-      if (u === 'admin' && p === '36335') {
-        role = 'admin';
-        userDisplayName = 'ผู้ดูแลระบบ';
-      } else if (u === 'staff' && p === '36335') {
-        role = 'staff';
-        userDisplayName = 'เจ้าหน้าที่คลัง';
-      } else if (u === 'user' && p === '36335') {
-        role = 'viewer'; // สิทธิ์เป็นผู้เข้าชม (viewer)
-        userDisplayName = 'ผู้ใช้งาน';
-      } 
+
+      const demoAccount = DEMO_MODE ? DEMO_ACCOUNTS[u] : null;
+      if (demoAccount && p === demoAccount.password) {
+        role = demoAccount.role;
+        userDisplayName = demoAccount.displayName;
+      }
+ 
       
       // ถ้ารหัสผ่านถูกต้องและมีสิทธิ์ (role)
       if (role) {
