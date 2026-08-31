@@ -229,9 +229,9 @@
       
       loadDatabase();
 
-      currentUser = 'admin';
-      document.getElementById('userBadge').textContent = 'admin';
-      document.getElementById('userAvatar').textContent = 'A';
+      currentUser = '';
+      document.getElementById('userBadge').textContent = 'ผู้เยี่ยมชม';
+      document.getElementById('userAvatar').textContent = 'D';
       
       populatePersonnelSelect();
       renderPersonnel();
@@ -240,22 +240,22 @@
       setLang('th');
 
       // Auth Check
-      const isLoggedIn = sessionStorage.getItem('dpd_logged_in') === 'true' || localStorage.getItem('dpd_logged_in') === 'true';
+      const isLoggedIn = sessionStorage.getItem('dpd_demo_logged_in') === 'true' || localStorage.getItem('dpd_demo_logged_in') === 'true';
       if (isLoggedIn) {
-        currentUser = sessionStorage.getItem('dpd_current_user') || localStorage.getItem('dpd_current_user') || 'Admin';
-        const role = sessionStorage.getItem('dpd_role') || localStorage.getItem('dpd_role') || 'admin';
+        currentUser = sessionStorage.getItem('dpd_demo_current_user') || localStorage.getItem('dpd_demo_current_user') || 'Admin';
+        const role = sessionStorage.getItem('dpd_demo_role') || localStorage.getItem('dpd_demo_role') || 'admin';
         document.body.classList.add('role-' + role);
         document.getElementById('userBadge').textContent = currentUser;
         document.getElementById('userAvatar').textContent = currentUser.slice(0, 1).toUpperCase();
         document.getElementById('loginScreen').classList.remove('active');
         document.getElementById('mainApp').classList.add('active');
         
-        const activeTab = localStorage.getItem('dpd_active_tab') || 'dashboard';
+        const activeTab = localStorage.getItem('dpd_demo_active_tab') || 'dashboard';
         showTab(activeTab);
       }
     });
 
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTZIaVyt-aEuvHO7ckjqJJVhJYNP2vWXb1956nTnI5VCZ7HOu24DSOF4es4ubFbLxH/exec';
+    const GOOGLE_SCRIPT_URL = ''; // Demo never connects to the production backend
 
     // Loading indicator helpers for Google Sheets sync
     function showSyncLoading(message) {
@@ -344,13 +344,13 @@
 
     async function loadDatabase() {
       // Clean up legacy custom overrides if present so they don't block Google Sheets master data
-      try { localStorage.removeItem('dpd_custom_overrides'); } catch(e){}
+      try { localStorage.removeItem('dpd_demo_custom_overrides'); } catch(e){}
 
       // 1. Initial local cache load to show UI instantly
       let storedProducts, storedHistory, storedPersonnel;
-      try { storedProducts = localStorage.getItem('dpd_products'); } catch (e) {}
-      try { storedHistory = localStorage.getItem('dpd_history'); } catch (e) {}
-      try { storedPersonnel = localStorage.getItem('dpd_personnel'); } catch (e) {}
+      try { storedProducts = localStorage.getItem('dpd_demo_products'); } catch (e) {}
+      try { storedHistory = localStorage.getItem('dpd_demo_history'); } catch (e) {}
+      try { storedPersonnel = localStorage.getItem('dpd_demo_personnel'); } catch (e) {}
 
       if (storedProducts) {
         try { products = JSON.parse(storedProducts); } catch (e) { products = fallbackProducts; }
@@ -373,13 +373,20 @@
       renderPersonnel();
       populateFiscalYears();
 
+      // Demo data must remain local and must never read from the production Google Sheet.
+      if (DEMO_MODE || !GOOGLE_SCRIPT_URL) {
+        hideSyncLoading();
+        populateUnitDatalist();
+        return;
+      }
+
       // 2. Fetch fresh data from Google Sheets Cloud Database silently in the background
       try {
         const response = await fetch(GOOGLE_SCRIPT_URL);
         if (!response.ok) throw new Error('Failed to fetch');
         const data = await response.json();
 
-        const localSaveTime = parseInt(localStorage.getItem('dpd_local_save_time')) || 0;
+        const localSaveTime = parseInt(localStorage.getItem('dpd_demo_local_save_time')) || 0;
         const timeSinceLocalSave = Date.now() - localSaveTime;
 
         // If no local save happened in the last 15 seconds, Google Sheets is the master database
@@ -418,9 +425,9 @@
           }
 
           // Cache loaded data locally
-          localStorage.setItem('dpd_products', JSON.stringify(products));
-          localStorage.setItem('dpd_history', JSON.stringify(history));
-          localStorage.setItem('dpd_personnel', JSON.stringify(PERSONNEL));
+          localStorage.setItem('dpd_demo_products', JSON.stringify(products));
+          localStorage.setItem('dpd_demo_history', JSON.stringify(history));
+          localStorage.setItem('dpd_demo_personnel', JSON.stringify(PERSONNEL));
         }
       } catch (err) {
         console.error('Cloud Sync failed, using offline fallback cache:', err);
@@ -437,11 +444,14 @@
 
     async function saveDatabase() {
       // 1. Instantly save to local cache so the UI updates and user can continue immediately
-      localStorage.setItem('dpd_products', JSON.stringify(products));
-      localStorage.setItem('dpd_history', JSON.stringify(history));
-      localStorage.setItem('dpd_personnel', JSON.stringify(PERSONNEL));
-      localStorage.setItem('dpd_local_save_time', Date.now());
-      try { localStorage.removeItem('dpd_custom_overrides'); } catch(e){}
+      localStorage.setItem('dpd_demo_products', JSON.stringify(products));
+      localStorage.setItem('dpd_demo_history', JSON.stringify(history));
+      localStorage.setItem('dpd_demo_personnel', JSON.stringify(PERSONNEL));
+      localStorage.setItem('dpd_demo_local_save_time', Date.now());
+      try { localStorage.removeItem('dpd_demo_custom_overrides'); } catch(e){}
+
+      // Demo writes only to its isolated browser cache.
+      if (DEMO_MODE || !GOOGLE_SCRIPT_URL) return;
 
       // 2. POST updates to Google Sheets in the background silently
       // Convert standard JSON keys to Thai keys for Google Sheets compatibility
@@ -563,15 +573,15 @@
         currentUser = userDisplayName;
         
         if (remember) {
-          localStorage.setItem('dpd_logged_in', 'true');
-          localStorage.setItem('dpd_current_user', currentUser);
-          localStorage.setItem('dpd_role', role);
-          sessionStorage.removeItem('dpd_logged_in');
+          localStorage.setItem('dpd_demo_logged_in', 'true');
+          localStorage.setItem('dpd_demo_current_user', currentUser);
+          localStorage.setItem('dpd_demo_role', role);
+          sessionStorage.removeItem('dpd_demo_logged_in');
         } else {
-          sessionStorage.setItem('dpd_logged_in', 'true');
-          sessionStorage.setItem('dpd_current_user', currentUser);
-          sessionStorage.setItem('dpd_role', role);
-          localStorage.removeItem('dpd_logged_in');
+          sessionStorage.setItem('dpd_demo_logged_in', 'true');
+          sessionStorage.setItem('dpd_demo_current_user', currentUser);
+          sessionStorage.setItem('dpd_demo_role', role);
+          localStorage.removeItem('dpd_demo_logged_in');
         }
         
         document.body.classList.remove('role-admin', 'role-staff', 'role-viewer');
@@ -583,7 +593,7 @@
         document.getElementById('loginScreen').classList.remove('active');
         document.getElementById('mainApp').classList.add('active');
         
-        const activeTab = localStorage.getItem('dpd_active_tab') || 'dashboard';
+        const activeTab = localStorage.getItem('dpd_demo_active_tab') || 'dashboard';
         showTab(activeTab);
         showToast('ยินดีต้อนรับเข้าสู่ระบบ', 'success');
       } else {
@@ -611,11 +621,13 @@
 
     function doLogout() {
       currentUser = '';
-      sessionStorage.clear();
-      localStorage.removeItem('dpd_logged_in');
-      localStorage.removeItem('dpd_current_user');
-      localStorage.removeItem('dpd_role');
-      localStorage.removeItem('dpd_active_tab');
+      sessionStorage.removeItem('dpd_demo_logged_in');
+      sessionStorage.removeItem('dpd_demo_current_user');
+      sessionStorage.removeItem('dpd_demo_role');
+      localStorage.removeItem('dpd_demo_logged_in');
+      localStorage.removeItem('dpd_demo_current_user');
+      localStorage.removeItem('dpd_demo_role');
+      localStorage.removeItem('dpd_demo_active_tab');
       
       document.body.classList.remove('role-admin', 'role-staff', 'role-viewer');
       
@@ -628,8 +640,24 @@
       showToast('ออกจากระบบเรียบร้อย', 'warning');
     }
 
-    function showTab(name, element) {
-      localStorage.setItem('dpd_active_tab', name);
+    function resetDemoData() {
+      if (!DEMO_MODE) return;
+      const confirmed = confirm('ล้างข้อมูลสาธิตทั้งหมดในเบราว์เซอร์นี้และเริ่มใหม่หรือไม่?');
+      if (!confirmed) return;
+
+      [localStorage, sessionStorage].forEach(storage => {
+        const keys = [];
+        for (let i = 0; i < storage.length; i += 1) {
+          const key = storage.key(i);
+          if (key && key.startsWith('dpd_demo_')) keys.push(key);
+        }
+        keys.forEach(key => storage.removeItem(key));
+      });
+      window.location.reload();
+    }
+
+        function showTab(name, element) {
+      localStorage.setItem('dpd_demo_active_tab', name);
       document.querySelectorAll('.nav-link').forEach(lnk => lnk.classList.remove('active'));
       const activeEl = element || document.getElementById('nav-' + name);
       if (activeEl) {
@@ -706,13 +734,13 @@
       const catFilterEl = document.getElementById('catFilter');
       if (catFilterEl) {
         if (!catFilterEl.dataset.initialized) {
-          const savedCat = localStorage.getItem('dpd_selected_category_filter');
+          const savedCat = localStorage.getItem('dpd_demo_selected_category_filter');
           if (savedCat !== null) {
             catFilterEl.value = savedCat;
           }
           catFilterEl.dataset.initialized = "true";
         }
-        localStorage.setItem('dpd_selected_category_filter', catFilterEl.value);
+        localStorage.setItem('dpd_demo_selected_category_filter', catFilterEl.value);
       }
       const catVal = catFilterEl ? catFilterEl.value : '';
       let list = products.filter(p => {
@@ -2423,7 +2451,7 @@
         const now = new Date();
         const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '_');
         downloadAnchor.setAttribute("href", url);
-        downloadAnchor.setAttribute("download", `dpd_stock_backup_${dateStr}.json`);
+        downloadAnchor.setAttribute("download", `dpd_demo_stock_backup_${dateStr}.json`);
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
