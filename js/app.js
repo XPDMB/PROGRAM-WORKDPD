@@ -1328,6 +1328,35 @@
       }
     };
 
+    function requestStatusText(status) {
+      return ({
+        pending: 'รออนุมัติ',
+        approved: 'อนุมัติแล้ว รอจ่าย',
+        rejected: 'ปฏิเสธ',
+        cancelled: 'ยกเลิก',
+        dispensed: 'จ่ายแล้ว',
+        returned: 'รับคืน/ปิดรายการ'
+      })[status || 'pending'] || status || '-';
+    }
+
+    function renderRequestTimeline(request) {
+      const events = [
+        ['ส่งคำขอ', request.requestedBy, request.createdAt || request.date],
+        ['อนุมัติ', request.approvedBy, request.approvedAt],
+        ['ปฏิเสธ', request.rejectedBy, request.rejectedAt],
+        ['ยกเลิก', request.cancelledBy, request.cancelledAt],
+        ['จ่ายพัสดุ', request.dispensedBy, request.dispensedAt],
+        ['รับคืน/ปิดรายการ', request.returnedBy, request.returnedAt]
+      ].filter(event => event[2]);
+
+      return '<div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08);">' +
+        '<div style="font-size:12px; color:var(--color-text-muted); margin-bottom:6px;">ลำดับการดำเนินการ</div>' +
+        events.map(event => '<div style="font-size:12px; margin:4px 0; color:#cbd5e1;">• ' +
+          escapeHTML(event[0]) + ' — ' + escapeHTML(event[1] || '-') + ' · ' +
+          escapeHTML(window.formatHistoryDate(event[2])) + '</div>').join('') +
+        '</div>';
+    }
+
     function renderHistory() {
       const container = document.getElementById('historyTable');
       if (!container) return;
@@ -1350,7 +1379,10 @@
           (h.name || '').toLowerCase().includes(searchQ) ||
           (h.user || '').toLowerCase().includes(searchQ) ||
           (h.userPosition || '').toLowerCase().includes(searchQ) ||
-          (h.note || '').toLowerCase().includes(searchQ)
+          (h.note || '').toLowerCase().includes(searchQ) ||
+          (h.requestNo || '').toLowerCase().includes(searchQ) ||
+          (h.issueNo || '').toLowerCase().includes(searchQ) ||
+          (h.returnNo || '').toLowerCase().includes(searchQ)
         );
       }
 
@@ -1368,6 +1400,7 @@
         let badgeClass = 'badge-primary';
         if (h.type === 'รับ') badgeClass = 'badge-success';
         if (h.type === 'เบิก') badgeClass = 'badge-danger';
+        if (h.type === 'คืน') badgeClass = 'badge-success';
         if (h.type === 'ขอเบิก') badgeClass = 'badge-warning';
         if (h.type === 'เพิ่ม') badgeClass = 'badge-primary';
         if (h.type === 'แก้ไข' || h.type === 'ปรับปรุง') badgeClass = 'badge-warning';
@@ -1377,25 +1410,40 @@
         const origIndex = history.indexOf(h);
         
         let actionBtn = '';
+        const requestKey = h.id || ('legacy-index:' + origIndex);
+        const encodedKey = safeInlineArg(requestKey);
+        const buttons = [];
+
         if (h.type === 'เบิก') {
-          actionBtn = `<button class="btn-action btn-action-print" style="width: auto; padding: 6px 16px; background: rgba(255,255,255,0.05);" onclick="printIssueSlip(${origIndex})" title="${t('พิมพ์ใบเบิก')}"><i class="ti ti-printer"></i> ${t('พิมพ์ใบเบิก')}</button>`;
-        } else if (h.type === 'ขอเบิก' && (!h.status || h.status === 'pending')) {
-          const requestKey = h.id || ('legacy-index:' + origIndex);
-          actionBtn = `
-            <div class="approve-only" style="display: flex; gap: 8px;">
-              <button class="btn-action" style="background-color: var(--color-success); color: white; border-color: var(--color-success); width: auto; padding: 6px 16px;" onclick="approveIssue(decodeURIComponent('${safeInlineArg(requestKey)}'))"><i class="ti ti-check"></i> อนุมัติ</button>
-              <button class="btn-action" style="background-color: var(--color-danger); color: white; border-color: var(--color-danger); width: auto; padding: 6px 16px;" onclick="rejectIssue(decodeURIComponent('${safeInlineArg(requestKey)}'))"><i class="ti ti-x"></i> ปฏิเสธ</button>
-            </div>`;
+          buttons.push('<button class="btn-action btn-action-print" style="width:auto;padding:6px 16px;background:rgba(255,255,255,0.05);" onclick="printIssueSlip(' + origIndex + ')" title="' + t('พิมพ์ใบเบิก') + '"><i class="ti ti-printer"></i> ' + t('พิมพ์ใบเบิก') + '</button>');
         }
+
+        if (h.type === 'ขอเบิก') {
+          const status = h.status || 'pending';
+          if (status === 'pending' && canApproveRequests()) {
+            buttons.push('<button class="btn-action" style="background:var(--color-success);color:white;width:auto;padding:6px 16px;" onclick="approveIssue(decodeURIComponent(\'' + encodedKey + '\'))"><i class="ti ti-check"></i> อนุมัติ</button>');
+            buttons.push('<button class="btn-action" style="background:var(--color-danger);color:white;width:auto;padding:6px 16px;" onclick="rejectIssue(decodeURIComponent(\'' + encodedKey + '\'))"><i class="ti ti-x"></i> ปฏิเสธ</button>');
+          }
+          if (status === 'approved' && canDispenseItems()) {
+            buttons.push('<button class="btn-action" style="background:var(--color-primary);color:white;width:auto;padding:6px 16px;" onclick="dispenseIssue(decodeURIComponent(\'' + encodedKey + '\'))"><i class="ti ti-package-export"></i> จ่ายพัสดุ</button>');
+          }
+          if (['pending', 'approved'].includes(status) && canCancelRequest(h)) {
+            buttons.push('<button class="btn-action" style="width:auto;padding:6px 16px;" onclick="cancelIssue(decodeURIComponent(\'' + encodedKey + '\'))"><i class="ti ti-ban"></i> ยกเลิกคำขอ</button>');
+          }
+          if (status === 'dispensed' && canDispenseItems()) {
+            buttons.push('<button class="btn-action" style="background:var(--color-success);color:white;width:auto;padding:6px 16px;" onclick="returnIssue(decodeURIComponent(\'' + encodedKey + '\'))"><i class="ti ti-package-import"></i> รับคืนและปิด</button>');
+          }
+        }
+        actionBtn = buttons.join('');
 
         const formattedDate = window.formatHistoryDate(h.date);
         const displayQty = h.type === 'ตรวจนับ' ? Math.abs(Number(h.difference || 0)) : h.qty;
         const qtyPrefix = h.type === 'ตรวจนับ'
           ? (Number(h.difference || 0) > 0 ? '+' : (Number(h.difference || 0) < 0 ? '-' : ''))
-          : (h.type === 'เบิก' ? '-' : (h.type === 'รับ' || h.type === 'เพิ่ม' ? '+' : ''));
+          : (h.type === 'เบิก' ? '-' : (h.type === 'รับ' || h.type === 'คืน' || h.type === 'เพิ่ม' ? '+' : ''));
         const qtyColor = h.type === 'ตรวจนับ'
           ? (Number(h.difference || 0) === 0 ? 'var(--color-success)' : (Number(h.difference || 0) > 0 ? 'var(--color-primary)' : 'var(--color-danger)'))
-          : ((h.type === 'เบิก') ? 'var(--color-danger)' : (h.type === 'รับ' ? 'var(--color-success)' : 'var(--color-text-primary)'));
+          : ((h.type === 'เบิก') ? 'var(--color-danger)' : (h.type === 'รับ' || h.type === 'คืน' ? 'var(--color-success)' : 'var(--color-text-primary)'));
 
         return `
           <div class="hist-card" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; overflow: hidden; transition: all 0.2s;">
@@ -1422,6 +1470,8 @@
                 <div>
                   <span style="font-size: 12px; color: var(--color-text-muted); display: block;">${t('บันทึกช่วยจำ/วัตถุประสงค์')}</span>
                   <div style="font-size: 14px; color: #e2e8f0; margin-top: 4px; line-height: 1.5;">${escapeHTML(h.note || '-')}</div>
+                  ${h.requestNo || h.issueNo || h.returnNo ? `<div style="font-size:12px;color:var(--color-text-muted);margin-top:8px;">${h.requestNo ? 'คำขอ ' + escapeHTML(h.requestNo) : ''}${h.issueNo ? ' · ใบจ่าย ' + escapeHTML(h.issueNo) : ''}${h.returnNo ? ' · ใบคืน ' + escapeHTML(h.returnNo) : ''}</div>` : ''}
+                  ${h.type === 'ขอเบิก' ? `<div style="margin-top:8px;"><span class="badge ${h.status === 'rejected' || h.status === 'cancelled' ? 'badge-danger' : (h.status === 'returned' ? 'badge-success' : 'badge-warning')}">${escapeHTML(requestStatusText(h.status))}</span></div>${renderRequestTimeline(h)}` : ''}
                   ${h.type === 'ตรวจนับ' ? `<div style="font-size: 12px; color: var(--color-text-muted); margin-top: 8px;">ยอดระบบ ${Number(h.beforeQty || 0).toLocaleString()} → ยอดจริง ${Number(h.actualQty || 0).toLocaleString()} (ส่วนต่าง ${Number(h.difference || 0) > 0 ? '+' : ''}${Number(h.difference || 0).toLocaleString()})</div>` : ''}
                 </div>
               </div>
