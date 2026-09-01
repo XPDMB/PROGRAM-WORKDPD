@@ -245,6 +245,53 @@
       return base + String(maxSequence + 1).padStart(4, '0');
     }
 
+    function askQuantity(message, maximum, defaultValue) {
+      const max = Math.max(0, Number(maximum || 0));
+      if (max < 1) {
+        showToast('ไม่มีจำนวนคงเหลือให้ดำเนินการ', 'warning');
+        return null;
+      }
+      const raw = prompt(message + ' (สูงสุด ' + max.toLocaleString() + ')', String(defaultValue || max));
+      if (raw === null) return null;
+      const quantity = Number(raw);
+      if (!Number.isInteger(quantity) || quantity < 1 || quantity > max) {
+        showToast('กรุณาระบุจำนวนเต็มตั้งแต่ 1 ถึง ' + max.toLocaleString(), 'danger');
+        return null;
+      }
+      return quantity;
+    }
+
+    function appendRequestEvent(request, action, label, quantity, documentNo) {
+      if (!Array.isArray(request.activityLog)) request.activityLog = [];
+      request.activityLog.push({
+        action: action,
+        label: label,
+        user: currentUser || '-',
+        at: new Date().toISOString(),
+        qty: Number(quantity || 0),
+        documentNo: documentNo || ''
+      });
+      if (request.activityLog.length > 100) request.activityLog = request.activityLog.slice(-100);
+    }
+
+    function requestProgress(request) {
+      const requested = Number(request.qty || 0);
+      const approved = Number(request.approvedQty || 0);
+      const dispensed = Number(request.dispensedQty || 0);
+      const returned = Number(request.returnedQty || 0);
+      const closed = Number(request.closedQty || 0);
+      return { requested, approved, dispensed, returned, closed };
+    }
+
+    function requestProgressText(request) {
+      const progress = requestProgress(request);
+      return 'ขอ ' + progress.requested.toLocaleString() +
+        ' · อนุมัติ ' + progress.approved.toLocaleString() +
+        ' · จ่าย ' + progress.dispensed.toLocaleString() +
+        ' · คืน ' + progress.returned.toLocaleString() +
+        ' · ปิด ' + progress.closed.toLocaleString();
+    }
+
     function safeImageUrl(value) {
       const raw = String(value ?? '').trim();
       if (!raw) return 'assets/logo.png';
@@ -333,6 +380,18 @@
           returnedAt: cleanText(entry.returnedAt, 40),
           closedBy: cleanText(entry.closedBy, 200),
           closedAt: cleanText(entry.closedAt, 40),
+          approvedQty: cleanNumber(entry.approvedQty ?? 0),
+          dispensedQty: cleanNumber(entry.dispensedQty ?? 0),
+          returnedQty: cleanNumber(entry.returnedQty ?? 0),
+          closedQty: cleanNumber(entry.closedQty ?? 0),
+          activityLog: Array.isArray(entry.activityLog) ? entry.activityLog.slice(-100).map(event => ({
+            action: cleanText(event && event.action, 40),
+            label: cleanText(event && event.label, 100),
+            user: cleanText(event && event.user, 200),
+            at: cleanText(event && event.at, 40),
+            qty: cleanNumber(event && event.qty || 0),
+            documentNo: cleanText(event && event.documentNo, 50)
+          })) : [],
           beforeQty: cleanNumber(entry.beforeQty ?? 0),
           actualQty: cleanNumber(entry.actualQty ?? 0),
           difference: cleanSignedNumber(entry.difference ?? 0),
@@ -915,7 +974,7 @@
         '<button type="button" onclick="openWorkQueue(\'' + escapeHTML(request.status || 'pending') + '\')" ' +
         'style="width:100%;display:grid;grid-template-columns:minmax(130px,.8fr) minmax(180px,1.5fr) minmax(120px,.7fr);gap:12px;align-items:center;text-align:left;border:0;border-top:1px solid rgba(255,255,255,.06);background:transparent;padding:12px 16px;color:inherit;cursor:pointer;">' +
         '<div><strong style="color:#e2e8f0;">' + escapeHTML(request.requestNo || '-') + '</strong><div style="font-size:11px;color:var(--color-text-muted);">' + escapeHTML(window.formatHistoryDate(request.createdAt || request.date)) + '</div></div>' +
-        '<div><strong style="color:#e2e8f0;">' + escapeHTML(request.name || '-') + '</strong><div style="font-size:12px;color:var(--color-text-muted);">' + Number(request.qty || 0).toLocaleString() + ' · ' + escapeHTML(request.user || '-') + '</div></div>' +
+        '<div><strong style="color:#e2e8f0;">' + escapeHTML(request.name || '-') + '</strong><div style="font-size:12px;color:var(--color-text-muted);">' + escapeHTML(requestProgressText(request)) + '<br>' + escapeHTML(request.user || '-') + '</div></div>' +
         '<span class="badge badge-warning" style="text-align:center;">' + escapeHTML(requestStatusText(request.status)) + '</span></button>'
       ).join('');
     }
@@ -1345,7 +1404,19 @@
         user: person,
         userPosition: found ? (found.position || '') : '',
         requestedBy: currentUser || person,
-        note: combinedNote
+        note: combinedNote,
+        approvedQty: 0,
+        dispensedQty: 0,
+        returnedQty: 0,
+        closedQty: 0,
+        activityLog: [{
+          action: 'submitted',
+          label: 'ส่งคำขอ',
+          user: currentUser || person,
+          at: now,
+          qty: qty,
+          documentNo: ''
+        }]
       });
 
       saveDatabase();
@@ -1407,21 +1478,27 @@
     }
 
     function renderRequestTimeline(request) {
-      const events = [
-        ['ส่งคำขอ', request.requestedBy, request.createdAt || request.date],
-        ['อนุมัติ', request.approvedBy, request.approvedAt],
-        ['ปฏิเสธ', request.rejectedBy, request.rejectedAt],
-        ['ยกเลิก', request.cancelledBy, request.cancelledAt],
-        ['จ่ายพัสดุ', request.dispensedBy, request.dispensedAt],
-        ['รับคืน', request.returnedBy, request.returnedAt],
-        ['ปิดรายการ', request.closedBy, request.closedAt]
-      ].filter(event => event[2]);
+      let events = Array.isArray(request.activityLog) ? request.activityLog : [];
+      if (events.length === 0) {
+        events = [
+          {label: 'ส่งคำขอ', user: request.requestedBy, at: request.createdAt || request.date, qty: request.qty},
+          {label: 'อนุมัติ', user: request.approvedBy, at: request.approvedAt, qty: request.approvedQty || request.qty},
+          {label: 'ปฏิเสธ', user: request.rejectedBy, at: request.rejectedAt, qty: 0},
+          {label: 'ยกเลิก', user: request.cancelledBy, at: request.cancelledAt, qty: 0},
+          {label: 'จ่ายพัสดุ', user: request.dispensedBy, at: request.dispensedAt, qty: request.dispensedQty || request.qty, documentNo: request.issueNo},
+          {label: 'รับคืน', user: request.returnedBy, at: request.returnedAt, qty: request.returnedQty || request.qty, documentNo: request.returnNo},
+          {label: 'ปิดรายการ', user: request.closedBy, at: request.closedAt, qty: request.closedQty || request.qty}
+        ].filter(event => event.at);
+      }
 
       return '<div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08);">' +
         '<div style="font-size:12px; color:var(--color-text-muted); margin-bottom:6px;">ลำดับการดำเนินการ</div>' +
         events.map(event => '<div style="font-size:12px; margin:4px 0; color:#cbd5e1;">• ' +
-          escapeHTML(event[0]) + ' — ' + escapeHTML(event[1] || '-') + ' · ' +
-          escapeHTML(window.formatHistoryDate(event[2])) + '</div>').join('') +
+          escapeHTML(event.label || event.action || '-') +
+          (Number(event.qty || 0) > 0 ? ' ' + Number(event.qty).toLocaleString() : '') +
+          ' — ' + escapeHTML(event.user || '-') + ' · ' +
+          escapeHTML(window.formatHistoryDate(event.at)) +
+          (event.documentNo ? ' · ' + escapeHTML(event.documentNo) : '') + '</div>').join('') +
         '</div>';
     }
 
@@ -1499,7 +1576,7 @@
           if (status === 'approved' && canDispenseItems()) {
             buttons.push('<button class="btn-action" style="background:var(--color-primary);color:white;width:auto;padding:6px 16px;" onclick="dispenseIssue(decodeURIComponent(\'' + encodedKey + '\'))"><i class="ti ti-package-export"></i> จ่ายพัสดุ</button>');
           }
-          if (['pending', 'approved'].includes(status) && canCancelRequest(h)) {
+          if (['pending', 'approved'].includes(status) && Number(h.dispensedQty || 0) === 0 && canCancelRequest(h)) {
             buttons.push('<button class="btn-action" style="width:auto;padding:6px 16px;" onclick="cancelIssue(decodeURIComponent(\'' + encodedKey + '\'))"><i class="ti ti-ban"></i> ยกเลิกคำขอ</button>');
           }
           if (status === 'dispensed' && canDispenseItems()) {
@@ -1544,7 +1621,7 @@
                   <span style="font-size: 12px; color: var(--color-text-muted); display: block;">${t('บันทึกช่วยจำ/วัตถุประสงค์')}</span>
                   <div style="font-size: 14px; color: #e2e8f0; margin-top: 4px; line-height: 1.5;">${escapeHTML(h.note || '-')}</div>
                   ${h.requestNo || h.issueNo || h.returnNo ? `<div style="font-size:12px;color:var(--color-text-muted);margin-top:8px;">${h.requestNo ? 'คำขอ ' + escapeHTML(h.requestNo) : ''}${h.issueNo ? ' · ใบจ่าย ' + escapeHTML(h.issueNo) : ''}${h.returnNo ? ' · ใบคืน ' + escapeHTML(h.returnNo) : ''}</div>` : ''}
-                  ${h.type === 'ขอเบิก' ? `<div style="margin-top:8px;"><span class="badge ${h.status === 'rejected' || h.status === 'cancelled' ? 'badge-danger' : ((h.status === 'returned' || h.status === 'closed') ? 'badge-success' : 'badge-warning')}">${escapeHTML(requestStatusText(h.status))}</span></div>${renderRequestTimeline(h)}` : ''}
+                  ${h.type === 'ขอเบิก' ? `<div style="margin-top:8px;"><span class="badge ${h.status === 'rejected' || h.status === 'cancelled' ? 'badge-danger' : ((h.status === 'returned' || h.status === 'closed') ? 'badge-success' : 'badge-warning')}">${escapeHTML(requestStatusText(h.status))}</span><div style="font-size:12px;color:#cbd5e1;margin-top:8px;">${escapeHTML(requestProgressText(h))}</div></div>${renderRequestTimeline(h)}` : ''}
                   ${h.type === 'ตรวจนับ' ? `<div style="font-size: 12px; color: var(--color-text-muted); margin-top: 8px;">ยอดระบบ ${Number(h.beforeQty || 0).toLocaleString()} → ยอดจริง ${Number(h.actualQty || 0).toLocaleString()} (ส่วนต่าง ${Number(h.difference || 0) > 0 ? '+' : ''}${Number(h.difference || 0).toLocaleString()})</div>` : ''}
                 </div>
               </div>
@@ -1572,15 +1649,21 @@
         showToast('คำขอนี้ถูกดำเนินการไปแล้วหรือไม่พบรายการ', 'warning');
         return;
       }
-      if (!confirm('ยืนยันการอนุมัติคำขอเบิกรายการนี้?')) return;
 
+      const approvedQty = askQuantity('ระบุจำนวนที่อนุมัติจากยอดขอ ' + Number(request.qty || 0).toLocaleString(), request.qty, request.qty);
+      if (approvedQty === null) return;
+      if (!confirm('ยืนยันอนุมัติจำนวน ' + approvedQty.toLocaleString() + ' รายการ?')) return;
+
+      const now = new Date().toISOString();
       request.status = 'approved';
+      request.approvedQty = approvedQty;
       request.approvedBy = currentUser;
-      request.approvedAt = new Date().toISOString();
+      request.approvedAt = now;
+      appendRequestEvent(request, 'approved', 'อนุมัติ', approvedQty, '');
       saveDatabase();
       renderHistory();
       renderDashboard();
-      showToast('อนุมัติคำขอแล้ว รอเจ้าหน้าที่คลังจ่ายพัสดุ', 'success');
+      showToast('อนุมัติ ' + approvedQty.toLocaleString() + ' รายการ รอเจ้าหน้าที่คลังจ่ายพัสดุ', 'success');
     };
 
     window.rejectIssue = function(requestKey) {
@@ -1595,9 +1678,11 @@
       }
       if (!confirm('ยืนยันการปฏิเสธคำขอเบิกรายการนี้?')) return;
 
+      const now = new Date().toISOString();
       request.status = 'rejected';
       request.rejectedBy = currentUser;
-      request.rejectedAt = new Date().toISOString();
+      request.rejectedAt = now;
+      appendRequestEvent(request, 'rejected', 'ปฏิเสธ', 0, '');
       saveDatabase();
       renderHistory();
       renderDashboard();
@@ -1606,8 +1691,8 @@
 
     window.cancelIssue = function(requestKey) {
       const request = findRequest(requestKey);
-      if (!request || request.type !== 'ขอเบิก' || !['pending', 'approved'].includes(request.status || 'pending')) {
-        showToast('รายการนี้ไม่สามารถยกเลิกได้', 'warning');
+      if (!request || request.type !== 'ขอเบิก' || !['pending', 'approved'].includes(request.status || 'pending') || Number(request.dispensedQty || 0) > 0) {
+        showToast('รายการนี้ไม่สามารถยกเลิกได้หลังเริ่มจ่ายพัสดุ', 'warning');
         return;
       }
       if (!canCancelRequest(request)) {
@@ -1616,9 +1701,11 @@
       }
       if (!confirm('ยืนยันการยกเลิกคำขอเบิกรายการนี้?')) return;
 
+      const now = new Date().toISOString();
       request.status = 'cancelled';
       request.cancelledBy = currentUser;
-      request.cancelledAt = new Date().toISOString();
+      request.cancelledAt = now;
+      appendRequestEvent(request, 'cancelled', 'ยกเลิก', 0, '');
       saveDatabase();
       renderHistory();
       renderDashboard();
@@ -1632,23 +1719,32 @@
       }
       const request = findRequest(requestKey);
       if (!request || request.type !== 'ขอเบิก' || request.status !== 'approved') {
-        showToast('ต้องเป็นคำขอที่อนุมัติแล้วเท่านั้น', 'warning');
+        showToast('ต้องเป็นคำขอที่อนุมัติแล้วและยังมียอดรอจ่าย', 'warning');
         return;
       }
+
+      const approvedQty = Number(request.approvedQty || request.qty || 0);
+      const dispensedQty = Number(request.dispensedQty || 0);
+      const remainingQty = approvedQty - dispensedQty;
+      const quantity = askQuantity('ระบุจำนวนที่จ่าย ยอดคงค้าง ' + remainingQty.toLocaleString(), remainingQty, remainingQty);
+      if (quantity === null) return;
+
       const product = products.find(item => item.code === request.code);
-      if (!product || product.qty < request.qty) {
+      if (!product || product.qty < quantity) {
         showToast('จำนวนพัสดุในคลังไม่เพียงพอ', 'danger');
         return;
       }
-      if (!confirm('ยืนยันการจ่ายพัสดุและตัดสต็อกจำนวน ' + request.qty + ' รายการ?')) return;
+      if (!confirm('ยืนยันจ่ายพัสดุและตัดสต็อกจำนวน ' + quantity.toLocaleString() + ' รายการ?')) return;
 
       const now = new Date().toISOString();
       const issueNo = generateDocumentNumber('ISS', 'issueNo');
-      product.qty -= request.qty;
-      request.status = 'dispensed';
+      product.qty -= quantity;
+      request.dispensedQty = dispensedQty + quantity;
+      request.status = request.dispensedQty >= approvedQty ? 'dispensed' : 'approved';
       request.issueNo = issueNo;
       request.dispensedBy = currentUser;
       request.dispensedAt = now;
+      appendRequestEvent(request, 'dispensed', 'จ่ายพัสดุ', quantity, issueNo);
       history.unshift({
         id: createTransactionId(),
         requestId: request.id,
@@ -1659,7 +1755,7 @@
         status: 'completed',
         code: request.code,
         name: request.name,
-        qty: request.qty,
+        qty: quantity,
         user: request.user,
         userPosition: request.userPosition,
         requestedBy: request.requestedBy,
@@ -1673,7 +1769,8 @@
       renderStock();
       renderHistory();
       renderDashboard();
-      showToast('จ่ายพัสดุและตัดสต็อกเรียบร้อย เลขที่ ' + issueNo, 'success');
+      const remainingAfter = approvedQty - request.dispensedQty;
+      showToast('จ่าย ' + quantity.toLocaleString() + ' รายการ เลขที่ ' + issueNo + (remainingAfter > 0 ? ' คงค้าง ' + remainingAfter.toLocaleString() : ''), 'success');
     };
 
     window.returnIssue = function(requestKey) {
@@ -1683,23 +1780,32 @@
       }
       const request = findRequest(requestKey);
       if (!request || request.type !== 'ขอเบิก' || request.status !== 'dispensed') {
-        showToast('รับคืนได้เฉพาะรายการที่จ่ายพัสดุแล้ว', 'warning');
+        showToast('รับคืนได้เฉพาะรายการที่จ่ายครบแล้วและยังมียอดค้าง', 'warning');
         return;
       }
+
+      const progress = requestProgress(request);
+      const remainingQty = progress.dispensed - progress.returned - progress.closed;
+      const quantity = askQuantity('ระบุจำนวนที่รับคืน ยอดค้าง ' + remainingQty.toLocaleString(), remainingQty, remainingQty);
+      if (quantity === null) return;
+
       const product = products.find(item => item.code === request.code);
       if (!product) {
         showToast('ไม่พบพัสดุในคลัง', 'danger');
         return;
       }
-      if (!confirm('ยืนยันรับคืนพัสดุเต็มจำนวน ' + request.qty + ' รายการ?')) return;
+      if (!confirm('ยืนยันรับคืนพัสดุจำนวน ' + quantity.toLocaleString() + ' รายการ?')) return;
 
       const now = new Date().toISOString();
       const returnNo = generateDocumentNumber('RET', 'returnNo');
-      product.qty += request.qty;
-      request.status = 'returned';
+      product.qty += quantity;
+      request.returnedQty = progress.returned + quantity;
       request.returnNo = returnNo;
       request.returnedBy = currentUser;
       request.returnedAt = now;
+      const accountedQty = request.returnedQty + progress.closed;
+      request.status = accountedQty >= progress.dispensed ? (progress.closed > 0 ? 'closed' : 'returned') : 'dispensed';
+      appendRequestEvent(request, 'returned', 'รับคืน', quantity, returnNo);
       history.unshift({
         id: createTransactionId(),
         requestId: request.id,
@@ -1711,7 +1817,7 @@
         status: 'completed',
         code: request.code,
         name: request.name,
-        qty: request.qty,
+        qty: quantity,
         user: request.user,
         userPosition: request.userPosition,
         returnedBy: currentUser,
@@ -1722,7 +1828,8 @@
       renderStock();
       renderHistory();
       renderDashboard();
-      showToast('รับคืนพัสดุเรียบร้อย เลขที่ ' + returnNo, 'success');
+      const remainingAfter = progress.dispensed - request.returnedQty - progress.closed;
+      showToast('รับคืน ' + quantity.toLocaleString() + ' รายการ เลขที่ ' + returnNo + (remainingAfter > 0 ? ' คงค้าง ' + remainingAfter.toLocaleString() : ''), 'success');
     };
 
     window.closeIssueRecord = function(requestKey) {
@@ -1732,18 +1839,28 @@
       }
       const request = findRequest(requestKey);
       if (!request || request.type !== 'ขอเบิก' || request.status !== 'dispensed') {
-        showToast('ปิดได้เฉพาะรายการที่จ่ายพัสดุแล้ว', 'warning');
+        showToast('ปิดได้เฉพาะรายการที่จ่ายครบแล้วและยังมียอดค้าง', 'warning');
         return;
       }
-      if (!confirm('ยืนยันปิดรายการโดยไม่รับพัสดุกลับเข้าสต็อก?')) return;
 
-      request.status = 'closed';
+      const progress = requestProgress(request);
+      const remainingQty = progress.dispensed - progress.returned - progress.closed;
+      const quantity = askQuantity('ระบุจำนวนที่ปิดโดยไม่รับคืน ยอดค้าง ' + remainingQty.toLocaleString(), remainingQty, remainingQty);
+      if (quantity === null) return;
+      if (!confirm('ยืนยันปิดจำนวน ' + quantity.toLocaleString() + ' รายการโดยไม่เพิ่มกลับเข้าสต็อก?')) return;
+
+      const now = new Date().toISOString();
+      request.closedQty = progress.closed + quantity;
       request.closedBy = currentUser;
-      request.closedAt = new Date().toISOString();
+      request.closedAt = now;
+      const accountedQty = progress.returned + request.closedQty;
+      request.status = accountedQty >= progress.dispensed ? 'closed' : 'dispensed';
+      appendRequestEvent(request, 'closed', 'ปิดรายการ', quantity, '');
       saveDatabase();
       renderHistory();
       renderDashboard();
-      showToast('ปิดรายการเรียบร้อย โดยไม่เปลี่ยนยอดสต็อก', 'success');
+      const remainingAfter = progress.dispensed - progress.returned - request.closedQty;
+      showToast('ปิด ' + quantity.toLocaleString() + ' รายการ' + (remainingAfter > 0 ? ' คงค้าง ' + remainingAfter.toLocaleString() : ''), 'success');
     };
 
 
