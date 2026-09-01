@@ -41,10 +41,25 @@ const checks = [
     if (approval.includes('product.qty -=')) throw new Error('Approval must not deduct stock');
 
     const dispense = app.slice(app.indexOf('window.dispenseIssue'), app.indexOf('window.returnIssue'));
-    if (!dispense.includes('product.qty -= request.qty')) throw new Error('Dispense must deduct stock');
+    if (!dispense.includes('product.qty -= quantity')) throw new Error('Dispense must deduct the entered quantity');
 
     const itemReturn = app.slice(app.indexOf('window.returnIssue'), app.indexOf('window.closeIssueRecord'));
-    if (!itemReturn.includes('product.qty += request.qty')) throw new Error('Return must restore stock');
+    if (!itemReturn.includes('product.qty += quantity')) throw new Error('Return must restore the entered quantity');
+
+    const partialMarkers = [
+      'function askQuantity',
+      'function appendRequestEvent',
+      'function requestProgress',
+      'approvedQty',
+      'dispensedQty',
+      'returnedQty',
+      'closedQty',
+      'activityLog',
+      'remainingQty'
+    ];
+    for (const marker of partialMarkers) {
+      if (!app.includes(marker)) throw new Error('Missing partial transaction marker: ' + marker);
+    }
 
     if (!html.includes('<option value="ขอเบิก">') || !html.includes('<option value="คืน">')) {
       throw new Error('Missing requisition history filters');
