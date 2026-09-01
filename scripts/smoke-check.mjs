@@ -2,6 +2,9 @@ import fs from 'node:fs';
 
 const app = fs.readFileSync('js/app.js', 'utf8');
 const html = fs.readFileSync('index.html', 'utf8');
+const backend = fs.readFileSync('google-apps-script/Code.gs', 'utf8');
+const manifest = fs.readFileSync('google-apps-script/appsscript.json', 'utf8');
+const backendGuide = fs.readFileSync('docs/GOOGLE_SHEETS_BACKEND_SETUP.md', 'utf8');
 
 const checks = [
   ['JavaScript parses', () => { new Function(app); }],
@@ -95,6 +98,39 @@ const checks = [
       if (!app.includes(marker)) throw new Error('Missing stocktake marker: ' + marker);
     }
     if (!html.includes('id="stocktakeModal"')) throw new Error('Missing stocktake modal');
+  }],
+  ['Google Sheets backend security controls exist', () => {
+    new Function(backend);
+    JSON.parse(manifest);
+    const markers = [
+      'Session.getActiveUser().getEmail()',
+      "PropertiesService.getScriptProperties().getProperty('ALLOWED_DOMAIN')",
+      'LockService.getScriptLock()',
+      "CacheService.getUserCache().put('dpd_csrf'",
+      'verifyCsrf_',
+      'findIdempotent_',
+      'VERSION_CONFLICT',
+      'writeAudit_',
+      "case 'createRequest'",
+      "case 'approveRequest'",
+      "case 'dispenseRequest'",
+      "case 'returnRequest'",
+      "case 'closeRequest'"
+    ];
+    for (const marker of markers) {
+      if (!backend.includes(marker)) throw new Error('Missing backend security marker: ' + marker);
+    }
+    if (!backendGuide.includes('User accessing the web app')) {
+      throw new Error('Deployment guide must require user-accessing execution');
+    }
+    if (!backendGuide.includes('ห้ามเลือก **Anyone, even anonymous**')) {
+      throw new Error('Deployment guide must reject anonymous access');
+    }
+  }],
+  ['No production backend is enabled in Preview', () => {
+    if (!app.includes("const GOOGLE_SCRIPT_URL = '';")) {
+      throw new Error('Preview must keep the production backend disabled');
+    }
   }],
   ['No real-looking Thai phone number is embedded', () => {
     const numbers = app.match(/0\d{2}-\d{7}/g) || [];
