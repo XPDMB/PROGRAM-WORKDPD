@@ -223,6 +223,28 @@
       return document.body.classList.contains('role-admin') || document.body.classList.contains('role-approver');
     }
 
+    function canDispenseItems() {
+      return document.body.classList.contains('role-admin') || document.body.classList.contains('role-staff');
+    }
+
+    function canCancelRequest(request) {
+      return document.body.classList.contains('role-admin') || request.requestedBy === currentUser;
+    }
+
+    function generateDocumentNumber(prefix, fieldName) {
+      const buddhistYear = new Date().getFullYear() + 543;
+      const base = prefix + '-' + buddhistYear + '-';
+      let maxSequence = 0;
+      history.forEach(entry => {
+        const value = String(entry[fieldName] || '');
+        if (value.startsWith(base)) {
+          const sequence = Number(value.slice(base.length));
+          if (Number.isInteger(sequence)) maxSequence = Math.max(maxSequence, sequence);
+        }
+      });
+      return base + String(maxSequence + 1).padStart(4, '0');
+    }
+
     function safeImageUrl(value) {
       const raw = String(value ?? '').trim();
       if (!raw) return 'assets/logo.png';
@@ -277,7 +299,7 @@
         };
       });
 
-      const allowedTypes = new Set(['รับ', 'เบิก', 'ขอเบิก', 'เพิ่ม', 'แก้ไข', 'ปรับปรุง', 'ลบ', 'ปฏิเสธ', 'ตรวจนับ']);
+      const allowedTypes = new Set(['รับ', 'เบิก', 'คืน', 'ขอเบิก', 'เพิ่ม', 'แก้ไข', 'ปรับปรุง', 'ลบ', 'ปฏิเสธ', 'ตรวจนับ']);
       const history = input.history.map(entry => {
         if (!entry || typeof entry !== 'object') throw new Error('Invalid history entry');
         const type = cleanText(entry.type, 30);
@@ -293,10 +315,22 @@
           userPosition: cleanText(entry.userPosition, 200),
           note: cleanText(entry.note, 1000),
           status: cleanText(entry.status, 30),
+          requestNo: cleanText(entry.requestNo, 50),
+          issueNo: cleanText(entry.issueNo, 50),
+          returnNo: cleanText(entry.returnNo, 50),
+          requestId: cleanText(entry.requestId, 100),
+          requestedBy: cleanText(entry.requestedBy, 200),
+          createdAt: cleanText(entry.createdAt, 40),
           approvedBy: cleanText(entry.approvedBy, 200),
           approvedAt: cleanText(entry.approvedAt, 40),
           rejectedBy: cleanText(entry.rejectedBy, 200),
           rejectedAt: cleanText(entry.rejectedAt, 40),
+          cancelledBy: cleanText(entry.cancelledBy, 200),
+          cancelledAt: cleanText(entry.cancelledAt, 40),
+          dispensedBy: cleanText(entry.dispensedBy, 200),
+          dispensedAt: cleanText(entry.dispensedAt, 40),
+          returnedBy: cleanText(entry.returnedBy, 200),
+          returnedAt: cleanText(entry.returnedAt, 40),
           beforeQty: cleanNumber(entry.beforeQty ?? 0),
           actualQty: cleanNumber(entry.actualQty ?? 0),
           difference: cleanSignedNumber(entry.difference ?? 0),
@@ -1218,48 +1252,41 @@
 
     function doIssue() {
       const code = document.getElementById('issueItem').value;
-      const qty = parseInt(document.getElementById('issueQty').value);
+      const qty = parseInt(document.getElementById('issueQty').value, 10);
       const person = document.getElementById('issuePerson').value.trim();
       const purpose = document.getElementById('issuePurpose').value || 'เบิกใช้งาน';
       const note = document.getElementById('issueNote').value.trim();
-      const combinedNote = note ? `${purpose} (${note})` : purpose;
+      const combinedNote = note ? purpose + ' (' + note + ')' : purpose;
+      const product = products.find(item => item.code === code);
 
-      const p = products.find(x => x.code === code);
-      if (p && qty > 0 && qty <= p.qty && person) {
-        let personName = person;
-        let personPosition = '';
-        
-        // Find position from PERSONNEL dynamically if it matches
-        const found = PERSONNEL.find(x => (x.name || '').trim() === personName);
-        if (found) {
-          personPosition = found.position || '';
-        }
+      if (!product || !Number.isInteger(qty) || qty <= 0 || qty > product.qty || !person) {
+        showToast('ข้อมูลไม่ถูกต้องหรือสินค้าไม่พอ', 'danger');
+        return;
+      }
 
-        const canIssueDirectly = document.body.classList.contains('role-admin') || document.body.classList.contains('role-staff');
-        const issueType = canIssueDirectly ? 'เบิก' : 'ขอเบิก';
-        
-        if (canIssueDirectly) {
-          p.qty -= qty;
-        }
+      const found = PERSONNEL.find(item => (item.name || '').trim() === person);
+      const now = new Date().toISOString();
+      history.unshift({
+        id: createTransactionId(),
+        requestNo: generateDocumentNumber('REQ', 'requestNo'),
+        date: now,
+        createdAt: now,
+        type: 'ขอเบิก',
+        status: 'pending',
+        code: product.code,
+        name: product.name,
+        qty: qty,
+        user: person,
+        userPosition: found ? (found.position || '') : '',
+        requestedBy: currentUser || person,
+        note: combinedNote
+      });
 
-        history.unshift({
-          id: createTransactionId(),
-          date: new Date().toISOString(),
-          type: issueType,
-          status: canIssueDirectly ? 'completed' : 'pending',
-          code: p.code,
-          name: p.name,
-          qty: qty,
-          user: personName,
-          userPosition: personPosition,
-          requestedBy: currentUser || personName,
-          note: combinedNote
-        });
-        saveDatabase();
-        renderStock();
-        closeIssueModal();
-        showToast(canIssueDirectly ? 'เบิกสินค้าสำเร็จ' : 'ส่งคำขอเบิกสินค้าสำเร็จ รออนุมัติ');
-      } else { showToast('ข้อมูลไม่ถูกต้องหรือสินค้าไม่พอ', 'danger'); }
+      saveDatabase();
+      closeIssueModal();
+      renderHistory();
+      renderDashboard();
+      showToast('ส่งคำขอเบิกสินค้าสำเร็จ รออนุมัติ', 'success');
     }
 
     function formatUser(userStr, posStr) {
@@ -1422,25 +1449,15 @@
         showToast('คำขอนี้ถูกดำเนินการไปแล้วหรือไม่พบรายการ', 'warning');
         return;
       }
-      if (!confirm('ยืนยันการอนุมัติเบิกพัสดุรายการนี้?')) return;
+      if (!confirm('ยืนยันการอนุมัติคำขอเบิกรายการนี้?')) return;
 
-      const product = products.find(item => item.code === request.code);
-      if (!product || product.qty < request.qty) {
-        showToast('จำนวนพัสดุในคลังไม่เพียงพอ', 'danger');
-        return;
-      }
-
-      product.qty -= request.qty;
-      request.type = 'เบิก';
       request.status = 'approved';
       request.approvedBy = currentUser;
       request.approvedAt = new Date().toISOString();
-      request.note = [request.note, 'อนุมัติโดย ' + currentUser].filter(Boolean).join(' | ');
       saveDatabase();
-      renderStock();
       renderHistory();
       renderDashboard();
-      showToast('อนุมัติรายการเบิกสำเร็จ', 'success');
+      showToast('อนุมัติคำขอแล้ว รอเจ้าหน้าที่คลังจ่ายพัสดุ', 'success');
     };
 
     window.rejectIssue = function(requestKey) {
@@ -1455,15 +1472,134 @@
       }
       if (!confirm('ยืนยันการปฏิเสธคำขอเบิกรายการนี้?')) return;
 
-      request.type = 'ปฏิเสธ';
       request.status = 'rejected';
       request.rejectedBy = currentUser;
       request.rejectedAt = new Date().toISOString();
-      request.note = [request.note, 'ปฏิเสธโดย ' + currentUser].filter(Boolean).join(' | ');
       saveDatabase();
       renderHistory();
       renderDashboard();
       showToast('ปฏิเสธคำขอเรียบร้อย', 'warning');
+    };
+
+    window.cancelIssue = function(requestKey) {
+      const request = findRequest(requestKey);
+      if (!request || request.type !== 'ขอเบิก' || !['pending', 'approved'].includes(request.status || 'pending')) {
+        showToast('รายการนี้ไม่สามารถยกเลิกได้', 'warning');
+        return;
+      }
+      if (!canCancelRequest(request)) {
+        showToast('ยกเลิกได้เฉพาะผู้สร้างคำขอหรือผู้ดูแลระบบ', 'danger');
+        return;
+      }
+      if (!confirm('ยืนยันการยกเลิกคำขอเบิกรายการนี้?')) return;
+
+      request.status = 'cancelled';
+      request.cancelledBy = currentUser;
+      request.cancelledAt = new Date().toISOString();
+      saveDatabase();
+      renderHistory();
+      renderDashboard();
+      showToast('ยกเลิกคำขอเรียบร้อย', 'warning');
+    };
+
+    window.dispenseIssue = function(requestKey) {
+      if (!canDispenseItems()) {
+        showToast('บัญชีนี้ไม่มีสิทธิ์จ่ายพัสดุ', 'danger');
+        return;
+      }
+      const request = findRequest(requestKey);
+      if (!request || request.type !== 'ขอเบิก' || request.status !== 'approved') {
+        showToast('ต้องเป็นคำขอที่อนุมัติแล้วเท่านั้น', 'warning');
+        return;
+      }
+      const product = products.find(item => item.code === request.code);
+      if (!product || product.qty < request.qty) {
+        showToast('จำนวนพัสดุในคลังไม่เพียงพอ', 'danger');
+        return;
+      }
+      if (!confirm('ยืนยันการจ่ายพัสดุและตัดสต็อกจำนวน ' + request.qty + ' รายการ?')) return;
+
+      const now = new Date().toISOString();
+      const issueNo = generateDocumentNumber('ISS', 'issueNo');
+      product.qty -= request.qty;
+      request.status = 'dispensed';
+      request.issueNo = issueNo;
+      request.dispensedBy = currentUser;
+      request.dispensedAt = now;
+      history.unshift({
+        id: createTransactionId(),
+        requestId: request.id,
+        requestNo: request.requestNo,
+        issueNo: issueNo,
+        date: now,
+        type: 'เบิก',
+        status: 'completed',
+        code: request.code,
+        name: request.name,
+        qty: request.qty,
+        user: request.user,
+        userPosition: request.userPosition,
+        requestedBy: request.requestedBy,
+        approvedBy: request.approvedBy,
+        approvedAt: request.approvedAt,
+        dispensedBy: currentUser,
+        dispensedAt: now,
+        note: request.note
+      });
+      saveDatabase();
+      renderStock();
+      renderHistory();
+      renderDashboard();
+      showToast('จ่ายพัสดุและตัดสต็อกเรียบร้อย เลขที่ ' + issueNo, 'success');
+    };
+
+    window.returnIssue = function(requestKey) {
+      if (!canDispenseItems()) {
+        showToast('บัญชีนี้ไม่มีสิทธิ์รับคืนพัสดุ', 'danger');
+        return;
+      }
+      const request = findRequest(requestKey);
+      if (!request || request.type !== 'ขอเบิก' || request.status !== 'dispensed') {
+        showToast('รับคืนได้เฉพาะรายการที่จ่ายพัสดุแล้ว', 'warning');
+        return;
+      }
+      const product = products.find(item => item.code === request.code);
+      if (!product) {
+        showToast('ไม่พบพัสดุในคลัง', 'danger');
+        return;
+      }
+      if (!confirm('ยืนยันรับคืนพัสดุเต็มจำนวน ' + request.qty + ' รายการ?')) return;
+
+      const now = new Date().toISOString();
+      const returnNo = generateDocumentNumber('RET', 'returnNo');
+      product.qty += request.qty;
+      request.status = 'returned';
+      request.returnNo = returnNo;
+      request.returnedBy = currentUser;
+      request.returnedAt = now;
+      history.unshift({
+        id: createTransactionId(),
+        requestId: request.id,
+        requestNo: request.requestNo,
+        issueNo: request.issueNo,
+        returnNo: returnNo,
+        date: now,
+        type: 'คืน',
+        status: 'completed',
+        code: request.code,
+        name: request.name,
+        qty: request.qty,
+        user: request.user,
+        userPosition: request.userPosition,
+        returnedBy: currentUser,
+        returnedAt: now,
+        note: 'รับคืนจาก ' + (request.issueNo || request.requestNo || request.id)
+      });
+      saveDatabase();
+      renderStock();
+      renderHistory();
+      renderDashboard();
+      showToast('รับคืนพัสดุเรียบร้อย เลขที่ ' + returnNo, 'success');
     };
 
     function formatThaiDate(dateStr) {
