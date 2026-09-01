@@ -50,6 +50,22 @@ const checks = [
       throw new Error('Missing requisition history filters');
     }
   }],
+  ['Role-aware dashboard work queue exists', () => {
+    const appMarkers = [
+      'function getVisibleRequestsForQueue',
+      'function renderWorkQueue',
+      'window.openWorkQueue',
+      "statusFilter",
+      "if (document.body.classList.contains('role-viewer'))"
+    ];
+    for (const marker of appMarkers) {
+      if (!app.includes(marker)) throw new Error('Missing work queue marker: ' + marker);
+    }
+    if (!html.includes('id="workQueueSummary"') || !html.includes('id="workQueueRecent"')) {
+      throw new Error('Missing dashboard work queue containers');
+    }
+    if (!html.includes('id="histStatusFilter"')) throw new Error('Missing history status filter');
+  }],
   ['Physical stocktake is complete', () => {
     const required = [
       'function openStocktakeModal',
