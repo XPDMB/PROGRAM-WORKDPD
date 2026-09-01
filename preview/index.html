@@ -185,6 +185,17 @@
             <!-- Dynamic Cards Loaded here -->
           </div>
 
+          <div class="panel" id="workQueuePanel">
+            <div class="panel-header">
+              <span class="panel-title" id="workQueueTitle"><i class="ti ti-list-check" aria-hidden="true"></i> คิวงานพัสดุ</span>
+              <span style="font-size:12px;color:var(--color-text-muted);">กดที่รายการเพื่อเปิดหน้าดำเนินการ</span>
+            </div>
+            <div class="panel-body" style="padding:16px;">
+              <div id="workQueueSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;"></div>
+              <div id="workQueueRecent" style="margin-top:14px;border:1px solid rgba(255,255,255,.06);border-radius:10px;overflow:hidden;"></div>
+            </div>
+          </div>
+
           <!-- Interactive Analytics Charts Row -->
           <div class="charts-row">
             <div class="panel" style="margin-bottom: 0;">
@@ -295,6 +306,19 @@
                   <option value="แก้ไข">แก้ไขรายละเอียด</option>
                   <option value="ปรับปรุง">ปรับยอดโดยตรง</option>
                   <option value="ลบ">ลบสินค้าออก</option>
+                </select>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:14px; font-weight:500; color:var(--color-text-secondary);">สถานะ:</span>
+                <select id="histStatusFilter" class="form-control" onchange="renderHistory()" style="width:165px">
+                  <option value="">ทุกสถานะ</option>
+                  <option value="pending">รออนุมัติ</option>
+                  <option value="approved">อนุมัติแล้ว รอจ่าย</option>
+                  <option value="dispensed">จ่ายแล้ว รอคืน/ปิด</option>
+                  <option value="returned">รับคืนแล้ว</option>
+                  <option value="closed">ปิดรายการแล้ว</option>
+                  <option value="rejected">ปฏิเสธ</option>
+                  <option value="cancelled">ยกเลิก</option>
                 </select>
               </div>
               <div style="display:flex; align-items:center; gap:8px;">
@@ -797,7 +821,7 @@
     <option value="ชุด"></option>
   </datalist>
 
-  <script src="app.js?v=3.7.0"></script>
+  <script src="app.js?v=3.8.0"></script>
   <script>
     // Initialize Vanta.js Waves Background
     VANTA.WAVES({
