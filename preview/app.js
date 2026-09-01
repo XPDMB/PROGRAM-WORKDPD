@@ -858,6 +858,68 @@
       if (backdrop) backdrop.classList.toggle('sidebar-open');
     }
 
+    function getVisibleRequestsForQueue() {
+      const requests = history.filter(entry => entry.type === 'ขอเบิก');
+      if (document.body.classList.contains('role-viewer')) {
+        return requests.filter(entry => entry.requestedBy === currentUser);
+      }
+      return requests;
+    }
+
+    window.openWorkQueue = function(status) {
+      showTab('history');
+      const typeFilter = document.getElementById('histFilter');
+      const statusFilter = document.getElementById('histStatusFilter');
+      if (typeFilter) typeFilter.value = 'ขอเบิก';
+      if (statusFilter) statusFilter.value = status;
+      renderHistory();
+    };
+
+    function renderWorkQueue() {
+      const container = document.getElementById('workQueueSummary');
+      const recentContainer = document.getElementById('workQueueRecent');
+      const title = document.getElementById('workQueueTitle');
+      if (!container || !recentContainer) return;
+
+      const requests = getVisibleRequestsForQueue();
+      const queueCards = [
+        {status: 'pending', label: 'รออนุมัติ', icon: 'ti-clock', color: '#f59e0b'},
+        {status: 'approved', label: 'อนุมัติแล้ว รอจ่าย', icon: 'ti-package-export', color: '#3b82f6'},
+        {status: 'dispensed', label: 'จ่ายแล้ว รอคืน/ปิด', icon: 'ti-package-import', color: '#10b981'}
+      ];
+
+      if (title) {
+        title.textContent = document.body.classList.contains('role-viewer') ? 'คิวคำขอของฉัน' : 'คิวงานพัสดุ';
+      }
+
+      container.innerHTML = queueCards.map(card => {
+        const count = requests.filter(request => (request.status || 'pending') === card.status).length;
+        return '<button type="button" onclick="openWorkQueue(\'' + card.status + '\')" ' +
+          'style="text-align:left;border:1px solid rgba(255,255,255,.08);background:rgba(15,23,42,.55);border-radius:12px;padding:16px;color:inherit;cursor:pointer;min-height:96px;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">' +
+          '<div><div style="font-size:13px;color:var(--color-text-muted);margin-bottom:8px;">' + escapeHTML(card.label) + '</div>' +
+          '<strong style="font-size:25px;color:#f8fafc;">' + count.toLocaleString() + ' รายการ</strong></div>' +
+          '<i class="ti ' + card.icon + '" style="font-size:28px;color:' + card.color + ';"></i></div></button>';
+      }).join('');
+
+      const activeRequests = requests
+        .filter(request => ['pending', 'approved', 'dispensed'].includes(request.status || 'pending'))
+        .slice(0, 5);
+
+      if (activeRequests.length === 0) {
+        recentContainer.innerHTML = '<div style="padding:18px;text-align:center;color:var(--color-text-muted);">ไม่มีงานค้างในขณะนี้</div>';
+        return;
+      }
+
+      recentContainer.innerHTML = activeRequests.map(request =>
+        '<button type="button" onclick="openWorkQueue(\'' + escapeHTML(request.status || 'pending') + '\')" ' +
+        'style="width:100%;display:grid;grid-template-columns:minmax(130px,.8fr) minmax(180px,1.5fr) minmax(120px,.7fr);gap:12px;align-items:center;text-align:left;border:0;border-top:1px solid rgba(255,255,255,.06);background:transparent;padding:12px 16px;color:inherit;cursor:pointer;">' +
+        '<div><strong style="color:#e2e8f0;">' + escapeHTML(request.requestNo || '-') + '</strong><div style="font-size:11px;color:var(--color-text-muted);">' + escapeHTML(window.formatHistoryDate(request.createdAt || request.date)) + '</div></div>' +
+        '<div><strong style="color:#e2e8f0;">' + escapeHTML(request.name || '-') + '</strong><div style="font-size:12px;color:var(--color-text-muted);">' + Number(request.qty || 0).toLocaleString() + ' · ' + escapeHTML(request.user || '-') + '</div></div>' +
+        '<span class="badge badge-warning" style="text-align:center;">' + escapeHTML(requestStatusText(request.status)) + '</span></button>'
+      ).join('');
+    }
+
     function renderDashboard() {
       const total = products.length;
       const lowList = products.filter(p => p.qty < p.min);
@@ -878,6 +940,8 @@
         lowTableEl.innerHTML = `<table><thead><tr><th>${t('รหัสสินค้า')}</th><th>${t('ชื่อ')}</th><th>${t('คงเหลือ')}</th><th>${t('ขั้นต่ำ')}</th></tr></thead><tbody>${lowList.map(p => `<tr><td>${escapeHTML(p.code)}</td><td>${escapeHTML(p.name)}</td><td>${p.qty}</td><td>${p.min}</td></tr>`).join('')}</tbody></table>`;
       }
       
+      renderWorkQueue();
+
       // Update interactive analytics charts
       renderCharts();
     }
@@ -1366,6 +1430,7 @@
       if (!container) return;
 
       const filter = document.getElementById('histFilter').value;
+      const statusFilter = document.getElementById('histStatusFilter') ? document.getElementById('histStatusFilter').value : '';
       const fyFilter = document.getElementById('histFiscalFilter') ? document.getElementById('histFiscalFilter').value : '';
       const searchEl = document.getElementById('historySearchInput');
       const searchQ = searchEl ? searchEl.value.trim().toLowerCase() : '';
@@ -1373,6 +1438,9 @@
       let list = history;
       if (filter) {
         list = list.filter(h => h.type === filter);
+      }
+      if (statusFilter) {
+        list = list.filter(h => (h.status || (h.type === 'ขอเบิก' ? 'pending' : '')) === statusFilter);
       }
       if (fyFilter) {
         list = list.filter(h => String(getFiscalYear(h.date)) === String(fyFilter));
@@ -1476,7 +1544,7 @@
                   <span style="font-size: 12px; color: var(--color-text-muted); display: block;">${t('บันทึกช่วยจำ/วัตถุประสงค์')}</span>
                   <div style="font-size: 14px; color: #e2e8f0; margin-top: 4px; line-height: 1.5;">${escapeHTML(h.note || '-')}</div>
                   ${h.requestNo || h.issueNo || h.returnNo ? `<div style="font-size:12px;color:var(--color-text-muted);margin-top:8px;">${h.requestNo ? 'คำขอ ' + escapeHTML(h.requestNo) : ''}${h.issueNo ? ' · ใบจ่าย ' + escapeHTML(h.issueNo) : ''}${h.returnNo ? ' · ใบคืน ' + escapeHTML(h.returnNo) : ''}</div>` : ''}
-                  ${h.type === 'ขอเบิก' ? `<div style="margin-top:8px;"><span class="badge ${h.status === 'rejected' || h.status === 'cancelled' ? 'badge-danger' : (h.status === 'returned' ? 'badge-success' : 'badge-warning')}">${escapeHTML(requestStatusText(h.status))}</span></div>${renderRequestTimeline(h)}` : ''}
+                  ${h.type === 'ขอเบิก' ? `<div style="margin-top:8px;"><span class="badge ${h.status === 'rejected' || h.status === 'cancelled' ? 'badge-danger' : ((h.status === 'returned' || h.status === 'closed') ? 'badge-success' : 'badge-warning')}">${escapeHTML(requestStatusText(h.status))}</span></div>${renderRequestTimeline(h)}` : ''}
                   ${h.type === 'ตรวจนับ' ? `<div style="font-size: 12px; color: var(--color-text-muted); margin-top: 8px;">ยอดระบบ ${Number(h.beforeQty || 0).toLocaleString()} → ยอดจริง ${Number(h.actualQty || 0).toLocaleString()} (ส่วนต่าง ${Number(h.difference || 0) > 0 ? '+' : ''}${Number(h.difference || 0).toLocaleString()})</div>` : ''}
                 </div>
               </div>
