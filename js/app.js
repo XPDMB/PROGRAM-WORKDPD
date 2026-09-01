@@ -331,6 +331,8 @@
           dispensedAt: cleanText(entry.dispensedAt, 40),
           returnedBy: cleanText(entry.returnedBy, 200),
           returnedAt: cleanText(entry.returnedAt, 40),
+          closedBy: cleanText(entry.closedBy, 200),
+          closedAt: cleanText(entry.closedAt, 40),
           beforeQty: cleanNumber(entry.beforeQty ?? 0),
           actualQty: cleanNumber(entry.actualQty ?? 0),
           difference: cleanSignedNumber(entry.difference ?? 0),
@@ -1335,7 +1337,8 @@
         rejected: 'ปฏิเสธ',
         cancelled: 'ยกเลิก',
         dispensed: 'จ่ายแล้ว',
-        returned: 'รับคืน/ปิดรายการ'
+        returned: 'รับคืนแล้ว',
+        closed: 'ปิดรายการแล้ว'
       })[status || 'pending'] || status || '-';
     }
 
@@ -1346,7 +1349,8 @@
         ['ปฏิเสธ', request.rejectedBy, request.rejectedAt],
         ['ยกเลิก', request.cancelledBy, request.cancelledAt],
         ['จ่ายพัสดุ', request.dispensedBy, request.dispensedAt],
-        ['รับคืน/ปิดรายการ', request.returnedBy, request.returnedAt]
+        ['รับคืน', request.returnedBy, request.returnedAt],
+        ['ปิดรายการ', request.closedBy, request.closedAt]
       ].filter(event => event[2]);
 
       return '<div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08);">' +
@@ -1431,7 +1435,8 @@
             buttons.push('<button class="btn-action" style="width:auto;padding:6px 16px;" onclick="cancelIssue(decodeURIComponent(\'' + encodedKey + '\'))"><i class="ti ti-ban"></i> ยกเลิกคำขอ</button>');
           }
           if (status === 'dispensed' && canDispenseItems()) {
-            buttons.push('<button class="btn-action" style="background:var(--color-success);color:white;width:auto;padding:6px 16px;" onclick="returnIssue(decodeURIComponent(\'' + encodedKey + '\'))"><i class="ti ti-package-import"></i> รับคืนและปิด</button>');
+            buttons.push('<button class="btn-action" style="background:var(--color-success);color:white;width:auto;padding:6px 16px;" onclick="returnIssue(decodeURIComponent(\'' + encodedKey + '\'))"><i class="ti ti-package-import"></i> รับคืน</button>');
+            buttons.push('<button class="btn-action" style="width:auto;padding:6px 16px;" onclick="closeIssueRecord(decodeURIComponent(\'' + encodedKey + '\'))"><i class="ti ti-circle-check"></i> ปิดรายการ</button>');
           }
         }
         actionBtn = buttons.join('');
@@ -1651,6 +1656,28 @@
       renderDashboard();
       showToast('รับคืนพัสดุเรียบร้อย เลขที่ ' + returnNo, 'success');
     };
+
+    window.closeIssueRecord = function(requestKey) {
+      if (!canDispenseItems()) {
+        showToast('บัญชีนี้ไม่มีสิทธิ์ปิดรายการ', 'danger');
+        return;
+      }
+      const request = findRequest(requestKey);
+      if (!request || request.type !== 'ขอเบิก' || request.status !== 'dispensed') {
+        showToast('ปิดได้เฉพาะรายการที่จ่ายพัสดุแล้ว', 'warning');
+        return;
+      }
+      if (!confirm('ยืนยันปิดรายการโดยไม่รับพัสดุกลับเข้าสต็อก?')) return;
+
+      request.status = 'closed';
+      request.closedBy = currentUser;
+      request.closedAt = new Date().toISOString();
+      saveDatabase();
+      renderHistory();
+      renderDashboard();
+      showToast('ปิดรายการเรียบร้อย โดยไม่เปลี่ยนยอดสต็อก', 'success');
+    };
+
 
     function formatThaiDate(dateStr) {
       if (!dateStr) return '';
