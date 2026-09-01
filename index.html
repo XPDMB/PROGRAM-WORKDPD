@@ -255,7 +255,7 @@
                 <i class="ti ti-clipboard-check" aria-hidden="true"></i> ตรวจนับสต็อก
               </button>
               <button class="btn btn-danger" onclick="openIssueModal()">
-                <i class="ti ti-arrow-up-right" aria-hidden="true"></i> เบิกสินค้าออก
+                <i class="ti ti-arrow-up-right" aria-hidden="true"></i> สร้างคำขอเบิก
               </button>
             </div>
           </div>
@@ -285,7 +285,9 @@
                 <select id="histFilter" class="form-control" onchange="renderHistory()" style="width:150px">
                   <option value="">ทั้งหมด</option>
                   <option value="รับ">รับสินค้าเข้า</option>
-                  <option value="เบิก">เบิกสินค้าออก</option>
+                  <option value="ขอเบิก">คำขอเบิก</option>
+                  <option value="เบิก">จ่ายพัสดุ</option>
+                  <option value="คืน">รับคืนพัสดุ</option>
                   <option value="ตรวจนับ">ตรวจนับสต็อก</option>
                   <option value="เพิ่ม">ลงทะเบียนใหม่</option>
                   <option value="แก้ไข">แก้ไขรายละเอียด</option>
@@ -674,7 +676,7 @@
   <div class="modal-bg" id="issueModal">
     <div class="modal">
       <div class="modal-header">
-        <h3 class="modal-title">บันทึกเบิกพัสดุออกจากสต็อก</h3>
+        <h3 class="modal-title">สร้างคำขอเบิกพัสดุ</h3>
         <button class="modal-close" onclick="closeIssueModal()"><i class="ti ti-x" aria-hidden="true"></i></button>
       </div>
       <div class="modal-body">
@@ -728,7 +730,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn" onclick="closeIssueModal()">ยกเลิก</button>
-        <button class="btn btn-danger" onclick="doIssue()">บันทึกเบิกสินค้า</button>
+        <button class="btn btn-danger" onclick="doIssue()">ส่งคำขอเบิก</button>
       </div>
     </div>
   </div>
@@ -793,7 +795,7 @@
     <option value="ชุด"></option>
   </datalist>
 
-  <script src="js/app.js?v=3.6.0"></script>
+  <script src="js/app.js?v=3.7.0"></script>
   <script>
     // Initialize Vanta.js Waves Background
     VANTA.WAVES({
