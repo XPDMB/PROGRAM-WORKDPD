@@ -1832,7 +1832,7 @@
           <table class="details-table">
             <tr>
               <th>รหัสใบเบิก</th>
-              <td>TR-${h.date.replace(/-/g, '')}-${String(index + 1).padStart(4, '0')}</td>
+              <td>${escapeHTML(h.issueNo || ('TR-' + String(h.date || '').replace(/-/g, '') + '-' + String(index + 1).padStart(4, '0')))}</td>
             </tr>
             <tr>
               <th>วันที่ทำรายการ</th>
@@ -2301,7 +2301,7 @@
 
       let reportData = products.map(p => {
         const recv = filteredHistory
-          .filter(h => h.code === p.code && (h.type === 'รับ' || h.type === 'เพิ่ม' || h.type === 'ปรับปรุง' || (h.type === 'ตรวจนับ' && Number(h.difference || 0) > 0)))
+          .filter(h => h.code === p.code && (h.type === 'รับ' || h.type === 'คืน' || h.type === 'เพิ่ม' || h.type === 'ปรับปรุง' || (h.type === 'ตรวจนับ' && Number(h.difference || 0) > 0)))
           .reduce((sum, h) => sum + (h.type === 'ตรวจนับ' ? Number(h.difference || 0) : Number(h.qty || 0)), 0);
 
         const issue = filteredHistory
@@ -2403,7 +2403,7 @@
 
       let reportData = products.map(p => {
         const recv = filteredHistory
-          .filter(h => h.code === p.code && (h.type === 'รับ' || h.type === 'เพิ่ม' || h.type === 'ปรับปรุง'))
+          .filter(h => h.code === p.code && (h.type === 'รับ' || h.type === 'คืน' || h.type === 'เพิ่ม' || h.type === 'ปรับปรุง'))
           .reduce((sum, h) => sum + h.qty, 0);
 
         const issue = filteredHistory
@@ -2662,7 +2662,7 @@
 
       let reportData = products.map(p => {
         const recv = filteredHistory
-          .filter(h => h.code === p.code && (h.type === 'รับ' || h.type === 'เพิ่ม' || h.type === 'ปรับปรุง'))
+          .filter(h => h.code === p.code && (h.type === 'รับ' || h.type === 'คืน' || h.type === 'เพิ่ม' || h.type === 'ปรับปรุง'))
           .reduce((sum, h) => sum + h.qty, 0);
 
         const issue = filteredHistory
