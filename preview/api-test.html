@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>DPD Stock API Test</title>
+  <style>
+    body{font-family:system-ui,sans-serif;max-width:760px;margin:48px auto;padding:0 20px;background:#0f172a;color:#e2e8f0}
+    .card{background:#111c30;border:1px solid #334155;border-radius:14px;padding:24px}
+    .pending{color:#fbbf24}.ok{color:#34d399}.error{color:#fb7185}
+    pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#020617;padding:16px;border-radius:10px}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>DPD Stock API Test</h1>
+    <p>ทดสอบแบบอ่านอย่างเดียวกับ Web App ที่จำกัดเฉพาะเจ้าของ</p>
+    <p id="status" class="pending">กำลังตรวจสอบ…</p>
+    <pre id="result">รอผลจาก Google Apps Script</pre>
+  </main>
+  <script>
+    const endpoint = 'https://script.google.com/macros/s/AKfycbyeObiwpNP_GPcvgOrIvVeWEPYxJhPzFuCSgx3DHaBj4H5esqtotH2GUc7857yzGW4V/exec?action=health';
+    const statusEl = document.getElementById('status');
+    const resultEl = document.getElementById('result');
+    fetch(endpoint,{method:'GET',credentials:'include',cache:'no-store',redirect:'follow'})
+      .then(async response => {
+        const text = await response.text();
+        let data;
+        try { data = JSON.parse(text); } catch (_) {
+          throw new Error('ได้รับคำตอบที่ไม่ใช่ JSON (อาจเป็นหน้าลงชื่อเข้าใช้ Google): ' + text.slice(0,160));
+        }
+        if (!response.ok || !data.ok) throw new Error(JSON.stringify(data));
+        statusEl.textContent = 'เชื่อมต่อ API สำเร็จ';
+        statusEl.className = 'ok';
+        resultEl.textContent = JSON.stringify(data,null,2);
+      })
+      .catch(error => {
+        statusEl.textContent = 'เชื่อมต่อ API ไม่สำเร็จ';
+        statusEl.className = 'error';
+        resultEl.textContent = String(error && error.message ? error.message : error);
+      });
+  </script>
+</body>
+</html>
