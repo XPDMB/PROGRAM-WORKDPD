@@ -42,7 +42,7 @@ python -m http.server 8080
 6. เพิ่ม Audit Log และการสำรองข้อมูลแบบมีเวอร์ชัน
 7. ลบข้อมูลจริงและรหัสผ่านออกจาก Git history
 
-รายละเอียดอยู่ที่ [แผน Google Workspace](docs/GOOGLE_WORKSPACE_AUTH_PLAN.md) และ [นโยบายความปลอดภัย](SECURITY.md)
+รายละเอียดอยู่ที่ [แผน Google Workspace](docs/GOOGLE_WORKSPACE_AUTH_PLAN.md) และ [นโยบายความปลอดภัย](SECURITY.md)\n\nBackend Google Sheets รุ่นเตรียมใช้งานอยู่ที่ `google-apps-script/` พร้อม [คู่มือติดตั้งและ Deploy](docs/GOOGLE_SHEETS_BACKEND_SETUP.md) โดย Preview ยังคงเป็น Demo และไม่เชื่อมข้อมูลจริง
 
 ## โหมดทดสอบสาธารณะ
 
