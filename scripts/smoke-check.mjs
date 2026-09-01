@@ -20,9 +20,34 @@ const checks = [
   ['Backup validation is enforced', () => {
     if (!app.includes('validateBackupData(JSON.parse')) throw new Error('Backup validation is not used');
   }],
-  ['Approval and rejection exist', () => {
-    if (!app.includes('window.approveIssue') || !app.includes('window.rejectIssue')) {
-      throw new Error('Incomplete approval workflow');
+  ['Complete requisition lifecycle exists', () => {
+    const markers = [
+      'window.approveIssue',
+      'window.rejectIssue',
+      'window.cancelIssue',
+      'window.dispenseIssue',
+      'window.returnIssue',
+      'window.closeIssueRecord',
+      "generateDocumentNumber('REQ', 'requestNo')",
+      "generateDocumentNumber('ISS', 'issueNo')",
+      "generateDocumentNumber('RET', 'returnNo')",
+      "type: 'คืน'"
+    ];
+    for (const marker of markers) {
+      if (!app.includes(marker)) throw new Error('Missing requisition marker: ' + marker);
+    }
+
+    const approval = app.slice(app.indexOf('window.approveIssue'), app.indexOf('window.rejectIssue'));
+    if (approval.includes('product.qty -=')) throw new Error('Approval must not deduct stock');
+
+    const dispense = app.slice(app.indexOf('window.dispenseIssue'), app.indexOf('window.returnIssue'));
+    if (!dispense.includes('product.qty -= request.qty')) throw new Error('Dispense must deduct stock');
+
+    const itemReturn = app.slice(app.indexOf('window.returnIssue'), app.indexOf('window.closeIssueRecord'));
+    if (!itemReturn.includes('product.qty += request.qty')) throw new Error('Return must restore stock');
+
+    if (!html.includes('<option value="ขอเบิก">') || !html.includes('<option value="คืน">')) {
+      throw new Error('Missing requisition history filters');
     }
   }],
   ['Physical stocktake is complete', () => {
