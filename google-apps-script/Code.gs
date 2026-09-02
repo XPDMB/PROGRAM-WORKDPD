@@ -13,6 +13,15 @@ const DPD = Object.freeze({
     idempotency: ['requestId', 'at', 'email', 'action', 'responseJson']
   },
   roles: ['viewer', 'staff', 'approver', 'admin'],
+  actionRoles: {
+    upsertProduct: ['staff', 'admin'], deleteProduct: ['admin'],
+    receiveStock: ['staff', 'admin'], stocktake: ['staff', 'admin'],
+    createRequest: ['viewer', 'staff', 'approver', 'admin'],
+    approveRequest: ['approver', 'admin'], rejectRequest: ['approver', 'admin'],
+    cancelRequest: ['viewer', 'staff', 'approver', 'admin'],
+    dispenseRequest: ['staff', 'admin'], returnRequest: ['staff', 'admin'], closeRequest: ['staff', 'admin'],
+    upsertPersonnel: ['admin'], deletePersonnel: ['admin'], setUserRole: ['admin']
+  },
   maxBodyBytes: 100000,
   maxText: 1000
 });
@@ -85,6 +94,7 @@ function processCommand_(body) {
   const action = cleanText_(body.action, 50);
   const requestId = cleanText_(body.requestId, 100);
   if (!action || !requestId) throw appError_('INVALID_REQUEST', 'action and requestId are required.');
+  requireActionRole_(actor, action);
 
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(30000)) throw appError_('BUSY', 'The database is busy. Please try again.');
@@ -109,8 +119,14 @@ function processCommand_(body) {
 function bootstrap_(actor) {
   const csrfToken = Utilities.getUuid();
   CacheService.getUserCache().put('dpd_csrf', csrfToken, 1800);
-  const requests = listEntities_('requests');
-  const movements = listEntities_('movements');
+  let requests = listEntities_('requests');
+  let movements = listEntities_('movements');
+  if (actor.role === 'viewer') {
+    requests = requests.filter(function(request) {
+      return String(request.requestedByEmail || '').toLowerCase() === actor.email;
+    });
+    movements = [];
+  }
   const history = requests.concat(movements).sort(function(a, b) {
     return String(b.date || b.updatedAt || '').localeCompare(String(a.date || a.updatedAt || ''));
   });
@@ -121,7 +137,7 @@ function bootstrap_(actor) {
     csrfToken: csrfToken,
     products: listEntities_('products'),
     history: history,
-    personnel: listEntities_('personnel'),
+    personnel: actor.role === 'admin' ? listEntities_('personnel') : [],
     serverTime: new Date().toISOString()
   };
 }
@@ -423,6 +439,12 @@ function getActor_() {
 
 function requireRole_(actor, allowed) {
   if (allowed.indexOf(actor.role) < 0) throw appError_('FORBIDDEN', 'This role cannot perform the requested action.');
+}
+
+function requireActionRole_(actor, action) {
+  const allowed = DPD.actionRoles[action];
+  if (!allowed) throw appError_('UNKNOWN_ACTION', 'Unknown command action.');
+  requireRole_(actor, allowed);
 }
 
 function publicActor_(actor) {
