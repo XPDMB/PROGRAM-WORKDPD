@@ -103,10 +103,13 @@ const checks = [
     new Function(backend);
     JSON.parse(manifest);
     const markers = [
-      'Session.getActiveUser().getEmail()',
-      "PropertiesService.getScriptProperties().getProperty('ALLOWED_DOMAIN')",
+      "getProperty('AUTH_PEPPER')",
+      'passwordHash_',
+      'authenticateSession_',
+      'CacheService.getScriptCache()',
+      'failedAttempts >= DPD.auth.maxFailures',
       'LockService.getScriptLock()',
-      "CacheService.getUserCache().put('dpd_csrf'",
+      'sessionToken',
       'verifyCsrf_',
       'findIdempotent_',
       'VERSION_CONFLICT',
@@ -120,11 +123,17 @@ const checks = [
     for (const marker of markers) {
       if (!backend.includes(marker)) throw new Error('Missing backend security marker: ' + marker);
     }
-    if (!backendGuide.includes('User accessing the web app')) {
-      throw new Error('Deployment guide must require user-accessing execution');
+    if (!backendGuide.includes('Execute as: **Me / User deploying**')) {
+      throw new Error('Deployment guide must require owner execution for internal accounts');
     }
-    if (!backendGuide.includes('ห้ามเลือก **Anyone, even anonymous**')) {
-      throw new Error('Deployment guide must reject anonymous access');
+    if (!backendGuide.includes('Who has access: **Anyone**')) {
+      throw new Error('Deployment guide must document the public login endpoint');
+    }
+    if (!backendGuide.includes('ไม่เก็บข้อความตรง ๆ')) {
+      throw new Error('Deployment guide must prohibit plaintext passwords');
+    }
+    if (!JSON.parse(manifest).webapp || JSON.parse(manifest).webapp.access !== 'ANYONE_ANONYMOUS') {
+      throw new Error('Manifest must expose the login page for internal accounts');
     }
   }],
   ['No production backend is enabled in Preview', () => {
