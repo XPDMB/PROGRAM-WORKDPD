@@ -1,165 +1,95 @@
 # การติดตั้ง Google Sheets Backend สำหรับ DPD Stock
 
-Backend อยู่ใน google-apps-script/Code.gs และออกแบบสำหรับผู้ใช้ภายใน 5–6 คน โดย Google Sheets เป็นฐานข้อมูลส่วนกลาง ส่วน GitHub เป็นที่เก็บและตรวจสอบเวอร์ชันโค้ด
+Backend อยู่ใน `google-apps-script/Code.gs` และออกแบบสำหรับผู้ใช้ภายใน 5–6 คน โดย Google Sheets เป็นฐานข้อมูลส่วนกลาง ส่วน GitHub เก็บและตรวจสอบเวอร์ชันโค้ด
 
-> อย่านำข้อมูลจริงไปใส่ใน Preview และอย่าเปลี่ยน GOOGLE_SCRIPT_URL จนกว่าการตั้งค่าบัญชีและสิทธิ์จะผ่านทั้งหมด
+> GitHub Pages เป็น Demo เท่านั้น ระบบที่ใช้ข้อมูลจริงให้เปิดผ่าน Apps Script Web App
 
 ## ความสามารถ
 
-- บทบาท viewer, staff, approver และ admin
-- ตรวจอีเมลผู้ใช้จาก Google Workspace ทุกคำสั่ง
-- จำกัดโดเมนด้วย ALLOWED_DOMAIN และตาราง Users
-- ใช้ Script Lock ป้องกันการแก้ยอดพร้อมกัน
-- ใช้ version ป้องกันการเขียนทับข้อมูลใหม่จากอีกอุปกรณ์
-- ใช้ requestId ป้องกันคำสั่งเดิมถูกบันทึกซ้ำ
-- ใช้ CSRF token อายุ 30 นาที
-- บันทึก Audit Log
-- รองรับรับเข้า ตรวจนับ ขอเบิก อนุมัติ ปฏิเสธ ยกเลิก จ่าย คืน และปิดบางส่วน
+- ชื่อผู้ใช้ภายใน ไม่ต้องมี Gmail
+- 4 บทบาท: viewer, staff, approver และ admin
+- รหัสผ่านเก็บแบบ HMAC-SHA256 พร้อม salt และ pepper ไม่เก็บข้อความตรง ๆ
+- session อายุสูงสุด 6 ชั่วโมงและ CSRF token ผูกกับ session
+- กรอกรหัสผิดครบ 5 ครั้งจะล็อกบัญชีชั่วคราว 15 นาที
+- Script Lock, optimistic version, idempotency และ Audit Log
+- รับเข้า ตรวจนับ ขอเบิก อนุมัติ ปฏิเสธ ยกเลิก จ่าย คืน และปิดยอด
 
 ## 1. เตรียม Google Sheet
 
-1. สร้าง Google Sheet ใหม่ในบัญชีหน่วยงาน
-2. ตั้งชื่อ เช่น DPD Stock Database
-3. คัดลอก Spreadsheet ID จาก URL
+1. สร้าง Google Sheet ในบัญชีผู้ดูแลระบบ
+2. คัดลอก Spreadsheet ID จาก URL
+3. อย่าเผยแพร่ Spreadsheet ID หรือข้อมูลจริงใน GitHub
 
-~~~text
-https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit
-~~~
-
-ไม่ต้องสร้างชีตย่อยเอง ฟังก์ชัน setupDatabase() จะสร้าง Users, Products, Requests, Movements, Personnel, Audit และ Idempotency
+ฟังก์ชัน `setupDatabase()` จะสร้าง Accounts, Users, Products, Requests, Movements, Personnel, Audit และ Idempotency
 
 ## 2. สร้าง Apps Script Project
 
-1. ใน Google Sheet เลือก **ส่วนขยาย → Apps Script**
-2. คัดลอก google-apps-script/Code.gs ไปใส่ Code.gs
-3. เปิด Project Settings และเลือกแสดงไฟล์ manifest
-4. คัดลอก google-apps-script/appsscript.json
-5. บันทึกโปรเจกต์
-
-ห้ามใส่ Spreadsheet ID, อีเมลจริง หรือ URL Deployment ลงใน GitHub
+1. เปิด Apps Script
+2. นำ `Code.gs`, `TestApp.html` และ `appsscript.json` จากโฟลเดอร์ `google-apps-script` ไปใช้
+3. บันทึกโปรเจกต์
 
 ## 3. ตั้งค่า Script Properties
 
 ไปที่ **Project Settings → Script Properties** แล้วเพิ่ม:
 
-| Property | ตัวอย่าง | หน้าที่ |
-|---|---|---|
-| SPREADSHEET_ID | ID จาก Google Sheet | ระบุฐานข้อมูล |
-| ALLOWED_DOMAIN | youragency.go.th | อนุญาตเฉพาะโดเมนหน่วยงาน |
-| INITIAL_ADMIN_EMAIL | อีเมลผู้ดูแล | สร้าง Admin คนแรก |
+| Property | หน้าที่ |
+|---|---|
+| SPREADSHEET_ID | ID ของ Google Sheet ฐานข้อมูล |
+| INITIAL_ADMIN_EMAIL | ค่าเดิมสำหรับชีต Users และความเข้ากันได้ย้อนหลัง |
+| AUTH_PEPPER | ระบบสร้างให้อัตโนมัติเมื่อเริ่มใช้งาน ห้ามนำขึ้น GitHub |
 
-## 4. สร้างฐานข้อมูล
+## 4. สร้างฐานข้อมูลและบัญชีแรก
 
-1. เลือกฟังก์ชัน setupDatabase
-2. กด Run
-3. อนุญาตสิทธิ์ Google Sheets และการอ่านอีเมลผู้ใช้
-4. ตรวจว่า Google Sheet มีครบ 7 แท็บ
-5. ตรวจแถวแรกของ Users ว่าเป็น Admin ที่ถูกต้อง
+1. รัน `setupDatabase()` และอนุญาตสิทธิ์ Google Sheets
+2. Deploy Web App ชั่วคราว
+3. เปิดหน้า Web App แล้วใช้แบบฟอร์มเริ่มต้นเพื่อสร้างบัญชี admin
+4. จากเมนู **สิทธิ์ผู้ใช้** ให้ admin สร้างบัญชี viewer, staff หรือ approver ตามต้องการ
 
-หากหัวตารางเดิมไม่ตรง ฟังก์ชันจะหยุดเพื่อป้องกันการเขียนทับชีตผิดชุด
+ห้ามใส่รหัสผ่านหรือค่า AUTH_PEPPER ลงใน source code, commit, issue หรือ Pull Request
 
-## 5. เพิ่มผู้ใช้
+## 5. Deploy Web App สำหรับทดสอบ
 
-| email | role | displayName | active |
-|---|---|---|---|
-| user@domain | viewer | ผู้ขอเบิก | TRUE |
-| stock@domain | staff | เจ้าหน้าที่คลัง | TRUE |
-| approver@domain | approver | ผู้อนุมัติ | TRUE |
-| admin@domain | admin | ผู้ดูแลระบบ | TRUE |
+ตั้งค่า:
 
-อย่าใช้รหัสผ่านหน้า Demo กับระบบจริง ระบบจริงใช้บัญชี Google Workspace
+- Execute as: **Me / User deploying**
+- Who has access: **Anyone**
+- ใช้ URL ที่ลงท้ายด้วย `/exec`
 
-## 6. Deploy Web App
+การเปิด URL แบบนี้ทำให้หน้าเข้าสู่ระบบเข้าถึงได้ แต่คำสั่งอ่านและเขียนข้อมูลต้องมี sessionToken และ CSRF token ที่ระบบออกให้หลังล็อกอินสำเร็จ ทุกคำสั่งยังตรวจบทบาทฝั่งเซิร์ฟเวอร์
 
-เลือก **Deploy → New deployment → Web app** และตั้งค่า:
+URL `/dev` เหมาะเฉพาะผู้มีสิทธิ์แก้ Apps Script และใช้ทดสอบโค้ดล่าสุด
 
-- Execute as: **User accessing the web app**
-- Who has access: **เฉพาะผู้ใช้ภายในโดเมน/องค์กร**
-- ห้ามเลือก **Anyone, even anonymous**
-- คัดลอก URL ที่ลงท้ายด้วย /exec
+## 6. ทดสอบสิทธิ์
 
-การ Deploy แบบ Execute as me ไม่เหมาะ เพราะ Backend ต้องระบุผู้ใช้ที่ทำรายการจริง หากอีเมลว่าง Backend จะตอบ IDENTITY_UNAVAILABLE
+- viewer: ดูสินค้าและสร้าง/ยกเลิกคำขอของตน
+- approver: อนุมัติหรือปฏิเสธคำขอ
+- staff: รับเข้า ตรวจนับ จ่าย และรับคืน
+- admin: จัดการทุกส่วนรวมถึงบัญชี
 
-URL /dev ใช้ได้เฉพาะผู้มีสิทธิ์แก้ Apps Script และเหมาะสำหรับทดสอบโค้ดล่าสุดเท่านั้น
+ทดสอบลำดับอย่างน้อยหนึ่งรอบ: viewer สร้างคำขอ → admin/approver อนุมัติ → staff จ่าย → staff รับคืนหรือปิดยอด
 
-## 7. ทดสอบก่อนเชื่อมหน้าเว็บ
+## 7. ความปลอดภัยในช่วงทดสอบ
 
-เปิดด้วยบัญชีหน่วยงาน:
-
-~~~text
-YOUR_DEPLOYMENT_URL?action=health
-YOUR_DEPLOYMENT_URL?action=bootstrap
-~~~
-
-ผลที่ต้องได้:
-
-- ok เป็น true
-- อีเมลและ role ตรงกับผู้ใช้
-- bootstrap มี csrfToken
-- ผู้ใช้ที่ไม่อยู่ใน Users ถูกปฏิเสธ
-- บัญชีนอกโดเมนถูกปฏิเสธ
-
-## 8. รูปแบบคำสั่งเขียนข้อมูล
-
-ทุก POST ต้องส่ง action, requestId, csrfToken และ payload เช่น:
-
-~~~json
-{
-  "action": "createRequest",
-  "requestId": "UUID-ที่ไม่ซ้ำ",
-  "csrfToken": "ค่าจาก bootstrap",
-  "payload": {
-    "request": {
-      "code": "DPD-001",
-      "qty": 10,
-      "user": "ชื่อผู้รับ",
-      "userPosition": "ตำแหน่ง",
-      "note": "วัตถุประสงค์"
-    }
-  }
-}
-~~~
-
-คำสั่งที่รองรับ:
-
-- upsertProduct, deleteProduct
-- receiveStock, stocktake
-- createRequest
-- approveRequest, rejectRequest, cancelRequest
-- dispenseRequest, returnRequest, closeRequest
-- upsertPersonnel, deletePersonnel
-- setUserRole
-
-คำสั่งแก้ข้อมูลเดิมควรส่ง expectedVersion หากข้อมูลถูกแก้จากอีกเครื่อง Backend จะตอบ VERSION_CONFLICT ให้โหลดข้อมูลใหม่แทนการเขียนทับ
-
-## 9. GitHub Pages และระบบจริง
-
-GitHub Pages เป็น Static Site จึงไม่สามารถเก็บ secret หรือยืนยันสิทธิ์ฝั่งเซิร์ฟเวอร์ได้ การเชื่อมกับ Apps Script ต้องทดสอบการเข้าสู่ระบบและ cross-origin ของโดเมนจริงก่อน
-
-แนวทางที่ปลอดภัยที่สุด:
-
-1. เก็บ source code และ version control ใน GitHub
-2. ให้ Apps Script Web App เป็นจุดที่ผู้ใช้เปิดระบบจริง
-3. ให้ Preview บน GitHub Pages ใช้ Demo Mode ต่อไป
-4. อย่าเปิด Backend แบบ anonymous เพื่อแก้ปัญหา cross-origin
+- ใช้เฉพาะข้อมูลทดสอบ
+- ไม่ส่งรหัสผ่านผ่านแชตสาธารณะหรือ GitHub
+- หากใช้รหัสเดียวกันหลายบัญชี ให้ถือว่าเป็นโหมดทดสอบชั่วคราว
+- ก่อนเปิดใช้งานจริง ให้เปลี่ยนเป็นรหัสเฉพาะบุคคลและยาวกว่ารหัสทดสอบ
+- ปิดบัญชีที่ไม่ใช้งาน และตรวจ Audit เป็นประจำ
+- Preview บน GitHub Pages ต้องคงเป็น Demo และไม่เชื่อมฐานข้อมูลจริง
 
 ## Checklist ก่อนเปิดจริง
 
-- [ ] ใช้ Google Workspace ของหน่วยงาน
-- [ ] ตั้ง ALLOWED_DOMAIN
-- [ ] Users มีเฉพาะผู้ได้รับอนุญาต
-- [ ] Deploy แบบ User accessing the web app
-- [ ] จำกัดการเข้าถึงเฉพาะองค์กร
-- [ ] viewer ไม่สามารถอนุมัติหรือแก้สต็อก
-- [ ] approver ไม่สามารถจ่ายพัสดุ
-- [ ] staff ไม่สามารถอนุมัติ
+- [ ] แต่ละคนมีบัญชีและรหัสเฉพาะบุคคล
+- [ ] admin สำรองข้อมูลและทดสอบกู้คืน
+- [ ] viewer, approver และ staff ถูกจำกัดสิทธิ์ถูกต้อง
 - [ ] ทดสอบเบิกพร้อมกันจากสองเครื่อง
-- [ ] Audit แสดงอีเมล action และ requestId
-- [ ] Preview ยังเป็น DEMO และไม่เชื่อมฐานข้อมูลจริง
+- [ ] Audit แสดง username, action และ requestId
+- [ ] ไม่มีรหัสผ่าน, AUTH_PEPPER หรือ Spreadsheet ID ใน GitHub
+- [ ] GitHub Pages ยังเป็น Demo
 
 ## เอกสาร Google
 
 - [Web Apps](https://developers.google.com/apps-script/guides/web)
-- [Session และ Active User](https://developers.google.com/apps-script/reference/base/session)
+- [Manifest web app](https://developers.google.com/apps-script/manifest/web-app-api-executable)
 - [Lock Service](https://developers.google.com/apps-script/reference/lock)
 - [Cache Service](https://developers.google.com/apps-script/reference/cache/cache-service)
