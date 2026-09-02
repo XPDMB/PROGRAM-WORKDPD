@@ -41,9 +41,16 @@ function setupDatabase() {
 }
 
 function doGet(e) {
+  const requestedAction = cleanText_((e && e.parameter && e.parameter.action) || '', 40);
+  if (!requestedAction) {
+    getActor_();
+    return HtmlService.createHtmlOutputFromFile('TestApp')
+      .setTitle('DPD Stock - Private Test')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.DEFAULT);
+  }
   return respond_(function() {
     const actor = getActor_();
-    const action = cleanText_((e && e.parameter && e.parameter.action) || 'bootstrap', 40);
+    const action = requestedAction;
     if (action === 'health') {
       return { ok: true, service: 'dpd-stock-backend', schemaVersion: 1, user: publicActor_(actor) };
     }
@@ -60,31 +67,43 @@ function doPost(e) {
     let body;
     try { body = JSON.parse(raw); } catch (err) { throw appError_('INVALID_JSON', 'Request body must be valid JSON.'); }
 
-    const actor = getActor_();
-    verifyCsrf_(body.csrfToken);
-    const action = cleanText_(body.action, 50);
-    const requestId = cleanText_(body.requestId, 100);
-    if (!action || !requestId) throw appError_('INVALID_REQUEST', 'action and requestId are required.');
-
-    const lock = LockService.getScriptLock();
-    if (!lock.tryLock(30000)) throw appError_('BUSY', 'The database is busy. Please try again.');
-    try {
-      const previous = findIdempotent_(requestId, actor.email);
-      if (previous) return previous;
-
-      const result = executeCommand_(action, body.payload || {}, actor);
-      const response = { ok: true, requestId: requestId, result: result };
-      writeIdempotent_(requestId, actor, action, response);
-      writeAudit_(actor, action, result.entityType || '', result.entityId || '', requestId, {
-        version: result.version || null,
-        documentNo: result.documentNo || ''
-      });
-      SpreadsheetApp.flush();
-      return response;
-    } finally {
-      lock.releaseLock();
-    }
+    return processCommand_(body);
   });
+}
+
+function uiBootstrap() {
+  return bootstrap_(getActor_());
+}
+
+function uiCommand(body) {
+  return processCommand_(body || {});
+}
+
+function processCommand_(body) {
+  const actor = getActor_();
+  verifyCsrf_(body.csrfToken);
+  const action = cleanText_(body.action, 50);
+  const requestId = cleanText_(body.requestId, 100);
+  if (!action || !requestId) throw appError_('INVALID_REQUEST', 'action and requestId are required.');
+
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(30000)) throw appError_('BUSY', 'The database is busy. Please try again.');
+  try {
+    const previous = findIdempotent_(requestId, actor.email);
+    if (previous) return previous;
+
+    const result = executeCommand_(action, body.payload || {}, actor);
+    const response = { ok: true, requestId: requestId, result: result };
+    writeIdempotent_(requestId, actor, action, response);
+    writeAudit_(actor, action, result.entityType || '', result.entityId || '', requestId, {
+      version: result.version || null,
+      documentNo: result.documentNo || ''
+    });
+    SpreadsheetApp.flush();
+    return response;
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function bootstrap_(actor) {
@@ -615,3 +634,4 @@ function safeCell_(value) {
   const text = cleanText_(value, 5000);
   return /^[=+\-@]/.test(text) ? "'" + text : text;
 }
+
