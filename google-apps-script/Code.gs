@@ -5,6 +5,7 @@
 const DPD = Object.freeze({
   sheets: {
     users: ['email', 'role', 'displayName', 'active', 'updatedAt'],
+    accounts: ['username', 'role', 'displayName', 'active', 'updatedAt', 'passwordHash', 'passwordSalt', 'mustChangePassword', 'failedAttempts', 'lockUntil', 'passwordVersion', 'lastLoginAt'],
     products: ['id', 'key', 'type', 'status', 'code', 'requestId', 'updatedAt', 'version', 'dataJson'],
     requests: ['id', 'key', 'type', 'status', 'code', 'requestId', 'updatedAt', 'version', 'dataJson'],
     movements: ['id', 'key', 'type', 'status', 'code', 'requestId', 'updatedAt', 'version', 'dataJson'],
@@ -22,6 +23,7 @@ const DPD = Object.freeze({
     dispenseRequest: ['staff', 'admin'], returnRequest: ['staff', 'admin'], closeRequest: ['staff', 'admin'],
     upsertPersonnel: ['admin'], deletePersonnel: ['admin'], setUserRole: ['admin']
   },
+  auth: { sessionSeconds: 21600, maxFailures: 5, lockMinutes: 15, minNewPassword: 10 },
   maxBodyBytes: 100000,
   maxText: 1000
 });
@@ -52,19 +54,13 @@ function setupDatabase() {
 function doGet(e) {
   const requestedAction = cleanText_((e && e.parameter && e.parameter.action) || '', 40);
   if (!requestedAction) {
-    getActor_();
     return HtmlService.createHtmlOutputFromFile('TestApp')
-      .setTitle('DPD Stock - Private Test')
+      .setTitle('DPD Stock')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.DEFAULT);
   }
   return respond_(function() {
-    const actor = getActor_();
-    const action = requestedAction;
-    if (action === 'health') {
-      return { ok: true, service: 'dpd-stock-backend', schemaVersion: 1, user: publicActor_(actor) };
-    }
-    if (action !== 'bootstrap') throw appError_('UNKNOWN_ACTION', 'Unknown GET action.');
-    return bootstrap_(actor);
+    if (requestedAction !== 'health') throw appError_('UNKNOWN_ACTION', 'Unknown GET action.');
+    return { ok: true, service: 'dpd-stock-backend', schemaVersion: 1, auth: 'password-session' };
   });
 }
 
@@ -80,8 +76,30 @@ function doPost(e) {
   });
 }
 
-function uiBootstrap() {
-  return bootstrap_(getActor_());
+function uiAuthStatus() {
+  return authStatus_();
+}
+
+function uiInitializeAdmin(input) {
+  return initializeAdmin_(input || {});
+}
+
+function uiLogin(input) {
+  return login_(input || {});
+}
+
+function uiLogout(sessionToken) {
+  revokeSession_(sessionToken);
+  return { ok: true };
+}
+
+function uiChangePassword(input) {
+  return changePassword_(input || {});
+}
+
+function uiBootstrap(sessionToken) {
+  const actor = authenticateSession_(sessionToken, false);
+  return bootstrap_(actor);
 }
 
 function uiCommand(body) {
@@ -89,8 +107,8 @@ function uiCommand(body) {
 }
 
 function processCommand_(body) {
-  const actor = getActor_();
-  verifyCsrf_(body.csrfToken);
+  const actor = authenticateSession_(body.sessionToken, false);
+  verifyCsrf_(body.csrfToken, actor.csrfToken);
   const action = cleanText_(body.action, 50);
   const requestId = cleanText_(body.requestId, 100);
   if (!action || !requestId) throw appError_('INVALID_REQUEST', 'action and requestId are required.');
@@ -117,8 +135,6 @@ function processCommand_(body) {
 }
 
 function bootstrap_(actor) {
-  const csrfToken = Utilities.getUuid();
-  CacheService.getUserCache().put('dpd_csrf', csrfToken, 1800);
   let requests = listEntities_('requests');
   let movements = listEntities_('movements');
   if (actor.role === 'viewer') {
@@ -134,10 +150,11 @@ function bootstrap_(actor) {
     ok: true,
     schemaVersion: 1,
     profile: publicActor_(actor),
-    csrfToken: csrfToken,
+    csrfToken: actor.csrfToken,
     products: listEntities_('products'),
     history: history,
     personnel: actor.role === 'admin' ? listEntities_('personnel') : [],
+    accounts: actor.role === 'admin' ? listPublicAccounts_() : [],
     serverTime: new Date().toISOString()
   };
 }
@@ -398,18 +415,32 @@ function deletePersonnel_(payload, actor) {
 
 function setUserRole_(payload, actor) {
   requireRole_(actor, ['admin']);
-  const email = cleanRequired_(payload.email, 320, 'Email').toLowerCase();
+  const username = normalizeUsername_(payload.username);
   const role = cleanRequired_(payload.role, 20, 'Role').toLowerCase();
   if (DPD.roles.indexOf(role) < 0) throw appError_('INVALID_ROLE', 'Unknown role.');
-  const domain = configuredDomain_();
-  if (domain && email.split('@')[1] !== domain) throw appError_('FORBIDDEN_DOMAIN', 'Email is outside the allowed domain.');
-  const ss = database_();
-  const sheet = ss.getSheetByName(sheetName_('users'));
-  const rowIndex = findUserRow_(sheet, email);
-  const row = [safeCell_(email), role, safeCell_(cleanText_(payload.displayName || email, 200)), payload.active !== false, new Date().toISOString()];
-  if (rowIndex > 0) sheet.getRange(rowIndex, 1, 1, row.length).setValues([row]);
-  else sheet.appendRow(row);
-  return { entityType: 'user', entityId: email, role: role, active: payload.active !== false };
+  const existing = getAccount_(username);
+  if (username === actor.username && (role !== 'admin' || payload.active === false)) {
+    throw appError_('SELF_PROTECTION', 'Admin cannot remove or disable their own access.');
+  }
+  const account = existing || {
+    username: username, failedAttempts: 0, lockUntil: '', passwordVersion: 0, lastLoginAt: ''
+  };
+  account.role = role;
+  account.displayName = cleanRequired_(payload.displayName || username, 200, 'Display name');
+  account.active = payload.active !== false;
+  const initialPassword = String(payload.initialPassword || '');
+  if (!existing && !initialPassword) throw appError_('PASSWORD_REQUIRED', 'Temporary password is required for a new account.');
+  if (initialPassword) {
+    validateInitialPassword_(initialPassword);
+    account.passwordSalt = randomSecret_();
+    account.passwordHash = passwordHash_(initialPassword, account.passwordSalt);
+    account.mustChangePassword = false;
+    account.passwordVersion = Number(account.passwordVersion || 0) + 1;
+    account.failedAttempts = 0;
+    account.lockUntil = '';
+  }
+  saveAccount_(account);
+  return { entityType: 'user', entityId: username, role: role, active: account.active, username: username };
 }
 
 function appendActivity_(request, action, label, actor, qty, documentNo) {
@@ -419,22 +450,6 @@ function appendActivity_(request, action, label, actor, qty, documentNo) {
     at: new Date().toISOString(), qty: Number(qty || 0), documentNo: documentNo || ''
   });
   request.activityLog = request.activityLog.slice(-100);
-}
-
-function getActor_() {
-  const email = String(Session.getActiveUser().getEmail() || '').trim().toLowerCase();
-  if (!email) throw appError_('IDENTITY_UNAVAILABLE', 'User email is unavailable. Deploy as user accessing the web app.');
-  const domain = configuredDomain_();
-  if (domain && email.split('@')[1] !== domain) throw appError_('FORBIDDEN_DOMAIN', 'Account is outside the allowed domain.');
-  const sheet = database_().getSheetByName(sheetName_('users'));
-  const rowIndex = findUserRow_(sheet, email);
-  if (rowIndex < 2) throw appError_('USER_NOT_REGISTERED', 'User is not registered.');
-  const row = sheet.getRange(rowIndex, 1, 1, DPD.sheets.users.length).getValues()[0];
-  const role = String(row[1] || '').toLowerCase();
-  if (DPD.roles.indexOf(role) < 0 || row[3] === false || String(row[3]).toLowerCase() === 'false') {
-    throw appError_('USER_DISABLED', 'User is disabled or has an invalid role.');
-  }
-  return { email: email, role: role, displayName: String(row[2] || email) };
 }
 
 function requireRole_(actor, allowed) {
@@ -448,15 +463,136 @@ function requireActionRole_(actor, action) {
 }
 
 function publicActor_(actor) {
-  return { email: actor.email, role: actor.role, displayName: actor.displayName };
+  return { username: actor.username, email: actor.username, role: actor.role, displayName: actor.displayName };
 }
 
-function configuredDomain_() {
-  return String(PropertiesService.getScriptProperties().getProperty('ALLOWED_DOMAIN') || '').trim().toLowerCase();
+function authStatus_() {
+  const sheet = accountSheet_();
+  const initialized = sheet.getLastRow() >= 2;
+  const activeEmail = String(Session.getActiveUser().getEmail() || '').trim().toLowerCase();
+  const effectiveEmail = String(Session.getEffectiveUser().getEmail() || '').trim().toLowerCase();
+  return { initialized: initialized, canInitialize: !initialized && !!activeEmail && activeEmail === effectiveEmail };
 }
 
-function verifyCsrf_(token) {
-  const expected = CacheService.getUserCache().get('dpd_csrf');
+function initializeAdmin_(input) {
+  const status = authStatus_();
+  if (status.initialized) throw appError_('ALREADY_INITIALIZED', 'Authentication is already initialized.');
+  if (!status.canInitialize) throw appError_('FORBIDDEN', 'Only the script owner can initialize authentication.');
+  const username = normalizeUsername_(input.username || 'admin');
+  const password = String(input.password || '');
+  validateInitialPassword_(password);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    if (accountSheet_().getLastRow() >= 2) throw appError_('ALREADY_INITIALIZED', 'Authentication is already initialized.');
+    ensureAuthPepper_();
+    const salt = randomSecret_();
+    saveAccount_({
+      username: username, role: 'admin', displayName: cleanText_(input.displayName || 'ผู้ดูแลระบบ', 200), active: true,
+      passwordHash: passwordHash_(password, salt), passwordSalt: salt, mustChangePassword: false,
+      failedAttempts: 0, lockUntil: '', passwordVersion: 1, lastLoginAt: ''
+    });
+    return { ok: true, username: username, mustChangePassword: false };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function login_(input) {
+  const username = normalizeUsername_(input.username);
+  const password = String(input.password || '');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const account = getAccount_(username);
+    if (!account || account.active === false) {
+      Utilities.sleep(350);
+      throw appError_('INVALID_CREDENTIALS', 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+    }
+    const lockUntil = account.lockUntil ? new Date(account.lockUntil).getTime() : 0;
+    if (lockUntil > Date.now()) throw appError_('ACCOUNT_LOCKED', 'บัญชีถูกล็อกชั่วคราว กรุณาลองใหม่ภายหลัง');
+    if (!constantTimeEqual_(passwordHash_(password, account.passwordSalt), account.passwordHash)) {
+      account.failedAttempts = Number(account.failedAttempts || 0) + 1;
+      if (account.failedAttempts >= DPD.auth.maxFailures) {
+        account.failedAttempts = 0;
+        account.lockUntil = new Date(Date.now() + DPD.auth.lockMinutes * 60000).toISOString();
+      }
+      saveAccount_(account);
+      Utilities.sleep(350);
+      throw appError_('INVALID_CREDENTIALS', 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+    }
+    account.failedAttempts = 0;
+    account.lockUntil = '';
+    account.lastLoginAt = new Date().toISOString();
+    saveAccount_(account);
+    return createSession_(account);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function changePassword_(input) {
+  const actor = authenticateSession_(input.sessionToken, true);
+  const currentPassword = String(input.currentPassword || '');
+  const newPassword = String(input.newPassword || '');
+  validateNewPassword_(newPassword);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const account = requireAccount_(actor.username);
+    if (!constantTimeEqual_(passwordHash_(currentPassword, account.passwordSalt), account.passwordHash)) {
+      throw appError_('INVALID_CREDENTIALS', 'รหัสผ่านปัจจุบันไม่ถูกต้อง');
+    }
+    if (constantTimeEqual_(passwordHash_(newPassword, account.passwordSalt), account.passwordHash)) {
+      throw appError_('PASSWORD_REUSED', 'รหัสผ่านใหม่ต้องไม่เหมือนรหัสผ่านเดิม');
+    }
+    const salt = randomSecret_();
+    account.passwordSalt = salt;
+    account.passwordHash = passwordHash_(newPassword, salt);
+    account.mustChangePassword = false;
+    account.passwordVersion = Number(account.passwordVersion || 0) + 1;
+    saveAccount_(account);
+    revokeSession_(input.sessionToken);
+    return createSession_(account);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function createSession_(account) {
+  const token = randomSecret_();
+  const session = {
+    username: account.username, role: account.role, displayName: account.displayName,
+    passwordVersion: Number(account.passwordVersion || 0), csrfToken: randomSecret_(),
+    expiresAt: Date.now() + DPD.auth.sessionSeconds * 1000
+  };
+  CacheService.getScriptCache().put(sessionCacheKey_(token), JSON.stringify(session), DPD.auth.sessionSeconds);
+  return { ok: true, sessionToken: token, csrfToken: session.csrfToken, profile: publicActor_(session), requiresPasswordChange: account.mustChangePassword === true };
+}
+
+function authenticateSession_(token, allowPasswordChange) {
+  const value = token ? CacheService.getScriptCache().get(sessionCacheKey_(token)) : '';
+  if (!value) throw appError_('SESSION_EXPIRED', 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');
+  let session;
+  try { session = JSON.parse(value); } catch (err) { throw appError_('SESSION_EXPIRED', 'เซสชันไม่ถูกต้อง'); }
+  if (Number(session.expiresAt || 0) <= Date.now()) throw appError_('SESSION_EXPIRED', 'เซสชันหมดอายุ');
+  const account = requireAccount_(session.username);
+  if (account.active === false || Number(account.passwordVersion || 0) !== Number(session.passwordVersion || 0)) {
+    throw appError_('SESSION_REVOKED', 'เซสชันถูกยกเลิก กรุณาเข้าสู่ระบบใหม่');
+  }
+  if (account.mustChangePassword === true && !allowPasswordChange) throw appError_('PASSWORD_CHANGE_REQUIRED', 'กรุณาเปลี่ยนรหัสผ่านก่อนใช้งาน');
+  return { username: account.username, email: account.username, role: account.role, displayName: account.displayName, csrfToken: session.csrfToken, passwordVersion: account.passwordVersion };
+}
+
+function revokeSession_(token) {
+  if (token) CacheService.getScriptCache().remove(sessionCacheKey_(token));
+}
+
+function sessionCacheKey_(token) {
+  return 'dpd_session_' + digestText_(String(token || '')).slice(0, 40);
+}
+
+function verifyCsrf_(token, expected) {
   if (!expected || !token || String(token) !== String(expected)) throw appError_('INVALID_CSRF', 'Session token is missing or expired.');
 }
 
@@ -486,6 +622,114 @@ function findUserRow_(sheet, email) {
   if (!sheet || sheet.getLastRow() < 2) return -1;
   const finder = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).createTextFinder(email).matchEntireCell(true).findNext();
   return finder ? finder.getRow() : -1;
+}
+
+function accountSheet_() {
+  const sheet = database_().getSheetByName(sheetName_('accounts'));
+  if (!sheet) throw appError_('NOT_CONFIGURED', 'Accounts sheet is missing. Run setupDatabase first.');
+  return sheet;
+}
+
+function findAccountRow_(sheet, username) {
+  if (!sheet || sheet.getLastRow() < 2) return -1;
+  const finder = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).createTextFinder(username).matchEntireCell(true).findNext();
+  return finder ? finder.getRow() : -1;
+}
+
+function getAccount_(username) {
+  const sheet = accountSheet_();
+  const rowIndex = findAccountRow_(sheet, username);
+  if (rowIndex < 2) return null;
+  const row = sheet.getRange(rowIndex, 1, 1, DPD.sheets.accounts.length).getValues()[0];
+  return {
+    _row: rowIndex, username: String(row[0] || ''), role: String(row[1] || ''), displayName: String(row[2] || ''),
+    active: row[3] !== false && String(row[3]).toLowerCase() !== 'false', updatedAt: String(row[4] || ''),
+    passwordHash: String(row[5] || ''), passwordSalt: String(row[6] || ''),
+    mustChangePassword: row[7] === true || String(row[7]).toLowerCase() === 'true',
+    failedAttempts: Number(row[8] || 0), lockUntil: String(row[9] || ''), passwordVersion: Number(row[10] || 0), lastLoginAt: String(row[11] || '')
+  };
+}
+
+function requireAccount_(username) {
+  const account = getAccount_(username);
+  if (!account || DPD.roles.indexOf(account.role) < 0) throw appError_('SESSION_REVOKED', 'บัญชีไม่พร้อมใช้งาน');
+  return account;
+}
+
+function saveAccount_(account) {
+  const sheet = accountSheet_();
+  const username = normalizeUsername_(account.username);
+  const rowIndex = account._row || findAccountRow_(sheet, username);
+  const row = [
+    safeCell_(username), safeCell_(account.role), safeCell_(account.displayName || username), account.active !== false,
+    new Date().toISOString(), safeCell_(account.passwordHash), safeCell_(account.passwordSalt), account.mustChangePassword === true,
+    Number(account.failedAttempts || 0), safeCell_(account.lockUntil || ''), Number(account.passwordVersion || 0), safeCell_(account.lastLoginAt || '')
+  ];
+  if (rowIndex > 0) sheet.getRange(rowIndex, 1, 1, row.length).setValues([row]);
+  else sheet.appendRow(row);
+  return getAccount_(username);
+}
+
+function listPublicAccounts_() {
+  const sheet = accountSheet_();
+  if (sheet.getLastRow() < 2) return [];
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, DPD.sheets.accounts.length).getValues().map(function(row) {
+    return {
+      username: String(row[0] || ''), role: String(row[1] || ''), displayName: String(row[2] || ''),
+      active: row[3] !== false && String(row[3]).toLowerCase() !== 'false', updatedAt: String(row[4] || ''),
+      mustChangePassword: row[7] === true || String(row[7]).toLowerCase() === 'true', lastLoginAt: String(row[11] || '')
+    };
+  });
+}
+
+function normalizeUsername_(value) {
+  const username = String(value || '').trim().toLowerCase();
+  if (!/^[a-z0-9._-]{3,40}$/.test(username)) throw appError_('INVALID_USERNAME', 'ชื่อผู้ใช้ต้องมี 3–40 ตัว และใช้ a-z, 0-9, จุด, ขีดล่าง หรือขีดกลาง');
+  return username;
+}
+
+function validateInitialPassword_(password) {
+  if (String(password || '').length < 5 || String(password).length > 128) {
+    throw appError_('WEAK_PASSWORD', 'รหัสเริ่มต้นต้องมีอย่างน้อย 5 ตัว');
+  }
+}
+
+function validateNewPassword_(password) {
+  const value = String(password || '');
+  if (value.length < DPD.auth.minNewPassword || value.length > 128 || !/[A-Za-z]/.test(value) || !/[0-9]/.test(value)) {
+    throw appError_('WEAK_PASSWORD', 'รหัสผ่านใหม่ต้องมีอย่างน้อย 10 ตัว และมีทั้งตัวอักษรกับตัวเลข');
+  }
+}
+
+function ensureAuthPepper_() {
+  const props = PropertiesService.getScriptProperties();
+  let pepper = String(props.getProperty('AUTH_PEPPER') || '');
+  if (!pepper) {
+    pepper = randomSecret_();
+    props.setProperty('AUTH_PEPPER', pepper);
+  }
+  return pepper;
+}
+
+function passwordHash_(password, salt) {
+  const bytes = Utilities.computeHmacSha256Signature(String(password) + '\u0000' + String(salt), ensureAuthPepper_(), Utilities.Charset.UTF_8);
+  return Utilities.base64EncodeWebSafe(bytes);
+}
+
+function digestText_(value) {
+  return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(value), Utilities.Charset.UTF_8));
+}
+
+function randomSecret_() {
+  return Utilities.getUuid() + Utilities.getUuid() + Utilities.getUuid() + Utilities.getUuid();
+}
+
+function constantTimeEqual_(left, right) {
+  const a = String(left || ''), b = String(right || '');
+  let diff = a.length ^ b.length;
+  const length = Math.max(a.length, b.length);
+  for (let i = 0; i < length; i += 1) diff |= (a.charCodeAt(i % Math.max(a.length, 1)) || 0) ^ (b.charCodeAt(i % Math.max(b.length, 1)) || 0);
+  return diff === 0;
 }
 
 function listEntities_(key) {
