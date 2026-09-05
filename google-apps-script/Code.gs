@@ -13,7 +13,7 @@ const DPD = Object.freeze({
     audit: ['id', 'at', 'email', 'role', 'action', 'entityType', 'entityId', 'requestId', 'detailsJson'],
     idempotency: ['requestId', 'at', 'email', 'action', 'responseJson']
   },
-  roles: ['viewer', 'staff', 'approver', 'admin'],
+  roles: ['viewer', 'staff', 'admin'],
   operatorActions: [
     'upsertProduct', 'deleteProduct', 'receiveStock', 'stocktake', 'createRequest',
     'approveRequest', 'rejectRequest', 'cancelRequest', 'dispenseRequest',
@@ -22,9 +22,9 @@ const DPD = Object.freeze({
   actionRoles: {
     upsertProduct: ['staff', 'admin'], deleteProduct: ['admin'],
     receiveStock: ['staff', 'admin'], stocktake: ['staff', 'admin'],
-    createRequest: ['viewer', 'staff', 'approver', 'admin'],
-    approveRequest: ['approver', 'admin'], rejectRequest: ['approver', 'admin'],
-    cancelRequest: ['viewer', 'staff', 'approver', 'admin'],
+    createRequest: ['viewer', 'staff', 'admin'],
+    approveRequest: ['admin'], rejectRequest: ['admin'],
+    cancelRequest: ['viewer', 'staff', 'admin'],
     dispenseRequest: ['staff', 'admin'], returnRequest: ['staff', 'admin'], closeRequest: ['staff', 'admin'],
     upsertPersonnel: ['admin'], deletePersonnel: ['admin'], setUserRole: ['admin']
   },
@@ -290,7 +290,7 @@ function stocktake_(payload, actor) {
 }
 
 function createRequest_(payload, actor) {
-  requireRole_(actor, ['viewer', 'staff', 'approver', 'admin']);
+  requireRole_(actor, ['viewer', 'staff', 'admin']);
   const input = payload.request || {};
   const code = cleanRequired_(input.code, 50, 'Product code');
   const product = requireEntity_('products', code);
@@ -315,7 +315,7 @@ function createRequest_(payload, actor) {
 }
 
 function approveRequest_(payload, actor) {
-  requireRole_(actor, ['approver', 'admin']);
+  requireRole_(actor, ['admin']);
   const request = requireEntity_('requests', cleanRequired_(payload.id, 100, 'Request id'));
   checkVersion_(request, payload.expectedVersion);
   if ((request.status || 'pending') !== 'pending') throw appError_('INVALID_STATUS', 'Request is not pending.');
@@ -332,7 +332,7 @@ function approveRequest_(payload, actor) {
 }
 
 function rejectRequest_(payload, actor) {
-  requireRole_(actor, ['approver', 'admin']);
+  requireRole_(actor, ['admin']);
   const request = requireEntity_('requests', cleanRequired_(payload.id, 100, 'Request id'));
   checkVersion_(request, payload.expectedVersion);
   if ((request.status || 'pending') !== 'pending') throw appError_('INVALID_STATUS', 'Request is not pending.');
