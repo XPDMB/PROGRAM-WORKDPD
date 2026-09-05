@@ -79,11 +79,12 @@ URL `/dev` เหมาะเฉพาะผู้มีสิทธิ์แก
 
 ## Checklist ก่อนเปิดจริง
 
-- [ ] แต่ละคนมีบัญชีและรหัสเฉพาะบุคคล
+- [ ] มีบัญชีส่วนกลางเฉพาะ admin, staff และ user ตามที่หน่วยงานกำหนด
 - [ ] admin สำรองข้อมูลและทดสอบกู้คืน
-- [ ] viewer, approver และ staff ถูกจำกัดสิทธิ์ถูกต้อง
+- [ ] user/viewer, staff และ admin ถูกจำกัดสิทธิ์ถูกต้อง
+- [ ] รายชื่อกำลังพลครบและเลือกผู้ดำเนินการจริงก่อนบันทึก
 - [ ] ทดสอบเบิกพร้อมกันจากสองเครื่อง
-- [ ] Audit แสดง username, action และ requestId
+- [ ] Audit แสดง username, ผู้ดำเนินการจริง, action และ requestId
 - [ ] ไม่มีรหัสผ่าน, AUTH_PEPPER หรือ Spreadsheet ID ใน GitHub
 - [ ] GitHub Pages ยังเป็น Demo
 
