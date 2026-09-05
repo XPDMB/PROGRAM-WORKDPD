@@ -14,6 +14,11 @@ const DPD = Object.freeze({
     idempotency: ['requestId', 'at', 'email', 'action', 'responseJson']
   },
   roles: ['viewer', 'staff', 'approver', 'admin'],
+  operatorActions: [
+    'upsertProduct', 'deleteProduct', 'receiveStock', 'stocktake', 'createRequest',
+    'approveRequest', 'rejectRequest', 'cancelRequest', 'dispenseRequest',
+    'returnRequest', 'closeRequest'
+  ],
   actionRoles: {
     upsertProduct: ['staff', 'admin'], deleteProduct: ['admin'],
     receiveStock: ['staff', 'admin'], stocktake: ['staff', 'admin'],
@@ -120,12 +125,15 @@ function processCommand_(body) {
     const previous = findIdempotent_(requestId, actor.email);
     if (previous) return previous;
 
+    attachOperator_(actor, action, body.operatorId);
     const result = executeCommand_(action, body.payload || {}, actor);
     const response = { ok: true, requestId: requestId, result: result };
     writeIdempotent_(requestId, actor, action, response);
     writeAudit_(actor, action, result.entityType || '', result.entityId || '', requestId, {
       version: result.version || null,
-      documentNo: result.documentNo || ''
+      documentNo: result.documentNo || '',
+      operatorId: actor.operatorId || '',
+      operatorName: actor.operatorName || ''
     });
     SpreadsheetApp.flush();
     return response;
@@ -154,9 +162,39 @@ function bootstrap_(actor) {
     products: listEntities_('products'),
     history: history,
     personnel: actor.role === 'admin' ? listEntities_('personnel') : [],
+    operators: listPublicOperators_(),
     accounts: actor.role === 'admin' ? listPublicAccounts_() : [],
     serverTime: new Date().toISOString()
   };
+}
+
+function listPublicOperators_() {
+  return listEntities_('personnel').filter(function(person) {
+    return person.active !== false;
+  }).map(function(person) {
+    return {
+      id: cleanText_(person.id, 100),
+      name: cleanText_(person.name, 200),
+      position: cleanText_(person.position, 200)
+    };
+  }).filter(function(person) {
+    return person.id && person.name;
+  });
+}
+
+function attachOperator_(actor, action, operatorId) {
+  if (DPD.operatorActions.indexOf(action) < 0) return actor;
+  const id = cleanRequired_(operatorId, 100, 'Actual operator');
+  const person = requireEntity_('personnel', id);
+  if (person.active === false) throw appError_('OPERATOR_INACTIVE', 'ผู้ดำเนินการนี้ถูกปิดใช้งาน');
+  actor.operatorId = id;
+  actor.operatorName = cleanRequired_(person.name, 200, 'Actual operator name');
+  actor.operatorPosition = cleanText_(person.position, 200);
+  return actor;
+}
+
+function actionUser_(actor) {
+  return actor.operatorName || actor.displayName;
 }
 
 function executeCommand_(action, payload, actor) {
@@ -222,7 +260,8 @@ function receiveStock_(payload, actor) {
   const savedProduct = saveEntity_('products', product, product.version);
   const movement = {
     id: Utilities.getUuid(), date: new Date().toISOString(), type: 'รับ', status: 'completed',
-    code: code, name: product.name, qty: quantity, user: actor.displayName,
+    code: code, name: product.name, qty: quantity, user: actionUser_(actor),
+    operatorId: actor.operatorId, operatorName: actor.operatorName,
     note: cleanText_(payload.note, DPD.maxText)
   };
   saveEntity_('movements', movement);
@@ -242,8 +281,9 @@ function stocktake_(payload, actor) {
   const movement = {
     id: Utilities.getUuid(), date: new Date().toISOString(), type: 'ตรวจนับ', status: 'completed',
     code: code, name: product.name, qty: Math.abs(actual - before), beforeQty: before,
-    actualQty: actual, difference: actual - before, countedBy: actor.displayName,
-    user: actor.displayName, note: reason
+    actualQty: actual, difference: actual - before, countedBy: actionUser_(actor),
+    operatorId: actor.operatorId, operatorName: actor.operatorName,
+    user: actionUser_(actor), note: reason
   };
   saveEntity_('movements', movement);
   return { entityType: 'product', entityId: code, version: savedProduct.version, qty: actual, difference: actual - before };
@@ -265,9 +305,10 @@ function createRequest_(payload, actor) {
     approvedQty: 0, dispensedQty: 0, returnedQty: 0, closedQty: 0,
     user: cleanRequired_(input.user, 200, 'Recipient name'),
     userPosition: cleanText_(input.userPosition, 200),
-    requestedBy: actor.displayName, requestedByEmail: actor.email,
+    requestedBy: actionUser_(actor), requestedByEmail: actor.email,
+    requestedByAccount: actor.username || actor.email, requestedByOperatorId: actor.operatorId,
     note: cleanText_(input.note, DPD.maxText),
-    activityLog: [{ action: 'submitted', label: 'ส่งคำขอ', user: actor.displayName, at: now, qty: quantity, documentNo: '' }]
+    activityLog: [{ action: 'submitted', label: 'ส่งคำขอ', user: actionUser_(actor), account: actor.username || actor.email, at: now, qty: quantity, documentNo: '' }]
   };
   const saved = saveEntity_('requests', request);
   return { entityType: 'request', entityId: saved.id, version: saved.version, documentNo: saved.requestNo, request: saved };
@@ -281,8 +322,9 @@ function approveRequest_(payload, actor) {
   const quantity = int_(payload.qty, 1, Number(request.qty || 0), 'qty');
   request.approvedQty = quantity;
   request.status = 'approved';
-  request.approvedBy = actor.displayName;
+  request.approvedBy = actionUser_(actor);
   request.approvedByEmail = actor.email;
+  request.approvedByAccount = actor.username || actor.email;
   request.approvedAt = new Date().toISOString();
   appendActivity_(request, 'approved', 'อนุมัติ', actor, quantity, '');
   const saved = saveEntity_('requests', request, request.version);
@@ -295,8 +337,9 @@ function rejectRequest_(payload, actor) {
   checkVersion_(request, payload.expectedVersion);
   if ((request.status || 'pending') !== 'pending') throw appError_('INVALID_STATUS', 'Request is not pending.');
   request.status = 'rejected';
-  request.rejectedBy = actor.displayName;
+  request.rejectedBy = actionUser_(actor);
   request.rejectedByEmail = actor.email;
+  request.rejectedByAccount = actor.username || actor.email;
   request.rejectedAt = new Date().toISOString();
   request.rejectionReason = cleanRequired_(payload.reason, DPD.maxText, 'Rejection reason');
   appendActivity_(request, 'rejected', 'ปฏิเสธ', actor, 0, '');
@@ -312,7 +355,8 @@ function cancelRequest_(payload, actor) {
     throw appError_('INVALID_STATUS', 'Request cannot be cancelled after dispensing starts.');
   }
   request.status = 'cancelled';
-  request.cancelledBy = actor.displayName;
+  request.cancelledBy = actionUser_(actor);
+  request.cancelledByAccount = actor.username || actor.email;
   request.cancelledAt = new Date().toISOString();
   appendActivity_(request, 'cancelled', 'ยกเลิก', actor, 0, '');
   return entityResult_('request', saveEntity_('requests', request, request.version));
@@ -336,7 +380,8 @@ function dispenseRequest_(payload, actor) {
   request.dispensedQty = dispensed + quantity;
   request.status = request.dispensedQty >= approved ? 'dispensed' : 'approved';
   request.issueNo = issueNo;
-  request.dispensedBy = actor.displayName;
+  request.dispensedBy = actionUser_(actor);
+  request.dispensedByAccount = actor.username || actor.email;
   request.dispensedAt = new Date().toISOString();
   appendActivity_(request, 'dispensed', 'จ่ายพัสดุ', actor, quantity, issueNo);
   const savedRequest = saveEntity_('requests', request, request.version);
@@ -344,7 +389,8 @@ function dispenseRequest_(payload, actor) {
     id: Utilities.getUuid(), requestId: request.id, requestNo: request.requestNo, issueNo: issueNo,
     date: request.dispensedAt, type: 'เบิก', status: 'completed', code: request.code,
     name: request.name, qty: quantity, user: request.user, userPosition: request.userPosition,
-    dispensedBy: actor.displayName, note: request.note
+    dispensedBy: actionUser_(actor), operatorId: actor.operatorId,
+    operatorName: actor.operatorName, account: actor.username || actor.email, note: request.note
   });
   return { entityType: 'request', entityId: request.id, version: savedRequest.version, documentNo: issueNo, request: savedRequest, stockQty: product.qty };
 }
@@ -363,7 +409,8 @@ function returnRequest_(payload, actor) {
   const returnNo = nextDocumentNo_('RET', 'movements', 'returnNo');
   request.returnedQty = Number(request.returnedQty || 0) + quantity;
   request.returnNo = returnNo;
-  request.returnedBy = actor.displayName;
+  request.returnedBy = actionUser_(actor);
+  request.returnedByAccount = actor.username || actor.email;
   request.returnedAt = new Date().toISOString();
   const accounted = Number(request.returnedQty) + Number(request.closedQty || 0);
   request.status = accounted >= Number(request.dispensedQty || 0) ? (Number(request.closedQty || 0) > 0 ? 'closed' : 'returned') : 'dispensed';
@@ -373,7 +420,9 @@ function returnRequest_(payload, actor) {
     id: Utilities.getUuid(), requestId: request.id, requestNo: request.requestNo, issueNo: request.issueNo,
     returnNo: returnNo, date: request.returnedAt, type: 'คืน', status: 'completed',
     code: request.code, name: request.name, qty: quantity, user: request.user,
-    returnedBy: actor.displayName, note: cleanText_(payload.note, DPD.maxText)
+    returnedBy: actionUser_(actor), operatorId: actor.operatorId,
+    operatorName: actor.operatorName, account: actor.username || actor.email,
+    note: cleanText_(payload.note, DPD.maxText)
   });
   return { entityType: 'request', entityId: request.id, version: savedRequest.version, documentNo: returnNo, request: savedRequest, stockQty: product.qty };
 }
@@ -386,7 +435,8 @@ function closeRequest_(payload, actor) {
   const remaining = Number(request.dispensedQty || 0) - Number(request.returnedQty || 0) - Number(request.closedQty || 0);
   const quantity = int_(payload.qty, 1, remaining, 'qty');
   request.closedQty = Number(request.closedQty || 0) + quantity;
-  request.closedBy = actor.displayName;
+  request.closedBy = actionUser_(actor);
+  request.closedByAccount = actor.username || actor.email;
   request.closedAt = new Date().toISOString();
   request.closeReason = cleanRequired_(payload.reason, DPD.maxText, 'Close reason');
   const accounted = Number(request.returnedQty || 0) + Number(request.closedQty);
@@ -446,7 +496,8 @@ function setUserRole_(payload, actor) {
 function appendActivity_(request, action, label, actor, qty, documentNo) {
   if (!Array.isArray(request.activityLog)) request.activityLog = [];
   request.activityLog.push({
-    action: action, label: label, user: actor.displayName, email: actor.email,
+    action: action, label: label, user: actionUser_(actor), email: actor.email,
+    operatorId: actor.operatorId || '', account: actor.username || actor.email,
     at: new Date().toISOString(), qty: Number(qty || 0), documentNo: documentNo || ''
   });
   request.activityLog = request.activityLog.slice(-100);
