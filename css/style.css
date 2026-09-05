@@ -1431,6 +1431,11 @@
 .role-staff .admin-only { display: none !important; }
 .role-viewer .admin-only { display: none !important; }
 .role-viewer .edit-only { display: none !important; }
+.role-approver .admin-only,
+.role-approver .edit-only { display: none !important; }
+.approve-only { display: none !important; }
+.role-admin .approve-only,
+.role-approver .approve-only { display: flex !important; }
 
 /* =========================================================
    3D Animation & Parallax Effects for Login

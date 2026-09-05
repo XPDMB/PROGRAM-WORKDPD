@@ -1,8 +1,11 @@
-// Authentic user database
-    const USERS = {
-      admin: '36335',
-      dpd: '36335',
-      stock: '36335'
+// Public demo accounts only. These credentials are intentionally non-sensitive.
+    // Production authentication must be verified by a trusted backend.
+    const DEMO_MODE = true;
+    const DEMO_ACCOUNTS = {
+      'demo-admin': { password: 'admin-demo', role: 'admin', displayName: 'ผู้ดูแลระบบสาธิต' },
+      'demo-stock': { password: 'stock-demo', role: 'staff', displayName: 'เจ้าหน้าที่คลังสาธิต' },
+      'demo-viewer': { password: 'viewer-demo', role: 'viewer', displayName: 'ผู้ชมระบบสาธิต' },
+      'demo-approver': { password: 'approver-demo', role: 'approver', displayName: 'ผู้อนุมัติสาธิต' }
     };
     
     let currentUser = '';
@@ -136,6 +139,11 @@
       "ล้างประวัติทั้งหมด": "Clear All History",
       "คุณแน่ใจหรือไม่ที่จะล้างข้อมูลประวัติความเคลื่อนไหวทั้งหมด?\n*การกระทำนี้จะลบข้อมูลประวัติทั้งหมดอย่างถาวรและไม่สามารถกู้คืนได้*": "Are you sure you want to clear all movement history?\n*This action will permanently delete all history logs and cannot be undone.*",
       "ล้างข้อมูลประวัติสำเร็จ": "History cleared successfully",
+      "ตรวจนับ": "Stocktake",
+      "ตรวจนับสต็อก": "Physical Stocktake",
+      "ยอดคงเหลือในระบบ": "System Quantity",
+      "จำนวนที่ตรวจพบจริง": "Actual Count",
+      "ส่วนต่าง": "Difference",
       "จำนวนพัสดุที่เบิก": "Quantity Issued",
       "ไม่มีข้อมูลการเบิก": "No Requisitions"
     };
@@ -191,6 +199,220 @@
       return (currentLang === 'en' && i18n[text]) ? i18n[text] : text;
     }
 
+    function escapeHTML(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function safeInlineArg(value) {
+      return encodeURIComponent(String(value ?? ''));
+    }
+
+    function createTransactionId() {
+      if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+        return window.crypto.randomUUID();
+      }
+      return 'TX-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+    }
+
+    function canApproveRequests() {
+      return document.body.classList.contains('role-admin') || document.body.classList.contains('role-approver');
+    }
+
+    function canDispenseItems() {
+      return document.body.classList.contains('role-admin') || document.body.classList.contains('role-staff');
+    }
+
+    function canCancelRequest(request) {
+      return document.body.classList.contains('role-admin') || request.requestedBy === currentUser;
+    }
+
+    function generateDocumentNumber(prefix, fieldName) {
+      const buddhistYear = new Date().getFullYear() + 543;
+      const base = prefix + '-' + buddhistYear + '-';
+      let maxSequence = 0;
+      history.forEach(entry => {
+        const value = String(entry[fieldName] || '');
+        if (value.startsWith(base)) {
+          const sequence = Number(value.slice(base.length));
+          if (Number.isInteger(sequence)) maxSequence = Math.max(maxSequence, sequence);
+        }
+      });
+      return base + String(maxSequence + 1).padStart(4, '0');
+    }
+
+    function askQuantity(message, maximum, defaultValue) {
+      const max = Math.max(0, Number(maximum || 0));
+      if (max < 1) {
+        showToast('ไม่มีจำนวนคงเหลือให้ดำเนินการ', 'warning');
+        return null;
+      }
+      const raw = prompt(message + ' (สูงสุด ' + max.toLocaleString() + ')', String(defaultValue || max));
+      if (raw === null) return null;
+      const quantity = Number(raw);
+      if (!Number.isInteger(quantity) || quantity < 1 || quantity > max) {
+        showToast('กรุณาระบุจำนวนเต็มตั้งแต่ 1 ถึง ' + max.toLocaleString(), 'danger');
+        return null;
+      }
+      return quantity;
+    }
+
+    function appendRequestEvent(request, action, label, quantity, documentNo) {
+      if (!Array.isArray(request.activityLog)) request.activityLog = [];
+      request.activityLog.push({
+        action: action,
+        label: label,
+        user: currentUser || '-',
+        at: new Date().toISOString(),
+        qty: Number(quantity || 0),
+        documentNo: documentNo || ''
+      });
+      if (request.activityLog.length > 100) request.activityLog = request.activityLog.slice(-100);
+    }
+
+    function requestProgress(request) {
+      const requested = Number(request.qty || 0);
+      const approved = Number(request.approvedQty || 0);
+      const dispensed = Number(request.dispensedQty || 0);
+      const returned = Number(request.returnedQty || 0);
+      const closed = Number(request.closedQty || 0);
+      return { requested, approved, dispensed, returned, closed };
+    }
+
+    function requestProgressText(request) {
+      const progress = requestProgress(request);
+      return 'ขอ ' + progress.requested.toLocaleString() +
+        ' · อนุมัติ ' + progress.approved.toLocaleString() +
+        ' · จ่าย ' + progress.dispensed.toLocaleString() +
+        ' · คืน ' + progress.returned.toLocaleString() +
+        ' · ปิด ' + progress.closed.toLocaleString();
+    }
+
+    function safeImageUrl(value) {
+      const raw = String(value ?? '').trim();
+      if (!raw) return 'assets/logo.png';
+      try {
+        const url = new URL(raw, window.location.href);
+        if (url.protocol === 'https:' || url.protocol === 'http:') return escapeHTML(url.href);
+      } catch (e) {}
+      return 'assets/logo.png';
+    }
+
+    function csvCell(value) {
+      let text = String(value ?? '');
+      if (/^[=+\-@]/.test(text)) text = "'" + text;
+      return '"' + text.replace(/"/g, '""') + '"';
+    }
+
+    function validateBackupData(input) {
+      if (!input || typeof input !== 'object') throw new Error('Invalid backup root');
+      if (!Array.isArray(input.products) || !Array.isArray(input.history) || !Array.isArray(input.personnel)) {
+        throw new Error('Invalid backup structure');
+      }
+      if (input.products.length > 5000 || input.history.length > 50000 || input.personnel.length > 5000) {
+        throw new Error('Backup exceeds demo limits');
+      }
+
+      const cleanText = (value, max) => String(value ?? '').replace(/[\u0000-\u001F\u007F]/g, '').slice(0, max);
+      const cleanNumber = (value, max = 1000000000) => {
+        const number = Number(value);
+        if (!Number.isFinite(number) || number < 0 || number > max) throw new Error('Invalid numeric value');
+        return Math.floor(number);
+      };
+      const cleanSignedNumber = (value, max = 1000000000) => {
+        const number = Number(value);
+        if (!Number.isFinite(number) || Math.abs(number) > max) throw new Error('Invalid signed numeric value');
+        return Math.trunc(number);
+      };
+
+      const products = input.products.map(product => {
+        if (!product || typeof product !== 'object') throw new Error('Invalid product');
+        const code = cleanText(product.code, 50).trim();
+        const name = cleanText(product.name, 200).trim();
+        if (!code || !name) throw new Error('Product code and name are required');
+        return {
+          code,
+          name,
+          cat: cleanText(product.cat, 100) || 'อื่นๆ',
+          qty: cleanNumber(product.qty),
+          min: cleanNumber(product.min),
+          unit: cleanText(product.unit, 50) || 'ชิ้น',
+          loc: cleanText(product.loc, 200),
+          img: cleanText(product.img, 1000)
+        };
+      });
+
+      const allowedTypes = new Set(['รับ', 'เบิก', 'คืน', 'ขอเบิก', 'เพิ่ม', 'แก้ไข', 'ปรับปรุง', 'ลบ', 'ปฏิเสธ', 'ตรวจนับ']);
+      const history = input.history.map(entry => {
+        if (!entry || typeof entry !== 'object') throw new Error('Invalid history entry');
+        const type = cleanText(entry.type, 30);
+        if (!allowedTypes.has(type)) throw new Error('Invalid history type');
+        return {
+          id: cleanText(entry.id, 100),
+          date: cleanText(entry.date, 40),
+          type,
+          code: cleanText(entry.code, 50),
+          name: cleanText(entry.name, 200),
+          qty: cleanNumber(entry.qty),
+          user: cleanText(entry.user, 200),
+          userPosition: cleanText(entry.userPosition, 200),
+          note: cleanText(entry.note, 1000),
+          status: cleanText(entry.status, 30),
+          requestNo: cleanText(entry.requestNo, 50),
+          issueNo: cleanText(entry.issueNo, 50),
+          returnNo: cleanText(entry.returnNo, 50),
+          requestId: cleanText(entry.requestId, 100),
+          requestedBy: cleanText(entry.requestedBy, 200),
+          createdAt: cleanText(entry.createdAt, 40),
+          approvedBy: cleanText(entry.approvedBy, 200),
+          approvedAt: cleanText(entry.approvedAt, 40),
+          rejectedBy: cleanText(entry.rejectedBy, 200),
+          rejectedAt: cleanText(entry.rejectedAt, 40),
+          cancelledBy: cleanText(entry.cancelledBy, 200),
+          cancelledAt: cleanText(entry.cancelledAt, 40),
+          dispensedBy: cleanText(entry.dispensedBy, 200),
+          dispensedAt: cleanText(entry.dispensedAt, 40),
+          returnedBy: cleanText(entry.returnedBy, 200),
+          returnedAt: cleanText(entry.returnedAt, 40),
+          closedBy: cleanText(entry.closedBy, 200),
+          closedAt: cleanText(entry.closedAt, 40),
+          approvedQty: cleanNumber(entry.approvedQty ?? 0),
+          dispensedQty: cleanNumber(entry.dispensedQty ?? 0),
+          returnedQty: cleanNumber(entry.returnedQty ?? 0),
+          closedQty: cleanNumber(entry.closedQty ?? 0),
+          activityLog: Array.isArray(entry.activityLog) ? entry.activityLog.slice(-100).map(event => ({
+            action: cleanText(event && event.action, 40),
+            label: cleanText(event && event.label, 100),
+            user: cleanText(event && event.user, 200),
+            at: cleanText(event && event.at, 40),
+            qty: cleanNumber(event && event.qty || 0),
+            documentNo: cleanText(event && event.documentNo, 50)
+          })) : [],
+          beforeQty: cleanNumber(entry.beforeQty ?? 0),
+          actualQty: cleanNumber(entry.actualQty ?? 0),
+          difference: cleanSignedNumber(entry.difference ?? 0),
+          countedBy: cleanText(entry.countedBy, 200)
+        };
+      });
+
+      const personnel = input.personnel.map(person => {
+        if (!person || typeof person !== 'object') throw new Error('Invalid personnel entry');
+        const name = cleanText(person.name, 200).trim();
+        if (!name) throw new Error('Personnel name is required');
+        return {
+          name,
+          position: cleanText(person.position, 200),
+          phone: cleanText(person.phone, 40)
+        };
+      });
+
+      return { products, history, personnel };
+    }
+
     // --- Real-time Clock ---
     function updateClock() {
       const now = new Date();
@@ -206,18 +428,9 @@
 
     // Personnel list defaults
     const DEFAULT_PERSONNEL = [
-      {name: 'น.อ.บุญทวี ช่วยเนียม', position: 'หก.กกม.บก.ซอ.', phone: '081-9129091'},
-      {name: 'น.ท.หญิง รวีวรรณ กิตติศักดิ์กุล', position: 'รอง หก.กกม.บก.ขอ.', phone: '094-5481842'},
-      {name: 'ร.อ.นที กล้าแข็ง', position: 'นปก.ฝปก.กกม.บก.ขอ.', phone: '064-8320092'},
-      {name: 'ร.ท.ธนรัตน์ อดิศัยสกุลชัย', position: 'นวพ.ผวพ.กกม.บก.ขอ.', phone: '094-7565591'},
-      {name: 'ร.ต.จิรภัทร จำปางาม', position: 'น.โปรแกรม ผวพ.กกม.บก.ซอ.', phone: '095-5251415'},
-      {name: 'พ.อ.อ.สุภัค อัมพิลาศัย', position: 'จนท.พัสดุอาวุโสฯ ช่วยราชการ กกม.บก.ซอ.', phone: '062-4248596'},
-      {name: 'พ.อ.ท.ชนินทร์ พรมฤทธิ์', position: 'จนท.ทดสอบ ผวพ.กกม.บก.ซอ.', phone: '099-7359773'},
-      {name: 'จ.อ.ณธัชพงศ์ ภู่ขันเงิน', position: 'จนท.ข้อมูล ฝบม.กกม.บก.ขอ.', phone: '062-3902690'},
-      {name: 'จ.ท.ภูมิดล บุโรดม', position: 'จนท.ข้อมูล ฝบม.กกม.บก.ขอ.', phone: '094-1135337'},
-      {name: 'จ.ต.ภัทร พายุหะ', position: 'จนท.ปฏิบัติการ ผปก.กกม.บก.ขอ.', phone: '098-0167567'},
-      {name: 'นางพัสวีพิชญ์ หีบจินดา', position: 'พนักงานรวบรวมและเตรียมข้อมูล', phone: '095-6041354'},
-      {name: 'นายภูรินทร์ อินทร์บุญช่วย', position: 'ช่างโครงสร้างฯ ช่วยราชการ กกม.บก.ซอ.', phone: '095-4048230'}
+      {name: 'เจ้าหน้าที่สาธิต ก', position: 'ผู้ดูแลคลังสาธิต', phone: '000-0000000'},
+      {name: 'เจ้าหน้าที่สาธิต ข', position: 'ผู้อนุมัติสาธิต', phone: '000-0000000'},
+      {name: 'เจ้าหน้าที่สาธิต ค', position: 'ผู้ใช้งานสาธิต', phone: '000-0000000'}
     ];
 
     const fallbackProducts = [];
@@ -236,9 +449,9 @@
       
       loadDatabase();
 
-      currentUser = 'admin';
-      document.getElementById('userBadge').textContent = 'admin';
-      document.getElementById('userAvatar').textContent = 'A';
+      currentUser = '';
+      document.getElementById('userBadge').textContent = 'ผู้เยี่ยมชม';
+      document.getElementById('userAvatar').textContent = 'D';
       
       populatePersonnelSelect();
       renderPersonnel();
@@ -247,22 +460,22 @@
       setLang('th');
 
       // Auth Check
-      const isLoggedIn = sessionStorage.getItem('dpd_logged_in') === 'true' || localStorage.getItem('dpd_logged_in') === 'true';
+      const isLoggedIn = sessionStorage.getItem('dpd_demo_logged_in') === 'true' || localStorage.getItem('dpd_demo_logged_in') === 'true';
       if (isLoggedIn) {
-        currentUser = sessionStorage.getItem('dpd_current_user') || localStorage.getItem('dpd_current_user') || 'Admin';
-        const role = sessionStorage.getItem('dpd_role') || localStorage.getItem('dpd_role') || 'admin';
+        currentUser = sessionStorage.getItem('dpd_demo_current_user') || localStorage.getItem('dpd_demo_current_user') || 'Admin';
+        const role = sessionStorage.getItem('dpd_demo_role') || localStorage.getItem('dpd_demo_role') || 'admin';
         document.body.classList.add('role-' + role);
         document.getElementById('userBadge').textContent = currentUser;
         document.getElementById('userAvatar').textContent = currentUser.slice(0, 1).toUpperCase();
         document.getElementById('loginScreen').classList.remove('active');
         document.getElementById('mainApp').classList.add('active');
         
-        const activeTab = localStorage.getItem('dpd_active_tab') || 'dashboard';
+        const activeTab = localStorage.getItem('dpd_demo_active_tab') || 'dashboard';
         showTab(activeTab);
       }
     });
 
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTZIaVyt-aEuvHO7ckjqJJVhJYNP2vWXb1956nTnI5VCZ7HOu24DSOF4es4ubFbLxH/exec';
+    const GOOGLE_SCRIPT_URL = ''; // Demo never connects to the production backend
 
     // Loading indicator helpers for Google Sheets sync
     function showSyncLoading(message) {
@@ -351,13 +564,13 @@
 
     async function loadDatabase() {
       // Clean up legacy custom overrides if present so they don't block Google Sheets master data
-      try { localStorage.removeItem('dpd_custom_overrides'); } catch(e){}
+      try { localStorage.removeItem('dpd_demo_custom_overrides'); } catch(e){}
 
       // 1. Initial local cache load to show UI instantly
       let storedProducts, storedHistory, storedPersonnel;
-      try { storedProducts = localStorage.getItem('dpd_products'); } catch (e) {}
-      try { storedHistory = localStorage.getItem('dpd_history'); } catch (e) {}
-      try { storedPersonnel = localStorage.getItem('dpd_personnel'); } catch (e) {}
+      try { storedProducts = localStorage.getItem('dpd_demo_products'); } catch (e) {}
+      try { storedHistory = localStorage.getItem('dpd_demo_history'); } catch (e) {}
+      try { storedPersonnel = localStorage.getItem('dpd_demo_personnel'); } catch (e) {}
 
       if (storedProducts) {
         try { products = JSON.parse(storedProducts); } catch (e) { products = fallbackProducts; }
@@ -380,13 +593,20 @@
       renderPersonnel();
       populateFiscalYears();
 
+      // Demo data must remain local and must never read from the production Google Sheet.
+      if (DEMO_MODE || !GOOGLE_SCRIPT_URL) {
+        hideSyncLoading();
+        populateUnitDatalist();
+        return;
+      }
+
       // 2. Fetch fresh data from Google Sheets Cloud Database silently in the background
       try {
         const response = await fetch(GOOGLE_SCRIPT_URL);
         if (!response.ok) throw new Error('Failed to fetch');
         const data = await response.json();
 
-        const localSaveTime = parseInt(localStorage.getItem('dpd_local_save_time')) || 0;
+        const localSaveTime = parseInt(localStorage.getItem('dpd_demo_local_save_time')) || 0;
         const timeSinceLocalSave = Date.now() - localSaveTime;
 
         // If no local save happened in the last 15 seconds, Google Sheets is the master database
@@ -425,9 +645,9 @@
           }
 
           // Cache loaded data locally
-          localStorage.setItem('dpd_products', JSON.stringify(products));
-          localStorage.setItem('dpd_history', JSON.stringify(history));
-          localStorage.setItem('dpd_personnel', JSON.stringify(PERSONNEL));
+          localStorage.setItem('dpd_demo_products', JSON.stringify(products));
+          localStorage.setItem('dpd_demo_history', JSON.stringify(history));
+          localStorage.setItem('dpd_demo_personnel', JSON.stringify(PERSONNEL));
         }
       } catch (err) {
         console.error('Cloud Sync failed, using offline fallback cache:', err);
@@ -444,11 +664,14 @@
 
     async function saveDatabase() {
       // 1. Instantly save to local cache so the UI updates and user can continue immediately
-      localStorage.setItem('dpd_products', JSON.stringify(products));
-      localStorage.setItem('dpd_history', JSON.stringify(history));
-      localStorage.setItem('dpd_personnel', JSON.stringify(PERSONNEL));
-      localStorage.setItem('dpd_local_save_time', Date.now());
-      try { localStorage.removeItem('dpd_custom_overrides'); } catch(e){}
+      localStorage.setItem('dpd_demo_products', JSON.stringify(products));
+      localStorage.setItem('dpd_demo_history', JSON.stringify(history));
+      localStorage.setItem('dpd_demo_personnel', JSON.stringify(PERSONNEL));
+      localStorage.setItem('dpd_demo_local_save_time', Date.now());
+      try { localStorage.removeItem('dpd_demo_custom_overrides'); } catch(e){}
+
+      // Demo writes only to its isolated browser cache.
+      if (DEMO_MODE || !GOOGLE_SCRIPT_URL) return;
 
       // 2. POST updates to Google Sheets in the background silently
       // Convert standard JSON keys to Thai keys for Google Sheets compatibility
@@ -540,7 +763,11 @@
       const toast = document.createElement('div');
       toast.className = `toast toast-${type}`;
       let icon = type === 'danger' ? 'ti-circle-x' : (type === 'warning' ? 'ti-alert-circle' : 'ti-circle-check');
-      toast.innerHTML = `<i class="ti ${icon}"></i><span>${message}</span>`;
+      const toastIcon = document.createElement('i');
+      toastIcon.className = `ti ${icon}`;
+      const toastMessage = document.createElement('span');
+      toastMessage.textContent = String(message);
+      toast.append(toastIcon, toastMessage);
       container.appendChild(toast);
       setTimeout(() => toast.classList.add('show'), 15);
       setTimeout(() => {
@@ -557,36 +784,31 @@
       
       let role = null;
       let userDisplayName = null;
-      
-      // กำหนดชื่อผู้ใช้และรหัสผ่านตามที่คุณต้องการ
-      if (u === 'admin' && p === '36335') {
-        role = 'admin';
-        userDisplayName = 'ผู้ดูแลระบบ';
-      } else if (u === 'staff' && p === '36335') {
-        role = 'staff';
-        userDisplayName = 'เจ้าหน้าที่คลัง';
-      } else if (u === 'user' && p === '36335') {
-        role = 'viewer'; // สิทธิ์เป็นผู้เข้าชม (viewer)
-        userDisplayName = 'ผู้ใช้งาน';
-      } 
+
+      const demoAccount = DEMO_MODE ? DEMO_ACCOUNTS[u] : null;
+      if (demoAccount && p === demoAccount.password) {
+        role = demoAccount.role;
+        userDisplayName = demoAccount.displayName;
+      }
+ 
       
       // ถ้ารหัสผ่านถูกต้องและมีสิทธิ์ (role)
       if (role) {
         currentUser = userDisplayName;
         
         if (remember) {
-          localStorage.setItem('dpd_logged_in', 'true');
-          localStorage.setItem('dpd_current_user', currentUser);
-          localStorage.setItem('dpd_role', role);
-          sessionStorage.removeItem('dpd_logged_in');
+          localStorage.setItem('dpd_demo_logged_in', 'true');
+          localStorage.setItem('dpd_demo_current_user', currentUser);
+          localStorage.setItem('dpd_demo_role', role);
+          sessionStorage.removeItem('dpd_demo_logged_in');
         } else {
-          sessionStorage.setItem('dpd_logged_in', 'true');
-          sessionStorage.setItem('dpd_current_user', currentUser);
-          sessionStorage.setItem('dpd_role', role);
-          localStorage.removeItem('dpd_logged_in');
+          sessionStorage.setItem('dpd_demo_logged_in', 'true');
+          sessionStorage.setItem('dpd_demo_current_user', currentUser);
+          sessionStorage.setItem('dpd_demo_role', role);
+          localStorage.removeItem('dpd_demo_logged_in');
         }
         
-        document.body.classList.remove('role-admin', 'role-staff', 'role-viewer');
+        document.body.classList.remove('role-admin', 'role-staff', 'role-viewer', 'role-approver');
         document.body.classList.add('role-' + role);
         
         errEl.style.display = 'none';
@@ -595,7 +817,7 @@
         document.getElementById('loginScreen').classList.remove('active');
         document.getElementById('mainApp').classList.add('active');
         
-        const activeTab = localStorage.getItem('dpd_active_tab') || 'dashboard';
+        const activeTab = localStorage.getItem('dpd_demo_active_tab') || 'dashboard';
         showTab(activeTab);
         showToast('ยินดีต้อนรับเข้าสู่ระบบ', 'success');
       } else {
@@ -623,13 +845,15 @@
 
     function doLogout() {
       currentUser = '';
-      sessionStorage.clear();
-      localStorage.removeItem('dpd_logged_in');
-      localStorage.removeItem('dpd_current_user');
-      localStorage.removeItem('dpd_role');
-      localStorage.removeItem('dpd_active_tab');
+      sessionStorage.removeItem('dpd_demo_logged_in');
+      sessionStorage.removeItem('dpd_demo_current_user');
+      sessionStorage.removeItem('dpd_demo_role');
+      localStorage.removeItem('dpd_demo_logged_in');
+      localStorage.removeItem('dpd_demo_current_user');
+      localStorage.removeItem('dpd_demo_role');
+      localStorage.removeItem('dpd_demo_active_tab');
       
-      document.body.classList.remove('role-admin', 'role-staff', 'role-viewer');
+      document.body.classList.remove('role-admin', 'role-staff', 'role-viewer', 'role-approver');
       
       if(document.getElementById('loginUser')) document.getElementById('loginUser').value = '';
       if(document.getElementById('loginPass')) document.getElementById('loginPass').value = '';
@@ -640,8 +864,24 @@
       showToast('ออกจากระบบเรียบร้อย', 'warning');
     }
 
-    function showTab(name, element) {
-      localStorage.setItem('dpd_active_tab', name);
+    function resetDemoData() {
+      if (!DEMO_MODE) return;
+      const confirmed = confirm('ล้างข้อมูลสาธิตทั้งหมดในเบราว์เซอร์นี้และเริ่มใหม่หรือไม่?');
+      if (!confirmed) return;
+
+      [localStorage, sessionStorage].forEach(storage => {
+        const keys = [];
+        for (let i = 0; i < storage.length; i += 1) {
+          const key = storage.key(i);
+          if (key && key.startsWith('dpd_demo_')) keys.push(key);
+        }
+        keys.forEach(key => storage.removeItem(key));
+      });
+      window.location.reload();
+    }
+
+        function showTab(name, element) {
+      localStorage.setItem('dpd_demo_active_tab', name);
       document.querySelectorAll('.nav-link').forEach(lnk => lnk.classList.remove('active'));
       const activeEl = element || document.getElementById('nav-' + name);
       if (activeEl) {
@@ -677,11 +917,74 @@
       if (backdrop) backdrop.classList.toggle('sidebar-open');
     }
 
+    function getVisibleRequestsForQueue() {
+      const requests = history.filter(entry => entry.type === 'ขอเบิก');
+      if (document.body.classList.contains('role-viewer')) {
+        return requests.filter(entry => entry.requestedBy === currentUser);
+      }
+      return requests;
+    }
+
+    window.openWorkQueue = function(status) {
+      showTab('history');
+      const typeFilter = document.getElementById('histFilter');
+      const statusFilter = document.getElementById('histStatusFilter');
+      if (typeFilter) typeFilter.value = 'ขอเบิก';
+      if (statusFilter) statusFilter.value = status;
+      renderHistory();
+    };
+
+    function renderWorkQueue() {
+      const container = document.getElementById('workQueueSummary');
+      const recentContainer = document.getElementById('workQueueRecent');
+      const title = document.getElementById('workQueueTitle');
+      if (!container || !recentContainer) return;
+
+      const requests = getVisibleRequestsForQueue();
+      const queueCards = [
+        {status: 'pending', label: 'รออนุมัติ', icon: 'ti-clock', color: '#f59e0b'},
+        {status: 'approved', label: 'อนุมัติแล้ว รอจ่าย', icon: 'ti-package-export', color: '#3b82f6'},
+        {status: 'dispensed', label: 'จ่ายแล้ว รอคืน/ปิด', icon: 'ti-package-import', color: '#10b981'}
+      ];
+
+      if (title) {
+        title.textContent = document.body.classList.contains('role-viewer') ? 'คิวคำขอของฉัน' : 'คิวงานพัสดุ';
+      }
+
+      container.innerHTML = queueCards.map(card => {
+        const count = requests.filter(request => (request.status || 'pending') === card.status).length;
+        return '<button type="button" onclick="openWorkQueue(\'' + card.status + '\')" ' +
+          'style="text-align:left;border:1px solid rgba(255,255,255,.08);background:rgba(15,23,42,.55);border-radius:12px;padding:16px;color:inherit;cursor:pointer;min-height:96px;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">' +
+          '<div><div style="font-size:13px;color:var(--color-text-muted);margin-bottom:8px;">' + escapeHTML(card.label) + '</div>' +
+          '<strong style="font-size:25px;color:#f8fafc;">' + count.toLocaleString() + ' รายการ</strong></div>' +
+          '<i class="ti ' + card.icon + '" style="font-size:28px;color:' + card.color + ';"></i></div></button>';
+      }).join('');
+
+      const activeRequests = requests
+        .filter(request => ['pending', 'approved', 'dispensed'].includes(request.status || 'pending'))
+        .slice(0, 5);
+
+      if (activeRequests.length === 0) {
+        recentContainer.innerHTML = '<div style="padding:18px;text-align:center;color:var(--color-text-muted);">ไม่มีงานค้างในขณะนี้</div>';
+        return;
+      }
+
+      recentContainer.innerHTML = activeRequests.map(request =>
+        '<button type="button" onclick="openWorkQueue(\'' + escapeHTML(request.status || 'pending') + '\')" ' +
+        'style="width:100%;display:grid;grid-template-columns:minmax(130px,.8fr) minmax(180px,1.5fr) minmax(120px,.7fr);gap:12px;align-items:center;text-align:left;border:0;border-top:1px solid rgba(255,255,255,.06);background:transparent;padding:12px 16px;color:inherit;cursor:pointer;">' +
+        '<div><strong style="color:#e2e8f0;">' + escapeHTML(request.requestNo || '-') + '</strong><div style="font-size:11px;color:var(--color-text-muted);">' + escapeHTML(window.formatHistoryDate(request.createdAt || request.date)) + '</div></div>' +
+        '<div><strong style="color:#e2e8f0;">' + escapeHTML(request.name || '-') + '</strong><div style="font-size:12px;color:var(--color-text-muted);">' + escapeHTML(requestProgressText(request)) + '<br>' + escapeHTML(request.user || '-') + '</div></div>' +
+        '<span class="badge badge-warning" style="text-align:center;">' + escapeHTML(requestStatusText(request.status)) + '</span></button>'
+      ).join('');
+    }
+
     function renderDashboard() {
       const total = products.length;
       const lowList = products.filter(p => p.qty < p.min);
       const totalQty = products.reduce((a, p) => a + p.qty, 0);
-      const txToday = history.filter(h => h.date === new Date().toISOString().slice(0, 10)).length;
+      const today = new Date().toISOString().slice(0, 10);
+      const txToday = history.filter(h => String(h.date || '').slice(0, 10) === today).length;
       document.getElementById('dashCards').innerHTML = [
         {label: t('รายการทั้งหมด'), val: total + ' ' + t('รายการ'), icon: 'ti-boxes', color: 'var(--color-primary)'},
         {label: t('สินค้าใกล้หมด'), val: lowList.length + ' ' + t('รายการ'), icon: 'ti-alert-triangle', color: 'var(--color-warning)'},
@@ -693,9 +996,11 @@
       if (lowList.length === 0) {
         lowTableEl.innerHTML = `<div style="text-align: center; padding: 24px; color: var(--color-text-muted);">${t('ปกติทุกรายการ')}</div>`;
       } else {
-        lowTableEl.innerHTML = `<table><thead><tr><th>${t('รหัสสินค้า')}</th><th>${t('ชื่อ')}</th><th>${t('คงเหลือ')}</th><th>${t('ขั้นต่ำ')}</th></tr></thead><tbody>${lowList.map(p => `<tr><td>${p.code}</td><td>${p.name}</td><td>${p.qty}</td><td>${p.min}</td></tr>`).join('')}</tbody></table>`;
+        lowTableEl.innerHTML = `<table><thead><tr><th>${t('รหัสสินค้า')}</th><th>${t('ชื่อ')}</th><th>${t('คงเหลือ')}</th><th>${t('ขั้นต่ำ')}</th></tr></thead><tbody>${lowList.map(p => `<tr><td>${escapeHTML(p.code)}</td><td>${escapeHTML(p.name)}</td><td>${p.qty}</td><td>${p.min}</td></tr>`).join('')}</tbody></table>`;
       }
       
+      renderWorkQueue();
+
       // Update interactive analytics charts
       renderCharts();
     }
@@ -718,13 +1023,13 @@
       const catFilterEl = document.getElementById('catFilter');
       if (catFilterEl) {
         if (!catFilterEl.dataset.initialized) {
-          const savedCat = localStorage.getItem('dpd_selected_category_filter');
+          const savedCat = localStorage.getItem('dpd_demo_selected_category_filter');
           if (savedCat !== null) {
             catFilterEl.value = savedCat;
           }
           catFilterEl.dataset.initialized = "true";
         }
-        localStorage.setItem('dpd_selected_category_filter', catFilterEl.value);
+        localStorage.setItem('dpd_demo_selected_category_filter', catFilterEl.value);
       }
       const catVal = catFilterEl ? catFilterEl.value : '';
       let list = products.filter(p => {
@@ -776,7 +1081,7 @@
             <span style="display: flex; align-items: center; gap: 10px;">
               <i class="ti ti-chevron-down toggle-icon" style="transition: transform 0.3s; font-size: 18px; transform: rotate(-90deg);"></i>
               <span style="font-size: 18px;">${catIcon}</span>
-              ${cat}
+              ${escapeHTML(cat)}
             </span>
             <span class="category-section-badge">จำนวน ${catItems.length} รายการ</span>
           </div>
@@ -793,9 +1098,9 @@
             </thead>
             <tbody>
               ${catItems.map(p => {
-                const imgSrc = p.img ? p.img : 'assets/logo.png';
+                const imgSrc = safeImageUrl(p.img);
                 const imgTag = `<img src="${imgSrc}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid var(--color-border);" onerror="this.src='assets/logo.png'" alt="img">`;
-                return `<tr><td style="width: 50px; padding: 4px 12px;">${imgTag}</td><td>${p.code}</td><td style="user-select: none;">${p.name}</td><td>${p.qty}</td><td>${p.unit}</td><td style="display: flex; gap: 4px; justify-content: flex-end;"><button class="btn-action edit-only" style="background-color: var(--color-success); color: white; border-color: var(--color-success);" onclick="openRecvModal('${p.code}')" title="รับสินค้าเข้า"><i class="ti ti-arrow-down-left"></i></button><button class="btn-action btn-action-edit edit-only" onclick="openEditModal('${p.code}')" title="แก้ไข"><i class="ti ti-edit"></i></button><button class="btn-action btn-action-delete edit-only" onclick="deleteProduct('${p.code}')" title="ลบ"><i class="ti ti-trash"></i></button></td></tr>`;
+                return `<tr><td style="width: 50px; padding: 4px 12px;">${imgTag}</td><td>${escapeHTML(p.code)}</td><td style="user-select: none;">${escapeHTML(p.name)}</td><td>${p.qty}</td><td>${escapeHTML(p.unit)}</td><td style="display: flex; gap: 4px; justify-content: flex-end;"><button class="btn-action edit-only" style="background-color: var(--color-success); color: white; border-color: var(--color-success);" onclick="openRecvModal(decodeURIComponent('${safeInlineArg(p.code)}'))" title="รับสินค้าเข้า"><i class="ti ti-arrow-down-left"></i></button><button class="btn-action btn-action-edit edit-only" onclick="openEditModal(decodeURIComponent('${safeInlineArg(p.code)}'))" title="แก้ไข"><i class="ti ti-edit"></i></button><button class="btn-action btn-action-delete edit-only" onclick="deleteProduct(decodeURIComponent('${safeInlineArg(p.code)}'))" title="ลบ"><i class="ti ti-trash"></i></button></td></tr>`;
               }).join('')}
             </tbody>
           </table>
@@ -807,6 +1112,7 @@
       }
 
       document.getElementById('stockTable').innerHTML = htmlOutput;
+      populateStocktakeProducts();
     }
 
     window.exportStockCSV = function() {
@@ -822,13 +1128,13 @@
       csvContent += "รหัสสินค้า,หมวดหมู่,ชื่อสินค้า,จำนวนคงเหลือ,หน่วยนับ,ตำแหน่งจัดเก็บ\n";
       
       list.forEach(p => {
-        let row = [
-          `"${p.code}"`,
-          `"${p.cat}"`,
-          `"${p.name}"`,
-          `"${p.qty}"`,
-          `"${p.unit}"`,
-          `"${p.loc || ''}"`
+        const row = [
+          csvCell(p.code),
+          csvCell(p.cat),
+          csvCell(p.name),
+          csvCell(p.qty),
+          csvCell(p.unit),
+          csvCell(p.loc || '')
         ];
         csvContent += row.join(",") + "\n";
       });
@@ -846,8 +1152,142 @@
     function populateSelects() {
       ['recvItem', 'issueItem'].forEach(id => {
         const s = document.getElementById(id);
-        if (s) s.innerHTML = '<option value="">-- เลือกสินค้า --</option>' + products.map(p => `<option value="${p.code}">${p.code} - ${p.name}</option>`).join('');
+        if (s) s.innerHTML = '<option value="">-- เลือกสินค้า --</option>' + products.map(p => `<option value="${escapeHTML(p.code)}">${escapeHTML(p.code)} - ${escapeHTML(p.name)}</option>`).join('');
       });
+    }
+
+    function populateStocktakeProducts() {
+      const select = document.getElementById('stocktakeItem');
+      if (!select) return;
+      const selected = select.value;
+      select.replaceChildren();
+
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = '-- เลือกพัสดุที่ต้องการตรวจนับ --';
+      select.appendChild(placeholder);
+
+      [...products]
+        .sort((a, b) => String(a.code).localeCompare(String(b.code), 'th'))
+        .forEach(product => {
+          const option = document.createElement('option');
+          option.value = product.code;
+          option.textContent = product.code + ' - ' + product.name;
+          select.appendChild(option);
+        });
+
+      if (products.some(product => product.code === selected)) select.value = selected;
+    }
+
+    function openStocktakeModal(code = '') {
+      const allowed = document.body.classList.contains('role-admin') || document.body.classList.contains('role-staff');
+      if (!allowed) {
+        showToast('บัญชีนี้ไม่มีสิทธิ์บันทึกผลตรวจนับ', 'danger');
+        return;
+      }
+
+      populateStocktakeProducts();
+      const select = document.getElementById('stocktakeItem');
+      select.value = products.some(product => product.code === code) ? code : '';
+      document.getElementById('stocktakeActualQty').value = '';
+      document.getElementById('stocktakeReason').value = '';
+      document.getElementById('stocktakeCountedBy').value = currentUser || 'ผู้ใช้งานสาธิต';
+      updateStocktakeDifference();
+      document.getElementById('stocktakeModal').classList.add('open');
+    }
+
+    function closeStocktakeModal() {
+      document.getElementById('stocktakeModal').classList.remove('open');
+    }
+
+    function updateStocktakeDifference() {
+      const code = document.getElementById('stocktakeItem').value;
+      const product = products.find(item => item.code === code);
+      const actualValue = document.getElementById('stocktakeActualQty').value;
+      const systemInput = document.getElementById('stocktakeSystemQty');
+      const differenceInput = document.getElementById('stocktakeDifference');
+
+      if (!product) {
+        systemInput.value = '';
+        differenceInput.value = '-';
+        differenceInput.style.color = '';
+        return;
+      }
+
+      systemInput.value = product.qty;
+      if (actualValue === '') {
+        differenceInput.value = '-';
+        differenceInput.style.color = '';
+        return;
+      }
+
+      const actualQty = Number(actualValue);
+      if (!Number.isInteger(actualQty) || actualQty < 0) {
+        differenceInput.value = 'จำนวนไม่ถูกต้อง';
+        differenceInput.style.color = 'var(--color-danger)';
+        return;
+      }
+
+      const difference = actualQty - product.qty;
+      differenceInput.value = (difference > 0 ? '+' : '') + difference;
+      differenceInput.style.color = difference === 0
+        ? 'var(--color-success)'
+        : (difference > 0 ? 'var(--color-primary)' : 'var(--color-danger)');
+    }
+
+    function saveStocktake() {
+      const allowed = document.body.classList.contains('role-admin') || document.body.classList.contains('role-staff');
+      if (!allowed) {
+        showToast('บัญชีนี้ไม่มีสิทธิ์บันทึกผลตรวจนับ', 'danger');
+        return;
+      }
+
+      const code = document.getElementById('stocktakeItem').value;
+      const actualValue = document.getElementById('stocktakeActualQty').value;
+      const reason = document.getElementById('stocktakeReason').value.trim();
+      const product = products.find(item => item.code === code);
+
+      if (!product) {
+        showToast('กรุณาเลือกรายการพัสดุ', 'danger');
+        return;
+      }
+      const actualQty = Number(actualValue);
+      if (!Number.isInteger(actualQty) || actualQty < 0) {
+        showToast('กรุณาระบุจำนวนที่ตรวจพบจริงเป็นจำนวนเต็มตั้งแต่ 0 ขึ้นไป', 'danger');
+        return;
+      }
+      if (reason.length < 3) {
+        showToast('กรุณาระบุเหตุผลหรือหมายเหตุการตรวจนับ', 'danger');
+        return;
+      }
+
+      const beforeQty = product.qty;
+      const difference = actualQty - beforeQty;
+      const countedBy = currentUser || 'ผู้ใช้งานสาธิต';
+      product.qty = actualQty;
+
+      history.unshift({
+        id: createTransactionId(),
+        date: new Date().toISOString(),
+        type: 'ตรวจนับ',
+        status: 'completed',
+        code: product.code,
+        name: product.name,
+        qty: Math.abs(difference),
+        beforeQty,
+        actualQty,
+        difference,
+        user: countedBy,
+        countedBy,
+        note: reason
+      });
+
+      saveDatabase();
+      closeStocktakeModal();
+      renderDashboard();
+      renderStock();
+      renderHistory();
+      showToast(difference === 0 ? 'บันทึกผลตรวจนับแล้ว ยอดตรงกับระบบ' : 'บันทึกผลตรวจนับและปรับยอดเรียบร้อย', 'success');
     }
 
     function openRecvModal(code) { 
@@ -937,45 +1377,53 @@
 
     function doIssue() {
       const code = document.getElementById('issueItem').value;
-      const qty = parseInt(document.getElementById('issueQty').value);
+      const qty = parseInt(document.getElementById('issueQty').value, 10);
       const person = document.getElementById('issuePerson').value.trim();
       const purpose = document.getElementById('issuePurpose').value || 'เบิกใช้งาน';
       const note = document.getElementById('issueNote').value.trim();
-      const combinedNote = note ? `${purpose} (${note})` : purpose;
+      const combinedNote = note ? purpose + ' (' + note + ')' : purpose;
+      const product = products.find(item => item.code === code);
 
-      const p = products.find(x => x.code === code);
-      if (p && qty > 0 && qty <= p.qty && person) {
-        let personName = person;
-        let personPosition = '';
-        
-        // Find position from PERSONNEL dynamically if it matches
-        const found = PERSONNEL.find(x => (x.name || '').trim() === personName);
-        if (found) {
-          personPosition = found.position || '';
-        }
+      if (!product || !Number.isInteger(qty) || qty <= 0 || qty > product.qty || !person) {
+        showToast('ข้อมูลไม่ถูกต้องหรือสินค้าไม่พอ', 'danger');
+        return;
+      }
 
-        const canIssueDirectly = document.body.classList.contains('role-admin') || document.body.classList.contains('role-staff');
-        const issueType = canIssueDirectly ? 'เบิก' : 'ขอเบิก';
-        
-        if (canIssueDirectly) {
-          p.qty -= qty;
-        }
-
-        history.unshift({
-          date: new Date().toISOString().slice(0, 10),
-          type: issueType,
-          code: p.code,
-          name: p.name,
+      const found = PERSONNEL.find(item => (item.name || '').trim() === person);
+      const now = new Date().toISOString();
+      history.unshift({
+        id: createTransactionId(),
+        requestNo: generateDocumentNumber('REQ', 'requestNo'),
+        date: now,
+        createdAt: now,
+        type: 'ขอเบิก',
+        status: 'pending',
+        code: product.code,
+        name: product.name,
+        qty: qty,
+        user: person,
+        userPosition: found ? (found.position || '') : '',
+        requestedBy: currentUser || person,
+        note: combinedNote,
+        approvedQty: 0,
+        dispensedQty: 0,
+        returnedQty: 0,
+        closedQty: 0,
+        activityLog: [{
+          action: 'submitted',
+          label: 'ส่งคำขอ',
+          user: currentUser || person,
+          at: now,
           qty: qty,
-          user: personName,
-          userPosition: personPosition,
-          note: combinedNote
-        });
-        saveDatabase();
-        renderStock();
-        closeIssueModal();
-        showToast(canIssueDirectly ? 'เบิกสินค้าสำเร็จ' : 'ส่งคำขอเบิกสินค้าสำเร็จ รออนุมัติ');
-      } else { showToast('ข้อมูลไม่ถูกต้องหรือสินค้าไม่พอ', 'danger'); }
+          documentNo: ''
+        }]
+      });
+
+      saveDatabase();
+      closeIssueModal();
+      renderHistory();
+      renderDashboard();
+      showToast('ส่งคำขอเบิกสินค้าสำเร็จ รออนุมัติ', 'success');
     }
 
     function formatUser(userStr, posStr) {
@@ -983,9 +1431,9 @@
       const name = userStr;
       const pos = posStr || '';
       if (pos) {
-        return `<strong>${name}</strong><br><span style="font-size: 11px; color: var(--color-text-muted);">${pos}</span>`;
+        return `<strong>${escapeHTML(name)}</strong><br><span style="font-size: 11px; color: var(--color-text-muted);">${escapeHTML(pos)}</span>`;
       }
-      return `<strong>${name}</strong>`;
+      return `<strong>${escapeHTML(name)}</strong>`;
     }
 
     window.formatHistoryDate = function(dateStr) {
@@ -1017,11 +1465,49 @@
       }
     };
 
+    function requestStatusText(status) {
+      return ({
+        pending: 'รออนุมัติ',
+        approved: 'อนุมัติแล้ว รอจ่าย',
+        rejected: 'ปฏิเสธ',
+        cancelled: 'ยกเลิก',
+        dispensed: 'จ่ายแล้ว',
+        returned: 'รับคืนแล้ว',
+        closed: 'ปิดรายการแล้ว'
+      })[status || 'pending'] || status || '-';
+    }
+
+    function renderRequestTimeline(request) {
+      let events = Array.isArray(request.activityLog) ? request.activityLog : [];
+      if (events.length === 0) {
+        events = [
+          {label: 'ส่งคำขอ', user: request.requestedBy, at: request.createdAt || request.date, qty: request.qty},
+          {label: 'อนุมัติ', user: request.approvedBy, at: request.approvedAt, qty: request.approvedQty || request.qty},
+          {label: 'ปฏิเสธ', user: request.rejectedBy, at: request.rejectedAt, qty: 0},
+          {label: 'ยกเลิก', user: request.cancelledBy, at: request.cancelledAt, qty: 0},
+          {label: 'จ่ายพัสดุ', user: request.dispensedBy, at: request.dispensedAt, qty: request.dispensedQty || request.qty, documentNo: request.issueNo},
+          {label: 'รับคืน', user: request.returnedBy, at: request.returnedAt, qty: request.returnedQty || request.qty, documentNo: request.returnNo},
+          {label: 'ปิดรายการ', user: request.closedBy, at: request.closedAt, qty: request.closedQty || request.qty}
+        ].filter(event => event.at);
+      }
+
+      return '<div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08);">' +
+        '<div style="font-size:12px; color:var(--color-text-muted); margin-bottom:6px;">ลำดับการดำเนินการ</div>' +
+        events.map(event => '<div style="font-size:12px; margin:4px 0; color:#cbd5e1;">• ' +
+          escapeHTML(event.label || event.action || '-') +
+          (Number(event.qty || 0) > 0 ? ' ' + Number(event.qty).toLocaleString() : '') +
+          ' — ' + escapeHTML(event.user || '-') + ' · ' +
+          escapeHTML(window.formatHistoryDate(event.at)) +
+          (event.documentNo ? ' · ' + escapeHTML(event.documentNo) : '') + '</div>').join('') +
+        '</div>';
+    }
+
     function renderHistory() {
       const container = document.getElementById('historyTable');
       if (!container) return;
 
       const filter = document.getElementById('histFilter').value;
+      const statusFilter = document.getElementById('histStatusFilter') ? document.getElementById('histStatusFilter').value : '';
       const fyFilter = document.getElementById('histFiscalFilter') ? document.getElementById('histFiscalFilter').value : '';
       const searchEl = document.getElementById('historySearchInput');
       const searchQ = searchEl ? searchEl.value.trim().toLowerCase() : '';
@@ -1029,6 +1515,9 @@
       let list = history;
       if (filter) {
         list = list.filter(h => h.type === filter);
+      }
+      if (statusFilter) {
+        list = list.filter(h => (h.status || (h.type === 'ขอเบิก' ? 'pending' : '')) === statusFilter);
       }
       if (fyFilter) {
         list = list.filter(h => String(getFiscalYear(h.date)) === String(fyFilter));
@@ -1039,7 +1528,10 @@
           (h.name || '').toLowerCase().includes(searchQ) ||
           (h.user || '').toLowerCase().includes(searchQ) ||
           (h.userPosition || '').toLowerCase().includes(searchQ) ||
-          (h.note || '').toLowerCase().includes(searchQ)
+          (h.note || '').toLowerCase().includes(searchQ) ||
+          (h.requestNo || '').toLowerCase().includes(searchQ) ||
+          (h.issueNo || '').toLowerCase().includes(searchQ) ||
+          (h.returnNo || '').toLowerCase().includes(searchQ)
         );
       }
 
@@ -1057,23 +1549,51 @@
         let badgeClass = 'badge-primary';
         if (h.type === 'รับ') badgeClass = 'badge-success';
         if (h.type === 'เบิก') badgeClass = 'badge-danger';
+        if (h.type === 'คืน') badgeClass = 'badge-success';
         if (h.type === 'ขอเบิก') badgeClass = 'badge-warning';
         if (h.type === 'เพิ่ม') badgeClass = 'badge-primary';
         if (h.type === 'แก้ไข' || h.type === 'ปรับปรุง') badgeClass = 'badge-warning';
-        if (h.type === 'ลบ') badgeClass = 'badge-danger';
+        if (h.type === 'ลบ' || h.type === 'ปฏิเสธ') badgeClass = 'badge-danger';
+        if (h.type === 'ตรวจนับ') badgeClass = 'badge-primary';
 
         const origIndex = history.indexOf(h);
         
         let actionBtn = '';
+        const requestKey = h.id || ('legacy-index:' + origIndex);
+        const encodedKey = safeInlineArg(requestKey);
+        const buttons = [];
+
         if (h.type === 'เบิก') {
-          actionBtn = `<button class="btn-action btn-action-print" style="width: auto; padding: 6px 16px; background: rgba(255,255,255,0.05);" onclick="printIssueSlip(${origIndex})" title="${t('พิมพ์ใบเบิก')}"><i class="ti ti-printer"></i> ${t('พิมพ์ใบเบิก')}</button>`;
-        } else if (h.type === 'ขอเบิก') {
-          actionBtn = `<button class="btn-action edit-only" style="background-color: var(--color-success); color: white; border-color: var(--color-success); width: auto; padding: 6px 16px;" onclick="approveIssue(${origIndex})"><i class="ti ti-check"></i> อนุมัติการเบิก</button>`;
+          buttons.push('<button class="btn-action btn-action-print" style="width:auto;padding:6px 16px;background:rgba(255,255,255,0.05);" onclick="printIssueSlip(' + origIndex + ')" title="' + t('พิมพ์ใบเบิก') + '"><i class="ti ti-printer"></i> ' + t('พิมพ์ใบเบิก') + '</button>');
         }
 
+        if (h.type === 'ขอเบิก') {
+          const status = h.status || 'pending';
+          if (status === 'pending' && canApproveRequests()) {
+            buttons.push('<button class="btn-action" style="background:var(--color-success);color:white;width:auto;padding:6px 16px;" onclick="approveIssue(decodeURIComponent(\'' + encodedKey + '\'))"><i class="ti ti-check"></i> อนุมัติ</button>');
+            buttons.push('<button class="btn-action" style="background:var(--color-danger);color:white;width:auto;padding:6px 16px;" onclick="rejectIssue(decodeURIComponent(\'' + encodedKey + '\'))"><i class="ti ti-x"></i> ปฏิเสธ</button>');
+          }
+          if (status === 'approved' && canDispenseItems()) {
+            buttons.push('<button class="btn-action" style="background:var(--color-primary);color:white;width:auto;padding:6px 16px;" onclick="dispenseIssue(decodeURIComponent(\'' + encodedKey + '\'))"><i class="ti ti-package-export"></i> จ่ายพัสดุ</button>');
+          }
+          if (['pending', 'approved'].includes(status) && Number(h.dispensedQty || 0) === 0 && canCancelRequest(h)) {
+            buttons.push('<button class="btn-action" style="width:auto;padding:6px 16px;" onclick="cancelIssue(decodeURIComponent(\'' + encodedKey + '\'))"><i class="ti ti-ban"></i> ยกเลิกคำขอ</button>');
+          }
+          if (status === 'dispensed' && canDispenseItems()) {
+            buttons.push('<button class="btn-action" style="background:var(--color-success);color:white;width:auto;padding:6px 16px;" onclick="returnIssue(decodeURIComponent(\'' + encodedKey + '\'))"><i class="ti ti-package-import"></i> รับคืน</button>');
+            buttons.push('<button class="btn-action" style="width:auto;padding:6px 16px;" onclick="closeIssueRecord(decodeURIComponent(\'' + encodedKey + '\'))"><i class="ti ti-circle-check"></i> ปิดรายการ</button>');
+          }
+        }
+        actionBtn = buttons.join('');
+
         const formattedDate = window.formatHistoryDate(h.date);
-        const qtyPrefix = (h.type === 'เบิก') ? '-' : '+';
-        const qtyColor = (h.type === 'เบิก') ? 'var(--color-danger)' : (h.type === 'รับ' ? 'var(--color-success)' : 'var(--color-text-primary)');
+        const displayQty = h.type === 'ตรวจนับ' ? Math.abs(Number(h.difference || 0)) : h.qty;
+        const qtyPrefix = h.type === 'ตรวจนับ'
+          ? (Number(h.difference || 0) > 0 ? '+' : (Number(h.difference || 0) < 0 ? '-' : ''))
+          : (h.type === 'เบิก' ? '-' : (h.type === 'รับ' || h.type === 'คืน' || h.type === 'เพิ่ม' ? '+' : ''));
+        const qtyColor = h.type === 'ตรวจนับ'
+          ? (Number(h.difference || 0) === 0 ? 'var(--color-success)' : (Number(h.difference || 0) > 0 ? 'var(--color-primary)' : 'var(--color-danger)'))
+          : ((h.type === 'เบิก') ? 'var(--color-danger)' : (h.type === 'รับ' || h.type === 'คืน' ? 'var(--color-success)' : 'var(--color-text-primary)'));
 
         return `
           <div class="hist-card" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; overflow: hidden; transition: all 0.2s;">
@@ -1081,12 +1601,12 @@
               <div style="display: flex; align-items: center; gap: 16px; flex: 1;">
                 <span class="badge ${badgeClass}" style="min-width: 65px; text-align: center;">${h.type === 'เบิก' ? t('เบิกออก') : (h.type === 'รับ' ? t('รับเข้า') : t(h.type))}</span>
                 <div style="display: flex; flex-direction: column;">
-                  <strong style="font-size: 15px; color: #e2e8f0;">${h.name} <span style="color: var(--color-text-muted); font-size: 13px; font-weight: normal;">(${h.code})</span></strong>
-                  <span style="font-size: 12px; color: #94a3b8; margin-top: 2px;"><i class="ti ti-calendar-event"></i> ${formattedDate}</span>
+                  <strong style="font-size: 15px; color: #e2e8f0;">${escapeHTML(h.name)} <span style="color: var(--color-text-muted); font-size: 13px; font-weight: normal;">(${escapeHTML(h.code)})</span></strong>
+                  <span style="font-size: 12px; color: #94a3b8; margin-top: 2px;"><i class="ti ti-calendar-event"></i> ${escapeHTML(formattedDate)}</span>
                 </div>
               </div>
               <div style="display: flex; align-items: center; gap: 16px;">
-                <strong style="font-size: 16px; color: ${qtyColor};">${qtyPrefix}${h.qty.toLocaleString()}</strong>
+                <strong style="font-size: 16px; color: ${qtyColor};">${qtyPrefix}${Number(displayQty || 0).toLocaleString()}</strong>
                 <i class="ti ti-chevron-down" id="hist-icon-${origIndex}" style="color: #64748b; transition: transform 0.3s;"></i>
               </div>
             </div>
@@ -1099,7 +1619,10 @@
                 </div>
                 <div>
                   <span style="font-size: 12px; color: var(--color-text-muted); display: block;">${t('บันทึกช่วยจำ/วัตถุประสงค์')}</span>
-                  <div style="font-size: 14px; color: #e2e8f0; margin-top: 4px; line-height: 1.5;">${h.note || '-'}</div>
+                  <div style="font-size: 14px; color: #e2e8f0; margin-top: 4px; line-height: 1.5;">${escapeHTML(h.note || '-')}</div>
+                  ${h.requestNo || h.issueNo || h.returnNo ? `<div style="font-size:12px;color:var(--color-text-muted);margin-top:8px;">${h.requestNo ? 'คำขอ ' + escapeHTML(h.requestNo) : ''}${h.issueNo ? ' · ใบจ่าย ' + escapeHTML(h.issueNo) : ''}${h.returnNo ? ' · ใบคืน ' + escapeHTML(h.returnNo) : ''}</div>` : ''}
+                  ${h.type === 'ขอเบิก' ? `<div style="margin-top:8px;"><span class="badge ${h.status === 'rejected' || h.status === 'cancelled' ? 'badge-danger' : ((h.status === 'returned' || h.status === 'closed') ? 'badge-success' : 'badge-warning')}">${escapeHTML(requestStatusText(h.status))}</span><div style="font-size:12px;color:#cbd5e1;margin-top:8px;">${escapeHTML(requestProgressText(h))}</div></div>${renderRequestTimeline(h)}` : ''}
+                  ${h.type === 'ตรวจนับ' ? `<div style="font-size: 12px; color: var(--color-text-muted); margin-top: 8px;">ยอดระบบ ${Number(h.beforeQty || 0).toLocaleString()} → ยอดจริง ${Number(h.actualQty || 0).toLocaleString()} (ส่วนต่าง ${Number(h.difference || 0) > 0 ? '+' : ''}${Number(h.difference || 0).toLocaleString()})</div>` : ''}
                 </div>
               </div>
               ${actionBtn ? `<div style="display: flex; justify-content: flex-end;">${actionBtn}</div>` : ''}
@@ -1109,26 +1632,237 @@
       }).join('')}</div>`;
     }
 
-    window.approveIssue = function(index) {
-      if (confirm('ยืนยันการอนุมัติเบิกพัสดุรายการนี้?')) {
-        const h = history[index];
-        if (h && h.type === 'ขอเบิก') {
-          const p = products.find(x => x.code === h.code);
-          if (p) {
-             if (p.qty >= h.qty) {
-                p.qty -= h.qty;
-                h.type = 'เบิก';
-                saveDatabase();
-                renderStock();
-                renderHistory();
-                showToast('อนุมัติรายการเบิกสำเร็จ', 'success');
-             } else {
-                showToast('จำนวนพัสดุในคลังไม่เพียงพอ', 'danger');
-             }
-          }
-        }
+    function findRequest(requestKey) {
+      if (String(requestKey).startsWith('legacy-index:')) {
+        return history[parseInt(String(requestKey).split(':')[1], 10)];
       }
+      return history.find(entry => entry.id === requestKey);
+    }
+
+    window.approveIssue = function(requestKey) {
+      if (!canApproveRequests()) {
+        showToast('บัญชีนี้ไม่มีสิทธิ์อนุมัติคำขอ', 'danger');
+        return;
+      }
+      const request = findRequest(requestKey);
+      if (!request || request.type !== 'ขอเบิก' || (request.status && request.status !== 'pending')) {
+        showToast('คำขอนี้ถูกดำเนินการไปแล้วหรือไม่พบรายการ', 'warning');
+        return;
+      }
+
+      const approvedQty = askQuantity('ระบุจำนวนที่อนุมัติจากยอดขอ ' + Number(request.qty || 0).toLocaleString(), request.qty, request.qty);
+      if (approvedQty === null) return;
+      if (!confirm('ยืนยันอนุมัติจำนวน ' + approvedQty.toLocaleString() + ' รายการ?')) return;
+
+      const now = new Date().toISOString();
+      request.status = 'approved';
+      request.approvedQty = approvedQty;
+      request.approvedBy = currentUser;
+      request.approvedAt = now;
+      appendRequestEvent(request, 'approved', 'อนุมัติ', approvedQty, '');
+      saveDatabase();
+      renderHistory();
+      renderDashboard();
+      showToast('อนุมัติ ' + approvedQty.toLocaleString() + ' รายการ รอเจ้าหน้าที่คลังจ่ายพัสดุ', 'success');
     };
+
+    window.rejectIssue = function(requestKey) {
+      if (!canApproveRequests()) {
+        showToast('บัญชีนี้ไม่มีสิทธิ์ปฏิเสธคำขอ', 'danger');
+        return;
+      }
+      const request = findRequest(requestKey);
+      if (!request || request.type !== 'ขอเบิก' || (request.status && request.status !== 'pending')) {
+        showToast('คำขอนี้ถูกดำเนินการไปแล้วหรือไม่พบรายการ', 'warning');
+        return;
+      }
+      if (!confirm('ยืนยันการปฏิเสธคำขอเบิกรายการนี้?')) return;
+
+      const now = new Date().toISOString();
+      request.status = 'rejected';
+      request.rejectedBy = currentUser;
+      request.rejectedAt = now;
+      appendRequestEvent(request, 'rejected', 'ปฏิเสธ', 0, '');
+      saveDatabase();
+      renderHistory();
+      renderDashboard();
+      showToast('ปฏิเสธคำขอเรียบร้อย', 'warning');
+    };
+
+    window.cancelIssue = function(requestKey) {
+      const request = findRequest(requestKey);
+      if (!request || request.type !== 'ขอเบิก' || !['pending', 'approved'].includes(request.status || 'pending') || Number(request.dispensedQty || 0) > 0) {
+        showToast('รายการนี้ไม่สามารถยกเลิกได้หลังเริ่มจ่ายพัสดุ', 'warning');
+        return;
+      }
+      if (!canCancelRequest(request)) {
+        showToast('ยกเลิกได้เฉพาะผู้สร้างคำขอหรือผู้ดูแลระบบ', 'danger');
+        return;
+      }
+      if (!confirm('ยืนยันการยกเลิกคำขอเบิกรายการนี้?')) return;
+
+      const now = new Date().toISOString();
+      request.status = 'cancelled';
+      request.cancelledBy = currentUser;
+      request.cancelledAt = now;
+      appendRequestEvent(request, 'cancelled', 'ยกเลิก', 0, '');
+      saveDatabase();
+      renderHistory();
+      renderDashboard();
+      showToast('ยกเลิกคำขอเรียบร้อย', 'warning');
+    };
+
+    window.dispenseIssue = function(requestKey) {
+      if (!canDispenseItems()) {
+        showToast('บัญชีนี้ไม่มีสิทธิ์จ่ายพัสดุ', 'danger');
+        return;
+      }
+      const request = findRequest(requestKey);
+      if (!request || request.type !== 'ขอเบิก' || request.status !== 'approved') {
+        showToast('ต้องเป็นคำขอที่อนุมัติแล้วและยังมียอดรอจ่าย', 'warning');
+        return;
+      }
+
+      const approvedQty = Number(request.approvedQty || request.qty || 0);
+      const dispensedQty = Number(request.dispensedQty || 0);
+      const remainingQty = approvedQty - dispensedQty;
+      const quantity = askQuantity('ระบุจำนวนที่จ่าย ยอดคงค้าง ' + remainingQty.toLocaleString(), remainingQty, remainingQty);
+      if (quantity === null) return;
+
+      const product = products.find(item => item.code === request.code);
+      if (!product || product.qty < quantity) {
+        showToast('จำนวนพัสดุในคลังไม่เพียงพอ', 'danger');
+        return;
+      }
+      if (!confirm('ยืนยันจ่ายพัสดุและตัดสต็อกจำนวน ' + quantity.toLocaleString() + ' รายการ?')) return;
+
+      const now = new Date().toISOString();
+      const issueNo = generateDocumentNumber('ISS', 'issueNo');
+      product.qty -= quantity;
+      request.dispensedQty = dispensedQty + quantity;
+      request.status = request.dispensedQty >= approvedQty ? 'dispensed' : 'approved';
+      request.issueNo = issueNo;
+      request.dispensedBy = currentUser;
+      request.dispensedAt = now;
+      appendRequestEvent(request, 'dispensed', 'จ่ายพัสดุ', quantity, issueNo);
+      history.unshift({
+        id: createTransactionId(),
+        requestId: request.id,
+        requestNo: request.requestNo,
+        issueNo: issueNo,
+        date: now,
+        type: 'เบิก',
+        status: 'completed',
+        code: request.code,
+        name: request.name,
+        qty: quantity,
+        user: request.user,
+        userPosition: request.userPosition,
+        requestedBy: request.requestedBy,
+        approvedBy: request.approvedBy,
+        approvedAt: request.approvedAt,
+        dispensedBy: currentUser,
+        dispensedAt: now,
+        note: request.note
+      });
+      saveDatabase();
+      renderStock();
+      renderHistory();
+      renderDashboard();
+      const remainingAfter = approvedQty - request.dispensedQty;
+      showToast('จ่าย ' + quantity.toLocaleString() + ' รายการ เลขที่ ' + issueNo + (remainingAfter > 0 ? ' คงค้าง ' + remainingAfter.toLocaleString() : ''), 'success');
+    };
+
+    window.returnIssue = function(requestKey) {
+      if (!canDispenseItems()) {
+        showToast('บัญชีนี้ไม่มีสิทธิ์รับคืนพัสดุ', 'danger');
+        return;
+      }
+      const request = findRequest(requestKey);
+      if (!request || request.type !== 'ขอเบิก' || request.status !== 'dispensed') {
+        showToast('รับคืนได้เฉพาะรายการที่จ่ายครบแล้วและยังมียอดค้าง', 'warning');
+        return;
+      }
+
+      const progress = requestProgress(request);
+      const remainingQty = progress.dispensed - progress.returned - progress.closed;
+      const quantity = askQuantity('ระบุจำนวนที่รับคืน ยอดค้าง ' + remainingQty.toLocaleString(), remainingQty, remainingQty);
+      if (quantity === null) return;
+
+      const product = products.find(item => item.code === request.code);
+      if (!product) {
+        showToast('ไม่พบพัสดุในคลัง', 'danger');
+        return;
+      }
+      if (!confirm('ยืนยันรับคืนพัสดุจำนวน ' + quantity.toLocaleString() + ' รายการ?')) return;
+
+      const now = new Date().toISOString();
+      const returnNo = generateDocumentNumber('RET', 'returnNo');
+      product.qty += quantity;
+      request.returnedQty = progress.returned + quantity;
+      request.returnNo = returnNo;
+      request.returnedBy = currentUser;
+      request.returnedAt = now;
+      const accountedQty = request.returnedQty + progress.closed;
+      request.status = accountedQty >= progress.dispensed ? (progress.closed > 0 ? 'closed' : 'returned') : 'dispensed';
+      appendRequestEvent(request, 'returned', 'รับคืน', quantity, returnNo);
+      history.unshift({
+        id: createTransactionId(),
+        requestId: request.id,
+        requestNo: request.requestNo,
+        issueNo: request.issueNo,
+        returnNo: returnNo,
+        date: now,
+        type: 'คืน',
+        status: 'completed',
+        code: request.code,
+        name: request.name,
+        qty: quantity,
+        user: request.user,
+        userPosition: request.userPosition,
+        returnedBy: currentUser,
+        returnedAt: now,
+        note: 'รับคืนจาก ' + (request.issueNo || request.requestNo || request.id)
+      });
+      saveDatabase();
+      renderStock();
+      renderHistory();
+      renderDashboard();
+      const remainingAfter = progress.dispensed - request.returnedQty - progress.closed;
+      showToast('รับคืน ' + quantity.toLocaleString() + ' รายการ เลขที่ ' + returnNo + (remainingAfter > 0 ? ' คงค้าง ' + remainingAfter.toLocaleString() : ''), 'success');
+    };
+
+    window.closeIssueRecord = function(requestKey) {
+      if (!canDispenseItems()) {
+        showToast('บัญชีนี้ไม่มีสิทธิ์ปิดรายการ', 'danger');
+        return;
+      }
+      const request = findRequest(requestKey);
+      if (!request || request.type !== 'ขอเบิก' || request.status !== 'dispensed') {
+        showToast('ปิดได้เฉพาะรายการที่จ่ายครบแล้วและยังมียอดค้าง', 'warning');
+        return;
+      }
+
+      const progress = requestProgress(request);
+      const remainingQty = progress.dispensed - progress.returned - progress.closed;
+      const quantity = askQuantity('ระบุจำนวนที่ปิดโดยไม่รับคืน ยอดค้าง ' + remainingQty.toLocaleString(), remainingQty, remainingQty);
+      if (quantity === null) return;
+      if (!confirm('ยืนยันปิดจำนวน ' + quantity.toLocaleString() + ' รายการโดยไม่เพิ่มกลับเข้าสต็อก?')) return;
+
+      const now = new Date().toISOString();
+      request.closedQty = progress.closed + quantity;
+      request.closedBy = currentUser;
+      request.closedAt = now;
+      const accountedQty = progress.returned + request.closedQty;
+      request.status = accountedQty >= progress.dispensed ? 'closed' : 'dispensed';
+      appendRequestEvent(request, 'closed', 'ปิดรายการ', quantity, '');
+      saveDatabase();
+      renderHistory();
+      renderDashboard();
+      const remainingAfter = progress.dispensed - progress.returned - request.closedQty;
+      showToast('ปิด ' + quantity.toLocaleString() + ' รายการ' + (remainingAfter > 0 ? ' คงค้าง ' + remainingAfter.toLocaleString() : ''), 'success');
+    };
+
 
     function formatThaiDate(dateStr) {
       if (!dateStr) return '';
@@ -1310,7 +2044,7 @@
           <table class="details-table">
             <tr>
               <th>รหัสใบเบิก</th>
-              <td>TR-${h.date.replace(/-/g, '')}-${String(index + 1).padStart(4, '0')}</td>
+              <td>${escapeHTML(h.issueNo || ('TR-' + String(h.date || '').replace(/-/g, '') + '-' + String(index + 1).padStart(4, '0')))}</td>
             </tr>
             <tr>
               <th>วันที่ทำรายการ</th>
@@ -1566,7 +2300,7 @@
       
       datalist.innerHTML = Array.from(units)
         .filter(u => u !== '')
-        .map(u => `<option value="${u}"></option>`)
+        .map(u => `<option value="${escapeHTML(u)}"></option>`)
         .join('');
     }
 
@@ -1592,7 +2326,7 @@
         const name = p.name || t('ไม่ระบุชื่อ');
         const position = p.position || '';
         const phone = p.phone || '-';
-        return `<tr><td><strong>${name}</strong></td><td><span class="badge badge-primary">${position}</span></td><td><i class="ti ti-phone" style="color: var(--color-text-muted); margin-right: 6px;"></i>${phone}</td><td style="text-align: center;"><div style="display: flex; gap: 6px; justify-content: center;"><button class="btn-action btn-action-edit" onclick="openPersonnelModal(${origIndex})" title="${t('แก้ไขข้อมูล')}"><i class="ti ti-edit"></i></button><button class="btn-action btn-action-delete" onclick="deletePersonnel(${origIndex})" title="${t('ลบรายชื่อ')}"><i class="ti ti-trash"></i></button></div></td></tr>`;
+        return `<tr><td><strong>${escapeHTML(name)}</strong></td><td><span class="badge badge-primary">${escapeHTML(position)}</span></td><td><i class="ti ti-phone" style="color: var(--color-text-muted); margin-right: 6px;"></i>${escapeHTML(phone)}</td><td style="text-align: center;"><div style="display: flex; gap: 6px; justify-content: center;"><button class="btn-action btn-action-edit" onclick="openPersonnelModal(${origIndex})" title="${t('แก้ไขข้อมูล')}"><i class="ti ti-edit"></i></button><button class="btn-action btn-action-delete" onclick="deletePersonnel(${origIndex})" title="${t('ลบรายชื่อ')}"><i class="ti ti-trash"></i></button></div></td></tr>`;
       }).join('');
     }
 
@@ -1779,12 +2513,12 @@
 
       let reportData = products.map(p => {
         const recv = filteredHistory
-          .filter(h => h.code === p.code && (h.type === 'รับ' || h.type === 'เพิ่ม' || h.type === 'ปรับปรุง'))
-          .reduce((sum, h) => sum + h.qty, 0);
+          .filter(h => h.code === p.code && (h.type === 'รับ' || h.type === 'คืน' || h.type === 'เพิ่ม' || h.type === 'ปรับปรุง' || (h.type === 'ตรวจนับ' && Number(h.difference || 0) > 0)))
+          .reduce((sum, h) => sum + (h.type === 'ตรวจนับ' ? Number(h.difference || 0) : Number(h.qty || 0)), 0);
 
         const issue = filteredHistory
-          .filter(h => h.code === p.code && h.type === 'เบิก')
-          .reduce((sum, h) => sum + h.qty, 0);
+          .filter(h => h.code === p.code && (h.type === 'เบิก' || (h.type === 'ตรวจนับ' && Number(h.difference || 0) < 0)))
+          .reduce((sum, h) => sum + (h.type === 'ตรวจนับ' ? Math.abs(Number(h.difference || 0)) : Number(h.qty || 0)), 0);
 
         return {
           code: p.code,
@@ -1820,7 +2554,7 @@
 
       container.innerHTML = `
         <div style="margin-bottom: 16px; font-weight: 600; font-size: 15px; color: var(--color-text-primary); text-align: center; border-bottom: 2px solid var(--color-border); padding-bottom: 8px;">
-          ${titleText}
+          ${escapeHTML(titleText)}
         </div>
         <table>
           <thead>
@@ -1845,14 +2579,14 @@
               </tr>
             ` : reportData.map(r => `
               <tr>
-                <td><strong>${r.code}</strong></td>
-                <td>${r.name}</td>
-                <td><span class="badge badge-primary">${t(r.cat)}</span></td>
-                <td>${r.loc}</td>
+                <td><strong>${escapeHTML(r.code)}</strong></td>
+                <td>${escapeHTML(r.name)}</td>
+                <td><span class="badge badge-primary">${escapeHTML(t(r.cat))}</span></td>
+                <td>${escapeHTML(r.loc)}</td>
                 <td style="text-align: right; font-weight: 500; color: var(--color-success);">${r.received > 0 ? '+' + r.received.toLocaleString() : '0'}</td>
                 <td style="text-align: right; font-weight: 500; color: var(--color-danger);">${r.issued > 0 ? '-' + r.issued.toLocaleString() : '0'}</td>
                 <td style="text-align: right; font-weight: 600;">${r.currentQty.toLocaleString()}</td>
-                <td>${t(r.unit)}</td>
+                <td>${escapeHTML(t(r.unit))}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -1881,7 +2615,7 @@
 
       let reportData = products.map(p => {
         const recv = filteredHistory
-          .filter(h => h.code === p.code && (h.type === 'รับ' || h.type === 'เพิ่ม' || h.type === 'ปรับปรุง'))
+          .filter(h => h.code === p.code && (h.type === 'รับ' || h.type === 'คืน' || h.type === 'เพิ่ม' || h.type === 'ปรับปรุง'))
           .reduce((sum, h) => sum + h.qty, 0);
 
         const issue = filteredHistory
@@ -2140,7 +2874,7 @@
 
       let reportData = products.map(p => {
         const recv = filteredHistory
-          .filter(h => h.code === p.code && (h.type === 'รับ' || h.type === 'เพิ่ม' || h.type === 'ปรับปรุง'))
+          .filter(h => h.code === p.code && (h.type === 'รับ' || h.type === 'คืน' || h.type === 'เพิ่ม' || h.type === 'ปรับปรุง'))
           .reduce((sum, h) => sum + h.qty, 0);
 
         const issue = filteredHistory
@@ -2179,7 +2913,7 @@
       csvRows.push('"รหัสพัสดุ","ชื่อรายการ","หมวดหมู่","สถานที่เก็บ","จำนวนรับเข้า","จำนวนเบิกออก","คงเหลือปัจจุบัน","หน่วยนับ"');
 
       reportData.forEach(r => {
-        csvRows.push(`"${r.code}","${r.name}","${r.cat}","${r.loc}",${r.received},${r.issued},${r.currentQty},"${r.unit}"`);
+        csvRows.push([csvCell(r.code), csvCell(r.name), csvCell(r.cat), csvCell(r.loc), r.received, r.issued, r.currentQty, csvCell(r.unit)].join(','));
       });
 
       const csvString = csvRows.join('\n');
@@ -2236,8 +2970,8 @@
       }
       
       container.innerHTML = matches.map(p => `
-        <div class="suggestion-item" onmousedown="selectPersonnelSuggestion('${p.name}')">
-          <strong>${p.name}</strong>
+        <div class="suggestion-item" onmousedown="selectPersonnelSuggestion(decodeURIComponent('${safeInlineArg(p.name)}'))">
+          <strong>${escapeHTML(p.name)}</strong>
         </div>
       `).join('');
       
@@ -2301,8 +3035,8 @@
       }
       
       container.innerHTML = matches.map(p => `
-        <div class="suggestion-item" onmousedown="selectRecvProduct('${p.code}', '${p.code} - ${p.name}')">
-          <strong>${p.code}</strong> - <span>${p.name}</span>
+        <div class="suggestion-item" onmousedown="selectRecvProduct(decodeURIComponent('${safeInlineArg(p.code)}'), decodeURIComponent('${safeInlineArg(p.code + ' - ' + p.name)}'))">
+          <strong>${escapeHTML(p.code)}</strong> - <span>${escapeHTML(p.name)}</span>
         </div>
       `).join('');
       
@@ -2372,8 +3106,8 @@
       }
       
       container.innerHTML = matches.map(p => `
-        <div class="suggestion-item" onmousedown="selectIssueProduct('${p.code}', '${p.code} - ${p.name}')">
-          <strong>${p.code}</strong> - <span>${p.name}</span>
+        <div class="suggestion-item" onmousedown="selectIssueProduct(decodeURIComponent('${safeInlineArg(p.code)}'), decodeURIComponent('${safeInlineArg(p.code + ' - ' + p.name)}'))">
+          <strong>${escapeHTML(p.code)}</strong> - <span>${escapeHTML(p.name)}</span>
         </div>
       `).join('');
       
@@ -2435,7 +3169,7 @@
         const now = new Date();
         const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '_');
         downloadAnchor.setAttribute("href", url);
-        downloadAnchor.setAttribute("download", `dpd_stock_backup_${dateStr}.json`);
+        downloadAnchor.setAttribute("download", `dpd_demo_stock_backup_${dateStr}.json`);
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
@@ -2454,33 +3188,33 @@
     function importBackupData(event) {
       const file = event.target.files[0];
       if (!file) return;
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('ไฟล์สำรองมีขนาดเกิน 5 MB', 'danger');
+        event.target.value = '';
+        return;
+      }
 
       const reader = new FileReader();
       reader.onload = function(e) {
         try {
-          const importedData = JSON.parse(e.target.result);
-          if (importedData && Array.isArray(importedData.products) && Array.isArray(importedData.history) && Array.isArray(importedData.personnel)) {
-            const confirmRestore = confirm('คุณต้องการกู้คืนข้อมูลระบบด้วยไฟล์สำรองนี้หรือไม่?\n*คำเตือน: ข้อมูลพัสดุ ประวัติการเบิกจ่าย และบุคลากรทั้งหมดที่มีอยู่ในปัจจุบันจะถูกเขียนทับทันที*');
-            if (confirmRestore) {
-              products = importedData.products;
-              history = importedData.history;
-              PERSONNEL = importedData.personnel;
-              saveDatabase();
-              
-              // Refresh views and components
-              renderDashboard();
-              renderStock();
-              renderHistory();
-              renderPersonnel();
-              populateFiscalYears();
-              
-              showToast('กู้คืนข้อมูลสำเร็จ (Database Restored)', 'success');
-            }
-          } else {
-            showToast('ไฟล์สำรองไม่ถูกต้อง หรือโครงสร้างข้อมูลผิดพลาด', 'danger');
+          const importedData = validateBackupData(JSON.parse(e.target.result));
+          const confirmRestore = confirm('คุณต้องการกู้คืนข้อมูลระบบด้วยไฟล์สำรองนี้หรือไม่?\n*คำเตือน: ข้อมูลสาธิตทั้งหมดในเบราว์เซอร์นี้จะถูกเขียนทับทันที*');
+          if (confirmRestore) {
+            products = importedData.products;
+            history = importedData.history;
+            PERSONNEL = importedData.personnel;
+            saveDatabase();
+
+            renderDashboard();
+            renderStock();
+            renderHistory();
+            renderPersonnel();
+            populateFiscalYears();
+
+            showToast('กู้คืนข้อมูลสาธิตสำเร็จ', 'success');
           }
         } catch (err) {
-          showToast('ไม่สามารถอ่านไฟล์ได้ หรือข้อมูลในไฟล์ไม่ใช่ JSON', 'danger');
+          showToast('ไฟล์สำรองไม่ถูกต้อง หรือข้อมูลไม่ผ่านการตรวจสอบ', 'danger');
         }
         event.target.value = '';
       };
