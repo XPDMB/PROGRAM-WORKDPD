@@ -772,14 +772,14 @@
         if (cat === 'อื่นๆ') catIcon = '📌';
 
         htmlOutput += `
-          <div class="category-section-header" onclick="this.nextElementSibling.style.display = (this.nextElementSibling.style.display === 'none' ? 'table' : 'none'); this.querySelector('.toggle-icon').style.transform = (this.nextElementSibling.style.display === 'none' ? 'rotate(-90deg)' : 'rotate(0deg)');">
-            <span style="display: flex; align-items: center; gap: 10px;">
-              <i class="ti ti-chevron-down toggle-icon" style="transition: transform 0.3s; font-size: 18px; transform: rotate(-90deg);"></i>
-              <span style="font-size: 18px;">${catIcon}</span>
-              ${cat}
+          <button type="button" class="category-section-header" aria-expanded="false" onclick="const table = this.nextElementSibling; const isOpening = table.style.display === 'none'; table.style.display = isOpening ? 'table' : 'none'; this.classList.toggle('is-open', isOpening); this.setAttribute('aria-expanded', String(isOpening));">
+            <span class="category-section-title">
+              <i class="ti ti-chevron-down toggle-icon" aria-hidden="true"></i>
+              <span class="category-section-icon" aria-hidden="true">${catIcon}</span>
+              <span>${cat}</span>
             </span>
             <span class="category-section-badge">จำนวน ${catItems.length} รายการ</span>
-          </div>
+          </button>
           <table style="display: none; width: 100%;">
             <thead>
               <tr>
